@@ -1,16 +1,18 @@
-#NHentai API
-##An API made using python webscrapping
+# NHentai API
+## An API made using python webscrapping
 
-Library Features:
+### Library Features:
 
-Home page pagination,
-Doujin information,
-Random doujin
+ - Home page pagination,
+ - Doujin information,
+ - Random doujin
 
-API
+### API
 
+```python
 from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
     dict: random_doujin = nhentai.get_random()
+```
