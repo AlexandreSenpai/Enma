@@ -1,0 +1,30 @@
+Metadata-Version: 2.1
+Name: NHentai-API
+Version: 0.0.1
+Summary: NHentai Python API made using webscraping.
+Home-page: https://github.com/AlexandreSenpai/NHentai-API.git
+Author: AlexandreSenpai
+Author-email: alexandrebsramos@hotmail.com
+License: MIT
+Description: #NHentai API
+        ##An API made using python webscrapping
+        
+        Library Features:
+        
+        Home page pagination,
+        Doujin information,
+        Random doujin
+        
+        API
+        
+        from NHentai import NHentai
+        
+        if __name__ == '__main__':
+            nhentai = NHentai()
+            dict: random_doujin = nhentai.get_random()
+Keywords: nhentai hentai
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Description-Content-Type: text/markdown
