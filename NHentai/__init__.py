@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
+import json
 
 class NHentai(object):
     def __init__(self):
@@ -17,7 +18,7 @@ class NHentai(object):
         }
 
         pagination_section = soup.find('section', class_='pagination')
-        return_object['totalPages'] = pagination_section.find('a', class_='last')['href'].split('=')[-1]
+        return_object['totalPages'] = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
 
         doujin_boxes = soup.find_all('div', class_='gallery')
         for item in doujin_boxes:
@@ -105,6 +106,45 @@ class NHentai(object):
             
         return return_object
 
+    def search(self, query, sort=None, page=1):
+
+        if sort:
+            search_page = requests.get(f'{self.__BASE_URL}/search/?q={query}&page={page}&sort={sort}')
+        else:
+            search_page = requests.get(f'{self.__BASE_URL}/search/?q={query}&page={page}')
+
+        soup = BeautifulSoup(search_page.content, 'html.parser')
+
+        return_object = {
+            "query": query,
+            "sort": sort or 'Recente',
+            "lang": '',
+            "totalResults": 0,
+            "doujins": [],
+            "totalPages": 0,
+        }
+
+        total_results = soup.find('div', id='content').find('h1').text.strip().split()[0]
+        return_object['totalResults'] = int(total_results)
+
+        pagination_section = soup.find('section', class_='pagination')
+        return_object['totalPages'] = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
+
+        doujin_boxes = soup.find_all('div', class_='gallery')
+        for item in doujin_boxes:
+
+            item_information = {
+                "id": item.find('a', class_='cover')['href'].split('/')[2],
+                "title": item.find('div', class_='caption').text,
+                "cover": item.find('img', class_='lazyload')['data-src'],
+                "data-tags": item['data-tags'].split(),
+            }
+
+            return_object['doujins'].append(item_information)
+            
+        return return_object
+
 if __name__ == '__main__':
     nhentai = NHentai()
-    teste = nhentai.get_random()
+    teste = nhentai.search('dumbbell nan kilo moteru')
+    print(json.dumps(teste, indent=4))
