@@ -22,7 +22,7 @@ class NHentai:
         
         return lang
 
-    def get_pages(self, page=1):
+    def get_pages(self, page=1) -> list:
 
         nhentai_homepage = requests.get(f'{self.__BASE_URL}/?page={page}')
         soup = BeautifulSoup(nhentai_homepage.content, 'html.parser')
@@ -54,7 +54,40 @@ class NHentai:
         
         return return_object
     
-    def get_doujin(self, id):
+    def get_user_page(self, uid: str, username: str) -> dict:
+        
+        user_page = requests.get(f'{self.__BASE_URL}/users/{uid}/{username}')
+        soup = BeautifulSoup(user_page.content, 'html.parser')
+
+        user_container = soup.find('div' ,id='user-container')
+
+        profile_pic_url = user_container.find('img')['src']
+        profile_username = user_container.find('h1').text
+        profile_since = user_container.find('time').text
+
+        favs_container = soup.find('div', id='recent-favorites-container')
+
+        galleries = favs_container.find_all('div', class_='gallery')
+
+        favs = []
+
+        for gallery in galleries:
+            favs.append({
+                'id': gallery.find('a', class_='cover')['href'].split('/')[2],
+                'cover': gallery.find('img')['data-src'],
+                'title': gallery.find('div', class_='caption').text,
+                'data-tags': gallery['data-tags'].split(' ')
+            })
+
+        return {
+            'uid': uid,
+            'username': profile_username,
+            'image': profile_pic_url,
+            'since': profile_since,
+            'doujins': favs
+        }
+
+    def get_doujin(self, id: str) -> dict:
 
         doujin_page = requests.get(f'{self.__BASE_URL}/g/{id}/')
         soup = BeautifulSoup(doujin_page.content, 'html.parser')
@@ -89,7 +122,7 @@ class NHentai:
             
         return return_object
 
-    def get_random(self):
+    def get_random(self) -> dict:
 
         doujin_page = requests.get(f'{self.__BASE_URL}/random/')
         soup = BeautifulSoup(doujin_page.content, 'html.parser')
