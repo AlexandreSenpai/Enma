@@ -1,11 +1,27 @@
 from bs4 import BeautifulSoup
 import requests
 
-class NHentai(object):
+class NHentai:
     def __init__(self):
         self.__BASE_URL = 'https://nhentai.net'
         self.__IMAGE_BASE_URL = 'https://i.nhentai.net/galleries'
+        self.__SUPORTED_LANG = ['English', 'Chinese']
     
+    def __get_lang_by_title(self, title: str) -> str:
+        acceptable_title = title.replace('[', '').replace(']', '')
+        partitoned_title = acceptable_title.split(' ')
+
+        lang = 'Japanese'
+
+        for part in partitoned_title:
+            try:
+                i = self.__SUPORTED_LANG.index(part)
+                lang = self.__SUPORTED_LANG[i]
+            except:
+                pass
+        
+        return lang
+
     def get_pages(self, page=1):
 
         nhentai_homepage = requests.get(f'{self.__BASE_URL}/?page={page}')
@@ -22,9 +38,14 @@ class NHentai(object):
         doujin_boxes = soup.find_all('div', class_='gallery')
         for item in doujin_boxes:
 
+            title = item.find('div', class_='caption').text
+
+            lang = self.__get_lang_by_title(title)
+
             item_information = {
                 "id": item.find('a', class_='cover')['href'].split('/')[2],
-                "title": item.find('div', class_='caption').text,
+                "title": title,
+                "lang": lang, 
                 "cover": item.find('img', class_='lazyload')['data-src'],
                 "data-tags": item['data-tags'].split(),
             }
@@ -107,4 +128,5 @@ class NHentai(object):
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    teste = nhentai.get_random()
+    test = nhentai.get_random()
+    print(test)
