@@ -3,3 +3,6 @@ env/
 .pytest*
 .env
 .vscode/
+dist/
+build/
+*.egg-info/

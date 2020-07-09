@@ -172,17 +172,16 @@ class NHentai:
         return_object = {
             "query": query,
             "sort": sort or 'Recente',
-            "lang": '',
             "totalResults": 0,
             "doujins": [],
             "totalPages": 0,
         }
 
         total_results = soup.find('div', id='content').find('h1').text.strip().split()[0]
-        return_object['totalResults'] = int(total_results)
+        return_object['totalResults'] = int(float(total_results.replace(',', '')))
 
         pagination_section = soup.find('section', class_='pagination')
-        return_object['totalPages'] = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
+        return_object['totalPages'] = int(pagination_section.find('a', class_='last')['href'].split('&')[1][5:])
 
         doujin_boxes = soup.find_all('div', class_='gallery')
         for item in doujin_boxes:
@@ -201,5 +200,5 @@ class NHentai:
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    test = nhentai.get_random()
+    test = nhentai.get_doujin('319855')
     print(test)
