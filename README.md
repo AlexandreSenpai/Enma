@@ -8,7 +8,9 @@
 
  - Home page pagination,
  - Doujin information,
- - Random doujin
+ - Random doujin,
+ - Search doujin,
+ - User favorite page
 
 ### Usage
 
