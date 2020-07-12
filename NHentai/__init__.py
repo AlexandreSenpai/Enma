@@ -181,7 +181,13 @@ class NHentai:
         return_object['totalResults'] = int(float(total_results.replace(',', '')))
 
         pagination_section = soup.find('section', class_='pagination')
-        return_object['totalPages'] = int(pagination_section.find('a', class_='last')['href'].split('&')[1][5:])
+        if pagination_section is not None:
+            last_page_HTMLObj = pagination_section.find('a', class_='last')
+            if last_page_HTMLObj is not None:
+                return_object['totalPages'] = int(last_page_HTMLObj['href'].split('&')[1][5:])
+            else:
+                last_page_HTMLObj = pagination_section.find('a', class_='page current')
+                return_object['totalPages'] = int(last_page_HTMLObj['href'].split('&')[1][5:])
 
         doujin_boxes = soup.find_all('div', class_='gallery')
         for item in doujin_boxes:
@@ -200,5 +206,5 @@ class NHentai:
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    test = nhentai.get_doujin('319855')
+    test = nhentai.search('asdasdasdasda', sort='popular', page=1)
     print(test)
