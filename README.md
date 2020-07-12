@@ -1,13 +1,16 @@
 # NHentai API
 ## An API made using python webscrapping
 
-### Library Features:
+### Instalation
+ pip3 install --upgrade NHentai-API or pip install --upgrade NHentai-API
+
+### Library Features
 
  - Home page pagination,
  - Doujin information,
  - Random doujin
 
-### API
+### Usage
 
 ```python
 from NHentai import NHentai
