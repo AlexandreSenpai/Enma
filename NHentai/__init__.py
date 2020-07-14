@@ -106,6 +106,10 @@ class NHentai:
         }
 
         info_box = soup.find('div', id='info')
+
+        if info_box is None:
+            return None
+
         return_object["title"] = info_box.find('h1', class_='title').find('span', class_='pretty').text
 
         tags = info_box.find_all('div', class_='tag-container field-name')
@@ -162,6 +166,11 @@ class NHentai:
 
     def search(self, query, sort=None, page=1):
 
+        if query.isnumeric():
+            any_doujin = self.get_doujin(id=query)
+            if any_doujin is not None:
+                return any_doujin
+
         if sort:
             search_page = requests.get(f'{self.__BASE_URL}/search/?q={query}&page={page}&sort={sort}')
         else:
@@ -206,5 +215,5 @@ class NHentai:
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    test = nhentai.search('asdasdasdasda', sort='popular', page=1)
+    test = nhentai.search('naruto', sort='popular', page=1)
     print(test)
