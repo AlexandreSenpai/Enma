@@ -58,16 +58,14 @@ class NHentai:
             except Exception as err:
                 pass
         
-        doujin_image = requests.get(f'{self._BASE_URL}/g/{id}/1')
-        soup = BeautifulSoup(doujin_image.content, 'html.parser')
+        thumbs = soup.findAll('div', class_='thumb-container')
 
-        first_url_string = soup.find('section', id='image-container').find('img')['src'].split('/')
-
-        gallery_id = first_url_string[4]
-        image_mime = first_url_string[-1].split('.')[-1]
-
-        return_object['images'] = [f'{self._IMAGE_BASE_URL}/{gallery_id}/{page}.{image_mime}' for page in range(1, int(return_object['pages'][0]) + 1)]
-            
+        for thumb in thumbs:
+            img = thumb.find('img', class_='lazyload')['data-src']
+            img_original_size = img.split('/')
+            gallery_id = img_original_size[4]
+            return_object['images'].append(f'{self._IMAGE_BASE_URL}/{gallery_id}/{img_original_size[-1].replace("t", "")}')
+        
         return return_object
 
     def get_pages(self, page: int=1) -> list:
@@ -197,5 +195,5 @@ class NHentai:
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    test = nhentai._get_doujin(id='30955')
+    test = nhentai._get_doujin(id='286769')
     print(test)

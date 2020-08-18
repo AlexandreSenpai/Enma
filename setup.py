@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='NHentai-API',
-    version='0.0.7',
+    version='0.0.9',
     description='NHentai Python API made using webscraping.',
     long_description=readme(),
     long_description_content_type='text/markdown',
