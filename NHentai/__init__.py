@@ -19,7 +19,7 @@ class NHentai:
                 i = self._SUPORTED_LANG.index(part)
                 lang = self._SUPORTED_LANG[i]
             except Exception as err:
-                print(err)
+                pass
         
         return lang
 
@@ -56,7 +56,7 @@ class NHentai:
                 for i in item.find('span', class_='tags').find_all('a', class_='tag'):
                     return_object[item.text.strip().split()[0].lower().replace(':', '')].append(i.find('span', class_='name').text)            
             except Exception as err:
-                print(err)
+                pass
         
         doujin_image = requests.get(f'{self._BASE_URL}/g/{id}/1')
         soup = BeautifulSoup(doujin_image.content, 'html.parser')
