@@ -1,9 +1,0 @@
-README.md
-setup.py
-NHentai/__init__.py
-NHentai.egg-info/PKG-INFO
-NHentai.egg-info/SOURCES.txt
-NHentai.egg-info/dependency_links.txt
-NHentai.egg-info/not-zip-safe
-NHentai.egg-info/requires.txt
-NHentai.egg-info/top_level.txt
