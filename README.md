@@ -2,15 +2,26 @@
 A NHentai API made using python webscrapping
 For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
 
-### Library Features:
+### Instalation
+ pip3 install --upgrade NHentai-API or pip install --upgrade NHentai-API
 
+### Library Features
+
+<<<<<<< HEAD
 - Home page pagination,
 - Doujin information,
 - Random doujin,
 - Search by id and tag,
 - User page
+=======
+ - Home page pagination,
+ - Doujin information,
+ - Random doujin,
+ - Search doujin,
+ - User favorite page
+>>>>>>> 97670f916445236286fab42953aed89b4ec5e182
 
-### API
+### Usage
 
 ##### Home
 
