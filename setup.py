@@ -15,7 +15,7 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    url='https://github.com/AlexandreSenpai/NHentai-API.git',
+    url='https://github.com/AlexandreSenpai/NHentai-API',
     author='AlexandreSenpai',
     author_email='alexandrebsramos@hotmail.com',
     keywords='nhentai hentai',
