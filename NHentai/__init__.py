@@ -48,7 +48,8 @@ class NHentai:
             return None
 
         return_object["title"] = info_box.find('h1', class_='title').find('span', class_='pretty').text
-        return_object["secondary_title"] = title_section.text if (title_section := info_box.find('h2', class_='title')) is not None else ''
+        title_section = info_box.find('h2', class_='title')
+        return_object["secondary_title"] = title_section.text if title_section is not None else ''
 
         tags = info_box.find_all('div', class_='tag-container field-name')
         for item in tags:
