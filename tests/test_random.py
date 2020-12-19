@@ -9,15 +9,15 @@ from nhentai import NHentai
 
 def test_case01():
     doujin = NHentai().get_random()
-    assert doujin.get('id') is not None
-    assert doujin.get('title') is not None
-    assert doujin.get('secondary_title') is not None
-    assert doujin.get('tags') is not None
-    assert doujin.get('artists') is not None
-    assert doujin.get('languages') is not None
-    assert doujin.get('categories') is not None
-    assert doujin.get('pages') is not None
-    assert doujin.get('images') is not None
+    assert doujin.id is not None
+    assert doujin.title is not None
+    assert doujin.secondary_title is not None
+    assert doujin.tags is not None
+    assert doujin.artists is not None
+    assert doujin.languages is not None
+    assert doujin.categories is not None
+    assert doujin.pages is not None
+    assert doujin.images is not None
 
 def test_case02():
     doujin = NHentai().get_random()
