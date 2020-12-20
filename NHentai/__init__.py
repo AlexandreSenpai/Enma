@@ -5,8 +5,9 @@ import json
 from bs4 import BeautifulSoup
 import requests
 
-from .entities.doujin import Doujin, DoujinThumbnail
-from .entities.page import HomePage, SearchPage
+from entities.doujin import Doujin, DoujinThumbnail
+from entities.page import HomePage, SearchPage, TagListPage, GroupListPage, CharacterListPage, ArtistListPage
+from entities.links import CharacterLink 
 
 class NHentai:
     def __init__(self):
@@ -15,10 +16,11 @@ class NHentai:
         self._SUPORTED_LANG = {'English': 'english', 'Chinese': 'chinese'}
     
     def _get_lang_by_title(self, title: str) -> str:
-        '''This method runs through the title inputed and search by
+        """This method runs through the title inputed and search by
         one of supported languages if it doesnt finds the methods returns
         Japanese.
-        '''
+        """
+
         acceptable_title = title.replace('[', '').replace(']', '')
         partitoned_title = acceptable_title.split(' ')
 
@@ -32,9 +34,10 @@ class NHentai:
 
 
     def _get_doujin(self, id: str) -> Doujin:
-        '''This method receives a string id as parameter, 
+        """This method receives a string id as parameter, 
         gets its informations and returns as a Doujin entity.
-        '''
+        """
+
         doujin_page = requests.get(f'{self._BASE_URL}/g/{id}/')
         soup = BeautifulSoup(doujin_page.content, 'html.parser')
 
@@ -87,9 +90,9 @@ class NHentai:
                         total_pages=len(IMAGES))
 
     def get_pages(self, page: int=1) -> HomePage:
-        '''This method paginates through the homepage of NHentai and returns the doujins
+        """This method paginates through the homepage of NHentai and returns the doujins
         initial information as id, title, language, cover and data-tags.
-        '''
+        """
 
         nhentai_homepage = requests.get(f'{self._BASE_URL}/?page={page}')
         soup = BeautifulSoup(nhentai_homepage.content, 'html.parser')
@@ -117,8 +120,8 @@ class NHentai:
     
     def get_user_page(self, uid: str, username: str) -> dict:
         
-        '''!!!!DEPRECATED!!!!
-        '''
+        """!!!!DEPRECATED!!!!
+        """
 
         user_page = requests.get(f'{self._BASE_URL}/users/{uid}/{username}')
         soup = BeautifulSoup(user_page.content, 'html.parser')
@@ -152,8 +155,8 @@ class NHentai:
         }
 
     def get_random(self) -> Doujin:
-        '''This method retrieves a random doujin
-        '''
+        """This method retrieves a random doujin
+        """
 
         doujin_page = requests.get(f'{self._BASE_URL}/random/')
         soup = BeautifulSoup(doujin_page.content, 'html.parser')
@@ -165,8 +168,8 @@ class NHentai:
         return doujin
 
     def search(self, query: str, sort: str=None, page: int=1) -> SearchPage:
-        '''This method retrieves the search page based on a query.
-        '''
+        """This method retrieves the search page based on a query.
+        """
         
         if query.isnumeric():
             any_doujin = self._get_doujin(id=query)
@@ -212,7 +215,47 @@ class NHentai:
                             total_pages=TOTAL_PAGES,
                             doujins=DOUJINS)
 
+    def get_characters(self, page: int = 1) -> CharacterListPage:
+        """This method retrieves a list of characters that are available on NHentai site.
+        """
+
+        character_page = requests.get(f'{self._BASE_URL}/characters/?page={page}')
+        soup = BeautifulSoup(character_page.content, 'html.parser')
+
+        pagination_section = soup.find('section', class_='pagination')
+        TOTAL_PAGES = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
+        CHARACTERS = []
+
+        character_list_section = soup.find('div', class_='container')
+        section = character_list_section.find_all('section')
+        for link in section:
+            for character in link:
+                try:
+                    TITLE = character.find('span', class_='name').text
+                    CHARACTERS.append(
+                        CharacterLink(
+                                      section=TITLE[0] if not TITLE[0].isnumeric() else '#',
+                                      title=TITLE,
+                                      url=character['href'],
+                                      total_entries=int(character.find('span', class_='count').text)))
+                except Exception as err:
+                    logging.error(err)
+        
+        return CharacterListPage(
+                                page=page,
+                                total_pages=int(TOTAL_PAGES),
+                                characters=CHARACTERS)
+
+    def get_artists(self, page: int = 1) -> ArtistListPage:
+        raise NotImplementedError
+
+    def get_tags(self, page: int = 1) -> TagListPage:
+        raise NotImplementedError
+
+    def get_groups(self, page: int = 1) -> GroupListPage:
+        raise NotImplementedError
+
 if __name__ == '__main__':
     nhentai = NHentai()
-    test = nhentai.get_pages(page=1)
+    test = nhentai.get_characters(page=32)
     print(test)

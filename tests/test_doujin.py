@@ -5,7 +5,7 @@ PACKAGE_PARENT = '../nhentai'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from nhentai import NHentai
+from NHentai import NHentai
 
 def test_case01():
     doujin = NHentai()._get_doujin('320165')
@@ -34,3 +34,4 @@ def test_case06():
 def test_case07():
     doujin = NHentai()._get_doujin('full color')
     assert doujin is None
+

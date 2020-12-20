@@ -12,6 +12,30 @@ class HomePage:
 class SearchPage:
     query: str
     sort: str
-    total_results: int
     total_pages: int
     doujins: List[DoujinThumbnail]
+
+@dataclass
+class GroupListPage:
+    page: int
+    total_pages: int
+    groups: List[str]
+
+@dataclass
+class CharacterListPage:
+    page: int
+    total_pages: int
+    characters: List[str]
+
+@dataclass
+class ArtistListPage:
+    page: int
+    total_pages: int
+    artists: List[str]
+
+@dataclass
+class TagListPage:
+    page: int
+    total_pages: int
+    tags: List[str]
+
