@@ -3,142 +3,145 @@ A NHentai API made using python webscrapping
 For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
 
 ### Instalation
- pip3 install --upgrade NHentai-API or pip install --upgrade NHentai-API
-
+```bash
+ pip install --upgrade NHentai-API
+ # or pip3 install --upgrade NHentai-API
+```
 ### Library Features
 
 - Home page pagination,
 - Doujin information,
 - Random doujin,
 - Search by id and tag,
-- User page
+- Character List
 
 ### Usage
 
 ##### Home
 
 ```python
-from nhentai import NHentai
+from Nhentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    random_doujin: dict = nhentai.get_pages(page=1)
+    random_doujin: HomePage = nhentai.get_pages(page=1)
 ```
 
-expected output:
+the expected output is a HomePage instance:
 ```python
-    {
-        'doujins': [{
-            'id': str, 
-            'title': str, 
-            'lang': str, 
-            'cover': str, 
-            'data-tags': list[str]
-        }], 
-        'totalPages': int
-    }
+    HomePage(
+        doujins: [
+            DoujinThumbnail(
+                id: str, 
+                title: str, 
+                lang: str, 
+                cover: str, 
+                data_tags: List[str])], 
+        total_pages: int)
 ```
 
 ##### Random
 
 ```python
-from nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    random_doujin: dict = nhentai.get_random()
+    random_doujin: Doujin = nhentai.get_random()
 ```
 
-expected output:
+The expected output is a Doujin instance:
 ```python
-    {
-        'id': str, 
-        'title': str, 
-        'secondary_title': str, 
-        'tags': list[str], 
-        'artists': list[str], 
-        'languages': list[str], 
-        'categories': list[str], 
-        'pages': list[str], 
-        'images': list[str]
-    }
+    Doujin(
+        id: str
+        title: str
+        secondary_title: str
+        tags: List[str]
+        artists: List[str]
+        languages: List[str]
+        categories: List[str]
+        characters: List[str]
+        parodies: List[str]
+        groups: List[str]
+        images: List[str]
+        total_pages: int)
 ```
+
+It's good always remember that some doujins doesnt have many properties that are listed above like artists, characters, parodies and more. This is only the default Doujin dataclass template.
 
 ##### Search
 
 ```python
-from nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    search_obj: dict = nhentai.search(query='naruto', sort='popular', page=1)
-    search_obj: dict = nhentai.search(query='30955', sort='popular', page=1)
+    search_obj: SearchPage = nhentai.search(query='naruto', sort='popular', page=1)
+    search_obj: SearchPage = nhentai.search(query='30955', sort='popular', page=1)
 ```
 
 expected output:
 ```python
-    {
-        'query': str, 
-        'sort': str, 
-        'totalResults': int, 
-        'doujins': [{
-            'id': str, 
-            'title': str', 
-            'lang': str, 
-            'cover': str, 
-            'data-tags': list[str]
-        }], 
-        'totalPages': int
-    }
-```
-
-##### User page
-
-```python
-from nhentai import NHentai
-
-if __name__ == '__main__':
-    nhentai = NHentai()
-    user: dict = nhentai.get_user_page(uid='1278294', username='alexandresenpai')
-```
-
-expected output:
-```python
-    {
-        'uid': str, 
-        'username': str, 
-        'image': str, 
-        'since': str, 
-        'doujins': [{
-            'id': str, 
-            'cover': str, 
-            'title': str, 
-            'data-tags': list[str]
-        }]
-    }
+    SearchPage(
+        query: str, 
+        sort: str, 
+        total_results: int, 
+        doujins: [
+            DoujinThumbnail(
+                id: str, 
+                title: str, 
+                lang: str, 
+                cover: str, 
+                data_tags: List[str])], 
+        total_pages: int)
 ```
 
 ##### Doujin
 
 ```python
-from nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    doujin: dict = nhentai._get_doujin(id='287167')
+    doujin: Doujin = nhentai._get_doujin(id='287167')
 ```
 
 expected output:
 ```python
-    {
-        'id': str, 
-        'title': str, 
-        'secondary_title': str, 
-        'tags': list[str], 
-        'artists': list[str], 
-        'languages': list[str], 
-        'categories': list[str], 
-        'pages': list[str], 
-        'images': list[str]
-    }
+    Doujin(
+        id: str
+        title: str
+        secondary_title: str
+        tags: List[str]
+        artists: List[str]
+        languages: List[str]
+        categories: List[str]
+        characters: List[str]
+        parodies: List[str]
+        groups: List[str]
+        images: List[str]
+        total_pages: int)
+```
+
+##### Characters
+
+```python
+from NHentai import NHentai
+
+if __name__ == '__main__':
+    nhentai = NHentai()
+    doujin: Doujin = nhentai.get_characters(page=1)
+```
+
+expected output:
+```python
+    CharacterListPage(
+                    page=int,
+                    total_pages=int,
+                    characters=[
+                        CharacterLink(
+                            section: str
+                            title: str
+                            url: str
+                            total_entries: int)])
 ```
