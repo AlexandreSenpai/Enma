@@ -5,9 +5,9 @@ import json
 from bs4 import BeautifulSoup
 import requests
 
-from entities.doujin import Doujin, DoujinThumbnail
-from entities.page import HomePage, SearchPage, TagListPage, GroupListPage, CharacterListPage, ArtistListPage
-from entities.links import CharacterLink 
+from .entities.doujin import Doujin, DoujinThumbnail
+from .entities.page import HomePage, SearchPage, TagListPage, GroupListPage, CharacterListPage, ArtistListPage
+from .entities.links import CharacterLink 
 
 class NHentai:
     def __init__(self):
