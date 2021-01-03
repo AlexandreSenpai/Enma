@@ -5,7 +5,7 @@ PACKAGE_PARENT = '..'
 SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
 sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
 
-from nhentai import NHentai
+from NHentai import NHentai
 
 def test_case01():
     doujin = NHentai().get_random()
@@ -16,7 +16,7 @@ def test_case01():
     assert doujin.artists is not None
     assert doujin.languages is not None
     assert doujin.categories is not None
-    assert doujin.pages is not None
+    assert doujin.total_pages is not None
     assert doujin.images is not None
 
 def test_case02():

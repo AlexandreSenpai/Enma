@@ -12,6 +12,7 @@ class HomePage:
 class SearchPage:
     query: str
     sort: str
+    total_results: int
     total_pages: int
     doujins: List[DoujinThumbnail]
 
