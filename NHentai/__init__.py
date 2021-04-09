@@ -120,7 +120,7 @@ class NHentai:
     
     def get_user_page(self, uid: str, username: str) -> dict:
         
-        """!!!!DEPRECATED!!!!
+        """!!!!!DEPRECATED!!!!!
         """
 
         user_page = requests.get(f'{self._BASE_URL}/users/{uid}/{username}')
@@ -232,17 +232,14 @@ class NHentai:
             for character in link:
                 try:
                     TITLE = character.find('span', class_='name').text
-                    CHARACTERS.append(
-                        CharacterLink(
-                                      section=TITLE[0] if not TITLE[0].isnumeric() else '#',
-                                      title=TITLE,
-                                      url=character['href'],
-                                      total_entries=int(character.find('span', class_='count').text)))
+                    CHARACTERS.append(CharacterLink(section=TITLE[0] if not TITLE[0].isnumeric() else '#',
+                                                    title=TITLE,
+                                                    url=character['href'],
+                                                    total_entries=int(character.find('span', class_='count').text)))
                 except Exception as err:
                     logging.error(err)
         
-        return CharacterListPage(
-                                page=page,
+        return CharacterListPage(page=page,
                                 total_pages=int(TOTAL_PAGES),
                                 characters=CHARACTERS)
 
