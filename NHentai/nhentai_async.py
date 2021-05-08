@@ -19,8 +19,7 @@ class NHentaiAsync(BaseWrapper):
         gets its informations and returns as a Doujin entity.
         """
 
-        SOUP = self._async_fetch(f'/g/{id}/')
-        SOUP = await SOUP
+        SOUP = await self._async_fetch(f'/g/{id}/')
 
         info_box = SOUP.find('div', id='info')
 
