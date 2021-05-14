@@ -1,5 +1,4 @@
 from typing import Dict, List
-import asyncio
 import logging
 
 from .base_wrapper import BaseWrapper
@@ -68,32 +67,31 @@ class NHentaiAsync(BaseWrapper):
                       images=IMAGES,
                       total_pages=len(IMAGES))
 
-    # def get_pages(self, page: int=1) -> HomePage:
-    #     """This method paginates through the homepage of NHentai and returns the doujins
-    #     initial information as id, title, language, cover and data-tags.
-    #     """
+    async def get_pages(self, page: int=1) -> HomePage:
+        """This method paginates through the homepage of NHentai and returns the doujins
+        initial information as id, title, language, cover and data-tags.
+        """
 
-    #     nhentai_homepage = requests.get(f'{self._BASE_URL}/?page={page}')
-    #     soup = BeautifulSoup(nhentai_homepage.content, 'html.parser')
+        SOUP = await self._async_fetch(f'/?page={page}')
 
-    #     pagination_section = soup.find('section', class_='pagination')
-    #     TOTAL_PAGES = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
-    #     DOUJINS = []
+        pagination_section = SOUP.find('section', class_='pagination')
+        TOTAL_PAGES = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
+        DOUJINS = []
 
-    #     doujin_boxes = soup.find_all('div', class_='gallery')
-    #     for item in doujin_boxes:
+        doujin_boxes = SOUP.find_all('div', class_='gallery')
+        for item in doujin_boxes:
 
-    #         TITLE = item.find('div', class_='caption').text
-    #         LANG = self._get_lang_by_title(TITLE)
+            TITLE = item.find('div', class_='caption').text
+            LANG = self._get_lang_by_title(TITLE)
 
-    #         DOUJINS.append(DoujinThumbnail(id=item.find('a', class_='cover')['href'].split('/')[2],
-    #                                        title=TITLE,
-    #                                        lang=LANG,
-    #                                        cover=item.find('img', class_='lazyload')['data-src'],
-    #                                        data_tags=item['data-tags'].split()))
+            DOUJINS.append(DoujinThumbnail(id=item.find('a', class_='cover')['href'].split('/')[2],
+                                           title=TITLE,
+                                           lang=LANG,
+                                           cover=item.find('img', class_='lazyload')['data-src'],
+                                           data_tags=item['data-tags'].split()))
         
-    #     return HomePage(doujins=DOUJINS,
-    #                     total_pages=TOTAL_PAGES)
+        return HomePage(doujins=DOUJINS,
+                        total_pages=TOTAL_PAGES)
     
     # def get_user_page(self, uid: str, username: str) -> dict:
         
@@ -131,92 +129,90 @@ class NHentaiAsync(BaseWrapper):
     #         'doujins': favs
     #     }
 
-    # def get_random(self) -> Doujin:
-    #     """This method retrieves a random doujin
-    #     """
+    async def get_random(self) -> Doujin:
+        """This method retrieves a random doujin
+        """
 
-    #     doujin_page = requests.get(f'{self._BASE_URL}/random/')
-    #     soup = BeautifulSoup(doujin_page.content, 'html.parser')
+        SOUP = await self._async_fetch(f'/random/')
 
-    #     id = soup.find('h3', id='gallery_id').text.replace('#', '')
+        id = SOUP.find('h3', id='gallery_id').text.replace('#', '')
 
-    #     doujin: Doujin = self.get_doujin(id=id)
+        doujin: Doujin = await self.get_doujin(id=id)
             
-    #     return doujin
+        return doujin
 
-    # def search(self, query: str, sort: str=None, page: int=1) -> SearchPage:
-    #     """This method retrieves the search page based on a query.
-    #     """
+    async def search(self, query: str, sort: str=None, page: int=1) -> SearchPage:
+        """This method retrieves the search page based on a query.
+        """
         
-    #     if query.isnumeric():
-    #         any_doujin = self.get_doujin(id=query)
-    #         if any_doujin is not None:
-    #             return any_doujin
+        if query.isnumeric():
+            any_doujin = await self.get_doujin(id=query)
+            if any_doujin is not None:
+                return any_doujin
 
-    #     if sort:
-    #         search_page = requests.get(f'{self._BASE_URL}/search/?q={query}&page={page}&sort={sort}')
-    #     else:
-    #         search_page = requests.get(f'{self._BASE_URL}/search/?q={query}&page={page}')
+        soup = None
 
-    #     soup = BeautifulSoup(search_page.content, 'html.parser')
+        if sort:
+            soup = await self._async_fetch(f'/search/?q={query}&page={page}&sort={sort}')
+        else:
+            soup = await self._async_fetch(f'/search/?q={query}&page={page}')
 
-    #     total_results = soup.find('div', id='content').find('h1').text.strip().split()[0]
+        total_results = soup.find('div', id='content').find('h1').text.strip().split()[0]
 
-    #     TOTAL_RESULTS = int(float(total_results.replace(',', '')))
-    #     TOTAL_PAGES = 0
-    #     DOUJINS = []
+        TOTAL_RESULTS = int(float(total_results.replace(',', '')))
+        TOTAL_PAGES = 0
+        DOUJINS = []
 
-    #     pagination_section = soup.find('section', class_='pagination')
-    #     if pagination_section is not None:
-    #         last_page_HTMLObj = pagination_section.find('a', class_='last')
-    #         if last_page_HTMLObj is not None:
-    #             TOTAL_PAGES = int(last_page_HTMLObj['href'].split('&')[1][5:])
-    #         else:
-    #             last_page_HTMLObj = pagination_section.find('a', class_='page current')
-    #             TOTAL_PAGES = int(last_page_HTMLObj['href'].split('&')[1][5:])
+        pagination_section = soup.find('section', class_='pagination')
+        if pagination_section is not None:
+            last_page_HTMLObj = pagination_section.find('a', class_='last')
+            if last_page_HTMLObj is not None:
+                TOTAL_PAGES = int(last_page_HTMLObj['href'].split('&')[1][5:])
+            else:
+                last_page_HTMLObj = pagination_section.find('a', class_='page current')
+                TOTAL_PAGES = int(last_page_HTMLObj['href'].split('&')[1][5:])
 
-    #     doujin_boxes = soup.find_all('div', class_='gallery')
-    #     for item in doujin_boxes:
+        doujin_boxes = soup.find_all('div', class_='gallery')
+        for item in doujin_boxes:
 
-    #         DOUJINS.append(DoujinThumbnail(id=item.find('a', class_='cover')['href'].split('/')[2],
-    #                                        title=item.find('div', class_='caption').text,
-    #                                        lang=self._get_lang_by_title(item.find('div', class_='caption').text),
-    #                                        cover=item.find('img', class_='lazyload')['data-src'],
-    #                                        data_tags=item['data-tags'].split()))
+            DOUJINS.append(DoujinThumbnail(id=item.find('a', class_='cover')['href'].split('/')[2],
+                                           title=item.find('div', class_='caption').text,
+                                           lang=self._get_lang_by_title(item.find('div', class_='caption').text),
+                                           cover=item.find('img', class_='lazyload')['data-src'],
+                                           data_tags=item['data-tags'].split()))
             
-    #     return SearchPage(query=query,
-    #                       sort=sort or 'recente',
-    #                       total_results=TOTAL_RESULTS,
-    #                       total_pages=TOTAL_PAGES,
-    #                       doujins=DOUJINS)
+        return SearchPage(query=query,
+                          sort=sort or 'recente',
+                          total_results=TOTAL_RESULTS,
+                          total_pages=TOTAL_PAGES,
+                          doujins=DOUJINS)
 
-    # def get_characters(self, page: int = 1) -> CharacterListPage:
-    #     """This method retrieves a list of characters that are available on NHentai site.
-    #     """
+    async def get_characters(self, page: int = 1) -> CharacterListPage:
+        """This method retrieves a list of characters that are available on NHentai site.
+        """
 
-    #     character_page = requests.get(f'{self._BASE_URL}/characters/?page={page}')
-    #     soup = BeautifulSoup(character_page.content, 'html.parser')
+        SOUP = await self._async_fetch(f'/characters/?page={page}')
 
-    #     pagination_section = soup.find('section', class_='pagination')
-    #     TOTAL_PAGES = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
-    #     CHARACTERS = []
+        pagination_section = SOUP.find('section', class_='pagination')
+        TOTAL_PAGES = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
+        CHARACTERS = []
 
-    #     character_list_section = soup.find('div', class_='container')
-    #     section = character_list_section.find_all('section')
-    #     for link in section:
-    #         for character in link:
-    #             try:
-    #                 TITLE = character.find('span', class_='name').text
-    #                 CHARACTERS.append(CharacterLink(section=TITLE[0] if not TITLE[0].isnumeric() else '#',
-    #                                                 title=TITLE,
-    #                                                 url=character['href'],
-    #                                                 total_entries=int(character.find('span', class_='count').text)))
-    #             except Exception as err:
-    #                 logging.error(err)
+        character_list_section = SOUP.find('div', class_='container')
+        section = character_list_section.find_all('section')
+        for link in section:
+            for character in link:
+                try:
+                    TITLE = character.find('span', class_='name').text
+                    CHARACTERS.append(CharacterLink(section=TITLE[0] if not TITLE[0].isnumeric() else '#',
+                                                    title=TITLE,
+                                                    url=character['href'],
+                                                    total_entries=int(character.find('span', class_='count').text)))
+                except Exception as err:
+                    logging.error(err)
         
-    #     return CharacterListPage(page=page,
-    #                             total_pages=int(TOTAL_PAGES),
-    #                             characters=CHARACTERS)
+        return CharacterListPage(page=page,
+                                 total_pages=int(TOTAL_PAGES),
+                                 characters=CHARACTERS)
 
     # def get_artists(self, page: int = 1) -> ArtistListPage:
     #     raise NotImplementedError
