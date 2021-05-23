@@ -6,7 +6,7 @@ def readme():
 
 setup(
     name='NHentai-API',
-    version='0.0.14',
+    version='0.0.16',
     description='NHentai Python API made using webscraping.',
     long_description=readme(),
     long_description_content_type='text/markdown',
@@ -18,10 +18,10 @@ setup(
     url='https://github.com/AlexandreSenpai/NHentai-API',
     author='AlexandreSenpai',
     author_email='alexandrebsramos@hotmail.com',
-    keywords='nhentai hentai AlexandreSenpai',
+    keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
     license='MIT',
     packages=['NHentai', 'NHentai.entities'],
-    install_requires=['requests', 'beautifulsoup4'],
+    install_requires=['requests', 'beautifulsoup4', 'aiohttp'],
     include_package_data=True,
     zip_safe=False
 )

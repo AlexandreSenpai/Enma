@@ -30,14 +30,13 @@ if __name__ == '__main__':
 
 the expected output is a HomePage instance:
 ```python
-    HomePage(
-        doujins: [DoujinThumbnail(id: str,
-                                  title: str,
-                                  lang: str,
-                                  cover: str,
-                                  url: str,
-                                  data_tags: List[str])], 
-        total_pages: int)
+    HomePage(doujins: [DoujinThumbnail(id: str,
+                                       title: str,
+                                       lang: str,
+                                       cover: str,
+                                       url: str,
+                                       data_tags: List[str])], 
+             total_pages: int)
 ```
 
 ##### Random
