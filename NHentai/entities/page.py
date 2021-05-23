@@ -40,3 +40,7 @@ class TagListPage:
     total_pages: int
     tags: List[str]
 
+@dataclass
+class PopularPage:
+    doujins: List[DoujinThumbnail]
+    total_doujins: int

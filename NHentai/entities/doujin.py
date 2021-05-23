@@ -22,4 +22,5 @@ class DoujinThumbnail:
     title: str
     lang: str
     cover: str
+    url: str
     data_tags: list

@@ -5,9 +5,14 @@ from bs4 import BeautifulSoup
 from aiohttp import ClientSession
 import requests
 
+from .entities.doujin import Doujin, DoujinThumbnail
+from .entities.page import HomePage, SearchPage, TagListPage, GroupListPage, CharacterListPage, ArtistListPage, PopularPage
+from .entities.links import CharacterLink 
+
 class BaseWrapper:
-    def __init__(self, base_url: str):
-        self.BASE_URL = base_url[:-1] if base_url[-1] == '/' else base_url
+    def __init__(self):
+        self._BASE_URL = 'https://nhentai.net'
+        self._IMAGE_BASE_URL = 'https://i.nhentai.net/galleries'
         self._SUPORTED_LANG = {'English': 'english', 'Chinese': 'chinese'}
         self._event_loop = get_event_loop()
     
@@ -34,7 +39,7 @@ class BaseWrapper:
 
     def _fetch(self, page_path: str) -> BeautifulSoup:
         page_path = page_path[1:] if page_path[0] == '/' else page_path
-        PAGE_REQUEST = requests.get(f'{self.BASE_URL}/{page_path}')
+        PAGE_REQUEST = requests.get(f'{self._BASE_URL}/{page_path}')
         if PAGE_REQUEST.status_code == 200:
             return BeautifulSoup(PAGE_REQUEST.content, 'html.parser')
         else:
@@ -43,7 +48,7 @@ class BaseWrapper:
     async def _async_fetch(self, page_path: str) -> BeautifulSoup:
         page_path = page_path[1:] if page_path[0] == '/' else page_path
         async with ClientSession() as session:
-            async with session.get(f'{self.BASE_URL}/{page_path}') as response:
+            async with session.get(f'{self._BASE_URL}/{page_path}') as response:
                 if response.status == 200:
                     CONTENT = await response.read()
                     return BeautifulSoup(CONTENT, 'html.parser')

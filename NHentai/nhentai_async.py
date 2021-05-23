@@ -1,18 +1,15 @@
-from typing import Dict, List
 import logging
 
 from .base_wrapper import BaseWrapper
-from .entities.doujin import Doujin, DoujinThumbnail
-from .entities.page import HomePage, SearchPage, TagListPage, GroupListPage, CharacterListPage, ArtistListPage
-from .entities.links import CharacterLink 
+from .base_wrapper import (Doujin, 
+                           DoujinThumbnail,
+                           HomePage, 
+                           SearchPage,
+                           CharacterListPage,
+                           PopularPage,
+                           CharacterLink) 
 
 class NHentaiAsync(BaseWrapper):
-    def __init__(self):
-        self._BASE_URL = 'https://nhentai.net'
-        self._IMAGE_BASE_URL = 'https://i.nhentai.net/galleries'
-
-        super().__init__(base_url=self._BASE_URL)
-
     async def get_doujin(self, id: str) -> Doujin:
         """This method receives a string id as parameter, 
         gets its informations and returns as a Doujin entity.
@@ -80,15 +77,18 @@ class NHentaiAsync(BaseWrapper):
 
         doujin_boxes = SOUP.find_all('div', class_='gallery')
         for item in doujin_boxes:
+            DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
+            DOUJIN_TITLE = item.find('div', class_='caption').text
+            DOUJIN_LANG = self._get_lang_by_title(DOUJIN_TITLE)
+            DOUJIN_COVER = item.find('img', class_='lazyload')['data-src']
+            DOUJIN_TAGS = item['data-tags'].split()
 
-            TITLE = item.find('div', class_='caption').text
-            LANG = self._get_lang_by_title(TITLE)
-
-            DOUJINS.append(DoujinThumbnail(id=item.find('a', class_='cover')['href'].split('/')[2],
-                                           title=TITLE,
-                                           lang=LANG,
-                                           cover=item.find('img', class_='lazyload')['data-src'],
-                                           data_tags=item['data-tags'].split()))
+            DOUJINS.append(DoujinThumbnail(id=DOUJIN_ID,
+                                           title=DOUJIN_TITLE,
+                                           lang=DOUJIN_LANG,
+                                           cover=DOUJIN_COVER,
+                                           url=f"{self._BASE_URL}/g/{DOUJIN_ID}",
+                                           data_tags=DOUJIN_TAGS))
         
         return HomePage(doujins=DOUJINS,
                         total_pages=TOTAL_PAGES)
@@ -175,11 +175,18 @@ class NHentaiAsync(BaseWrapper):
         doujin_boxes = soup.find_all('div', class_='gallery')
         for item in doujin_boxes:
 
-            DOUJINS.append(DoujinThumbnail(id=item.find('a', class_='cover')['href'].split('/')[2],
-                                           title=item.find('div', class_='caption').text,
-                                           lang=self._get_lang_by_title(item.find('div', class_='caption').text),
-                                           cover=item.find('img', class_='lazyload')['data-src'],
-                                           data_tags=item['data-tags'].split()))
+            DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
+            DOUJIN_TITLE = item.find('div', class_='caption').text
+            DOUJIN_LANG = self._get_lang_by_title(item.find('div', class_='caption').text)
+            DOUJIN_COVER = item.find('img', class_='lazyload')['data-src']
+            DOUJIN_TAGS = item['data-tags'].split()
+
+            DOUJINS.append(DoujinThumbnail(id=DOUJIN_ID,
+                                           title=DOUJIN_TITLE,
+                                           lang=DOUJIN_LANG,
+                                           cover=DOUJIN_COVER,
+                                           url=f"{self._BASE_URL}/g/{DOUJIN_ID}",
+                                           data_tags=DOUJIN_TAGS))
             
         return SearchPage(query=query,
                           sort=sort or 'recente',
@@ -213,6 +220,31 @@ class NHentaiAsync(BaseWrapper):
         return CharacterListPage(page=page,
                                  total_pages=int(TOTAL_PAGES),
                                  characters=CHARACTERS)
+
+    async def get_popular_now(self):
+        """This method retrieves a list of the current most popular doujins
+        """
+
+        SOUP = await self._async_fetch(f'/')
+        
+        popular_section = SOUP.find('div', class_='index-popular')
+        DOUJINS = []
+
+        for item in popular_section.find_all('div', class_='gallery'):
+            DOUJIN_TITLE = item.find('div', class_='caption').text
+            DOUJIN_LANG = self._get_lang_by_title(DOUJIN_TITLE)
+            DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
+            DOUJIN_COVER = item.find('img', class_='lazyload')['data-src']
+
+            DOUJINS.append(DoujinThumbnail(id=DOUJIN_ID,
+                                           title=DOUJIN_TITLE,
+                                           lang=DOUJIN_LANG,
+                                           cover=DOUJIN_COVER,
+                                           url=f"{self._BASE_URL}/g/{DOUJIN_ID}",
+                                           data_tags=item['data-tags'].split()))
+        
+        return PopularPage(doujins=DOUJINS,
+                           total_doujins=len(DOUJINS))
 
     # def get_artists(self, page: int = 1) -> ArtistListPage:
     #     raise NotImplementedError
