@@ -1,4 +1,5 @@
 import logging
+from typing import AsyncGenerator
 
 from .base_wrapper import BaseWrapper
 from .base_wrapper import (Doujin, 
@@ -193,7 +194,11 @@ class NHentaiAsync(BaseWrapper):
                           total_results=TOTAL_RESULTS,
                           total_pages=TOTAL_PAGES,
                           doujins=DOUJINS)
-
+    
+    async def search_pages(self, query: str, sort: str=None, max_pages: int=1) -> AsyncGenerator[SearchPage, None]:
+        for page in range(1, max_pages + 1):
+            yield await self.search(query=query, sort=sort, page=page)
+    
     async def get_characters(self, page: int = 1) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
         """
