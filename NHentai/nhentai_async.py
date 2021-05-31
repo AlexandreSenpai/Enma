@@ -1,13 +1,17 @@
 import logging
 
 from .base_wrapper import BaseWrapper
-from .base_wrapper import (Doujin, 
-                           DoujinThumbnail,
-                           HomePage, 
-                           SearchPage,
-                           CharacterListPage,
-                           PopularPage,
-                           CharacterLink) 
+from .entities.doujin import Doujin, DoujinThumbnail, Title, Tag, Page, Cover
+from .entities.page import (HomePage, 
+                            SearchPage, 
+                            TagListPage, 
+                            GroupListPage, 
+                            CharacterListPage, 
+                            ArtistListPage, 
+                            PopularPage)
+from .entities.links import CharacterLink 
+from .entities.options import Sort
+
 
 class NHentaiAsync(BaseWrapper):
     async def get_doujin(self, id: str) -> Doujin:

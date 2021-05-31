@@ -7,6 +7,8 @@ from .doujin import DoujinThumbnail
 class HomePage:
     doujins: List[DoujinThumbnail]
     total_pages: int = 0
+    per_page: int = 0
+    page: int = 1
 
 @dataclass
 class SearchPage:
