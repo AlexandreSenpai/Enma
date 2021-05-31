@@ -1,4 +1,5 @@
 import logging
+import asyncio
 from typing import AsyncGenerator
 
 from .base_wrapper import BaseWrapper
@@ -195,9 +196,28 @@ class NHentaiAsync(BaseWrapper):
                           total_pages=TOTAL_PAGES,
                           doujins=DOUJINS)
     
-    async def search_pages(self, query: str, sort: str=None, max_pages: int=1) -> AsyncGenerator[SearchPage, None]:
+    async def search_pages(self,
+                           query: str,
+                           sort: str=None,
+                           max_pages: int=1,
+                           *, concurrent_tasks: int=3)
+                           -> AsyncGenerator[SearchPage, None]:
+        TASKS = []
+        
         for page in range(1, max_pages + 1):
-            yield await self.search(query=query, sort=sort, page=page)
+            if len(TASKS) < concurrent_tasks:
+                task = asyncio.ensure_future(self.search(query=query, sort=sort, page=page))
+                TASKS.append(task)
+            
+            else:
+                for task in await asyncio.gather(*TASKS):
+                    yield task
+                
+                TASKS = []
+        
+        # yield remaining tasks
+        for task in await asyncio.gather(*TASKS):
+            yield task
     
     async def get_characters(self, page: int = 1) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
