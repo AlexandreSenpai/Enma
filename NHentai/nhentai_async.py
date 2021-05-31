@@ -210,14 +210,14 @@ class NHentaiAsync(BaseWrapper):
                 TASKS.append(task)
             
             else:
-                for task in await asyncio.gather(*TASKS):
-                    yield task
+                for task in TASKS:
+                    yield await task
                 
                 TASKS = []
         
         # yield remaining tasks
-        for task in await asyncio.gather(*TASKS):
-            yield task
+        for task in TASKS:
+            yield await task
     
     async def get_characters(self, page: int = 1) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
