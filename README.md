@@ -1,12 +1,21 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/alexandresenpai/nhentai-api/badge)](https://www.codefactor.io/repository/github/alexandresenpai/nhentai-api)
+[![PyPI download month](https://img.shields.io/pypi/dm/NHentai-API.svg)](https://pypi.python.org/pypi/NHentai-API/)
+[![codecov](https://codecov.io/gh/AlexandreSenpai/NHentai-API/branch/master/graph/badge.svg?token=F3LP15DYMR)](https://codecov.io/gh/AlexandreSenpai/NHentai-API)
+[![Python 3.7+](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/release/python-370/)
+[![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+
 # NHentai API
+
 A NHentai API made using python webscrapping
 For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
 
 ### Instalation
+
 ```bash
  pip install --upgrade NHentai-API
  # or pip3 install --upgrade NHentai-API
 ```
+
 ### Library Features
 
 - Home page pagination,
@@ -29,13 +38,14 @@ if __name__ == '__main__':
 ```
 
 the expected output is a HomePage instance:
+
 ```python
     HomePage(doujins: [DoujinThumbnail(id: str,
                                        title: str,
                                        lang: str,
                                        cover: str,
                                        url: str,
-                                       data_tags: List[str])], 
+                                       data_tags: List[str])],
              total_pages: int)
 ```
 
@@ -50,6 +60,7 @@ if __name__ == '__main__':
 ```
 
 The expected output is a Doujin instance:
+
 ```python
     Doujin(id: str
            title: str
@@ -79,16 +90,17 @@ if __name__ == '__main__':
 ```
 
 expected output:
+
 ```python
-    SearchPage(query: str, 
-               sort: str, 
-               total_results: int, 
+    SearchPage(query: str,
+               sort: str,
+               total_results: int,
                doujins: [DoujinThumbnail(id: str,
-                                         title: str, 
-                                         lang: str, 
+                                         title: str,
+                                         lang: str,
                                          cover: str,
                                          url: str,
-                                         data_tags: List[str])], 
+                                         data_tags: List[str])],
                total_pages: int)
 ```
 
@@ -103,6 +115,7 @@ if __name__ == '__main__':
 ```
 
 expected output:
+
 ```python
     Doujin(id: str
            title: str
@@ -129,6 +142,7 @@ if __name__ == '__main__':
 ```
 
 expected output:
+
 ```python
     CharacterListPage(page=int,
                       total_pages=int,
@@ -149,10 +163,11 @@ if __name__ == '__main__':
 ```
 
 expected output:
+
 ```python
     PopularPage(doujins=List[DoujinThumbnail(id: str,
-                                             title: str, 
-                                             lang: str, 
+                                             title: str,
+                                             lang: str,
                                              cover: str,
                                              url: str,
                                              data_tags: List[str])],
@@ -160,12 +175,13 @@ expected output:
 ```
 
 ## Introducing NHentai Async
+
 This is the first version of the asynchronous nhentai scrapper. The methods works in the very same way as the base nhentai scrapper, but to make it works you'll have to work with asyncio module using an event loop that you can import from it or get from NHentaiAsync class property: `event_loop`.
 
 Since we're working with async functions, you can only call the NHentaiAsync methods from inside an async funcion or context.
 
 ```py
-from NHentai.nhentai_async import NHentaiAsync 
+from NHentai.nhentai_async import NHentaiAsync
 
 if __name__ == '__main__':
     nhentai_async = NHentaiAsync()
@@ -177,7 +193,7 @@ if __name__ == '__main__':
 or even
 
 ```python
-from NHentai.nhentai_async import NHentaiAsync 
+from NHentai.nhentai_async import NHentaiAsync
 
 nhentai_async = NHentaiAsync()
 
