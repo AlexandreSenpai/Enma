@@ -114,8 +114,8 @@ class Doujin:
                     'language': []}
 
         for tag in ALL_TAGS:
-                if TAG_DICT.get(TAG_TYPE := tag.get('type')) is not None:
-                    TAG_DICT[TAG_TYPE].append(Tag.from_json(tag))
+                if TAG_DICT.get(tag.get('type')) is not None:
+                    TAG_DICT[tag.get('type')].append(Tag.from_json(tag))
 
         COVER = Cover.from_json(json_object=json_object.get('images').get('cover'), media_id=MEDIA_ID)
         PAGES = [DoujinPage.from_json(page, index, MEDIA_ID)
