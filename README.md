@@ -30,7 +30,7 @@ For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
 ##### Home
 
 ```python
-from NHentai.nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
@@ -40,19 +40,21 @@ if __name__ == '__main__':
 the expected output is a HomePage instance:
 
 ```python
-    HomePage(doujins: [DoujinThumbnail(id: str,
-                                       title: str,
-                                       lang: str,
-                                       cover: str,
-                                       url: str,
-                                       data_tags: List[str])],
-             total_pages: int)
+    Page(doujins: [DoujinThumbnail(id: str,
+                                    title: str,
+                                    lang: str,
+                                    cover: str,
+                                    url: str,
+                                    tags: List[str])],
+        total_pages: int,
+        total_results: int,
+        per_page: int)
 ```
 
 ##### Random
 
 ```python
-from NHentai.nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
@@ -62,18 +64,20 @@ if __name__ == '__main__':
 The expected output is a Doujin instance:
 
 ```python
-    Doujin(id: str
-           title: str
-           secondary_title: str
-           tags: List[str]
-           artists: List[str]
-           languages: List[str]
-           categories: List[str]
-           characters: List[str]
-           parodies: List[str]
-           groups: List[str]
-           images: List[str]
-           total_pages: int)
+    Doujin(id: int
+            media_id: str
+            upload_at: datetime
+            title: List[Title]
+            tags: List[Tag]
+            artists: List[Tag]
+            languages: List[Tag]
+            categories: List[Tag]
+            characters: List[Tag]
+            parodies: List[Tag]
+            groups: List[Tag]
+            cover: str
+            images: List[DoujinPage]
+            total_pages: int)
 ```
 
 It's good always remember that some doujins doesnt have many properties that are listed above like artists, characters, parodies and more. This is only the default Doujin dataclass template.
@@ -81,33 +85,33 @@ It's good always remember that some doujins doesnt have many properties that are
 ##### Search
 
 ```python
-from NHentai.nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
-    search_obj: SearchPage = nhentai.search(query='naruto', sort='popular', page=1)
-    search_obj: SearchPage = nhentai.search(query='30955', sort='popular', page=1)
+    search_obj: SearchPage = nhentai.search(query='naruto', sort=Sort.TODAY, page=1)
+    search_obj: SearchPage = nhentai.search(query='30955', page=1)
 ```
 
 expected output:
 
 ```python
-    SearchPage(query: str,
-               sort: str,
-               total_results: int,
+    SearchPage(query: str
+               sort: str
+               total_results: int
+               total_pages: int
                doujins: [DoujinThumbnail(id: str,
                                          title: str,
                                          lang: str,
                                          cover: str,
                                          url: str,
-                                         data_tags: List[str])],
-               total_pages: int)
+                                         tags: List[str])])
 ```
 
 ##### Doujin
 
 ```python
-from NHentai.nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
@@ -117,24 +121,26 @@ if __name__ == '__main__':
 expected output:
 
 ```python
-    Doujin(id: str
-           title: str
-           secondary_title: str
-           tags: List[str]
-           artists: List[str]
-           languages: List[str]
-           categories: List[str]
-           characters: List[str]
-           parodies: List[str]
-           groups: List[str]
-           images: List[str]
-           total_pages: int)
+    Doujin(id: int
+            media_id: str
+            upload_at: datetime
+            title: List[Title]
+            tags: List[Tag]
+            artists: List[Tag]
+            languages: List[Tag]
+            categories: List[Tag]
+            characters: List[Tag]
+            parodies: List[Tag]
+            groups: List[Tag]
+            cover: str
+            images: List[DoujinPage]
+            total_pages: int)
 ```
 
 ##### Characters
 
 ```python
-from NHentai.nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
@@ -155,7 +161,7 @@ expected output:
 ##### Most Popular
 
 ```python
-from NHentai.nhentai import NHentai
+from NHentai import NHentai
 
 if __name__ == '__main__':
     nhentai = NHentai()
@@ -170,7 +176,7 @@ expected output:
                                              lang: str,
                                              cover: str,
                                              url: str,
-                                             data_tags: List[str])],
+                                             tags: List[str])],
                 total_doujins: int)
 ```
 
@@ -181,7 +187,7 @@ This is the first version of the asynchronous nhentai scrapper. The methods work
 Since we're working with async functions, you can only call the NHentaiAsync methods from inside an async funcion or context.
 
 ```py
-from NHentai.nhentai_async import NHentaiAsync
+from NHentai import NHentaiAsync
 
 if __name__ == '__main__':
     nhentai_async = NHentaiAsync()
@@ -193,7 +199,7 @@ if __name__ == '__main__':
 or even
 
 ```python
-from NHentai.nhentai_async import NHentaiAsync
+from NHentai import NHentaiAsync
 
 nhentai_async = NHentaiAsync()
 
