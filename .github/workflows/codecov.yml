@@ -21,7 +21,7 @@ jobs:
       - name: Generate Code Coverage Report
         run: |
           pip install pytest pytest-cov
-          python -m pytest --cov=NHentai-API/. --cov-report=xml NHentai-API/tests
+          pytest --cov=. --cov-report=xml ./tests
       - name: Upload Report to codecov website
         uses: codecov/codecov-action@v1
         with:
