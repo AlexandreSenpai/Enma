@@ -42,14 +42,14 @@ async def test_async_case01():
         assert d.title is not None
         assert d.languages is not None
 
-@pytest.mark.asyncio
-async def test_async_case02():
-    doujins = await NHentaiAsync().get_popular_now()
-    for doujin in doujins.doujins:
-        assert isinstance(doujin, DoujinThumbnail)
+# @pytest.mark.asyncio
+# async def test_async_case02():
+#     doujins = await NHentaiAsync().get_popular_now()
+#     for doujin in doujins.doujins:
+#         assert isinstance(doujin, DoujinThumbnail)
 
-@pytest.mark.asyncio
-async def test_async_case03():
-    doujin = await NHentaiAsync().get_popular_now()
-    assert isinstance(doujin, PopularPage)
+# @pytest.mark.asyncio
+# async def test_async_case03():
+#     doujin = await NHentaiAsync().get_popular_now()
+#     assert isinstance(doujin, PopularPage)
 
