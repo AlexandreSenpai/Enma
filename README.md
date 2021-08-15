@@ -6,18 +6,19 @@
 
 # NHentai API
 
-A NHentai API made using python webscrapping
-For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
+An NHentai API made using python webscrapping. \
+For update notes, follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
 
-### Instalation
-
+### Installation
 ```bash
- pip install --upgrade NHentai-API
- # or pip3 install --upgrade NHentai-API
+pip install --upgrade NHentai-API
+```
+or
+```
+pip3 install --upgrade NHentai-API
 ```
 
 ### Library Features
-
 - Home page pagination,
 - Doujin information,
 - Random doujin,
@@ -25,179 +26,180 @@ For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
 - Character List
 - Popular List
 
-### Usage
-
-##### Home
+### Home
 
 ```python
 from NHentai import NHentai
 
-if __name__ == '__main__':
-    nhentai = NHentai()
-    random_doujin: HomePage = nhentai.get_pages(page=1)
+nhentai = NHentai()
+random_doujin: HomePage = nhentai.get_pages(page=1)
 ```
-
-the expected output is a HomePage instance:
-
+The expected output is a HomePage instance:
 ```python
-    Page(doujins: [DoujinThumbnail(id: str,
-                                    title: str,
-                                    lang: str,
-                                    cover: str,
-                                    url: str,
-                                    tags: List[str])],
-        total_pages: int,
-        total_results: int,
-        per_page: int)
+Page(
+    doujins: List[
+        DoujinThumbnail(
+           id: str,
+           title: str,
+           lang: str,
+           cover: str,
+           url: str,
+           tags: List[str]
+        )
+    ],
+
+    total_pages: int,
+    total_results: int,
+    per_page: int)
 ```
 
-##### Random
-
+### Random
 ```python
 from NHentai import NHentai
 
-if __name__ == '__main__':
-    nhentai = NHentai()
-    random_doujin: Doujin = nhentai.get_random()
+nhentai = NHentai()
+random_doujin: Doujin = nhentai.get_random()
 ```
-
 The expected output is a Doujin instance:
-
 ```python
-    Doujin(id: int
-            media_id: str
-            upload_at: datetime
-            title: List[Title]
-            tags: List[Tag]
-            artists: List[Tag]
-            languages: List[Tag]
-            categories: List[Tag]
-            characters: List[Tag]
-            parodies: List[Tag]
-            groups: List[Tag]
-            cover: str
-            images: List[DoujinPage]
-            total_pages: int)
+Doujin(
+    id: int,
+    media_id: str,
+    upload_at: datetime,
+    title: List[Title],
+    tags: List[Tag],
+    artists: List[Tag],
+    languages: List[Tag],
+    categories: List[Tag],
+    characters: List[Tag],
+    parodies: List[Tag],
+    groups: List[Tag],
+    cover: str,
+    images: List[DoujinPage],
+    total_pages: int
+)
 ```
+Note: Not all doujins have certain properties like `tags`, `artists`, etc. They could be an empty list or a NoneType value.
 
-It's good always remember that some doujins doesnt have many properties that are listed above like artists, characters, parodies and more. This is only the default Doujin dataclass template.
-
-##### Search
-
-```python
-from NHentai import NHentai
-
-if __name__ == '__main__':
-    nhentai = NHentai()
-    search_obj: SearchPage = nhentai.search(query='naruto', sort=Sort.TODAY, page=1)
-    search_obj: SearchPage = nhentai.search(query='30955', page=1)
-```
-
-expected output:
-
-```python
-    SearchPage(query: str
-               sort: str
-               total_results: int
-               total_pages: int
-               doujins: [DoujinThumbnail(id: str,
-                                         title: str,
-                                         lang: str,
-                                         cover: str,
-                                         url: str,
-                                         tags: List[str])])
-```
-
-##### Doujin
-
+### Search
 ```python
 from NHentai import NHentai
 
-if __name__ == '__main__':
-    nhentai = NHentai()
-    doujin: Doujin = nhentai.get_doujin(id='287167')
+nhentai = NHentai()
+search_obj: SearchPage = nhentai.search(query='naruto', sort=Sort.TODAY, page=1)
+search_obj: SearchPage = nhentai.search(query='30955', page=1)
 ```
-
-expected output:
-
+The expected output is a SearchPage instance:
 ```python
-    Doujin(id: int
-            media_id: str
-            upload_at: datetime
-            title: List[Title]
-            tags: List[Tag]
-            artists: List[Tag]
-            languages: List[Tag]
-            categories: List[Tag]
-            characters: List[Tag]
-            parodies: List[Tag]
-            groups: List[Tag]
-            cover: str
-            images: List[DoujinPage]
-            total_pages: int)
+SearchPage(
+    query: str
+    sort: str
+    total_results: int
+    total_pages: int
+    doujins: List[
+        DoujinThumbnail(
+            id: str,
+            title: str,
+            lang: str,
+            cover: str,
+            url: str,
+            tags: List[str]
+        )
+    ]
+)
 ```
 
-##### Characters
-
-```python
-from NHentai import NHentai
-
-if __name__ == '__main__':
-    nhentai = NHentai()
-    doujin: CharacterListPage = nhentai.get_characters(page=1)
-```
-
-expected output:
-
-```python
-    CharacterListPage(page=int,
-                      total_pages=int,
-                      characters=[CharacterLink(section: str
-                                                title: str
-                                                url: str
-                                                total_entries: int)])
-```
-
-##### Most Popular
-
+### Doujin
 ```python
 from NHentai import NHentai
 
-if __name__ == '__main__':
-    nhentai = NHentai()
-    doujins: PopularPage = nhentai.get_popular_now()
+nhentai = NHentai()
+doujin: Doujin = nhentai.get_doujin(id='287167')
 ```
-
-expected output:
-
+The expected output is a Doujin instance:
 ```python
-    PopularPage(doujins=List[DoujinThumbnail(id: str,
-                                             title: str,
-                                             lang: str,
-                                             cover: str,
-                                             url: str,
-                                             tags: List[str])],
-                total_doujins: int)
+Doujin(
+    id: int,
+    media_id: str,
+    upload_at: datetime,
+    title: List[Title],
+    tags: List[Tag],
+    artists: List[Tag],
+    languages: List[Tag],
+    categories: List[Tag],
+    characters: List[Tag],
+    parodies: List[Tag],
+    groups: List[Tag],
+    cover: str,
+    images: List[DoujinPage],
+    total_pages: int
+)
 ```
 
-## Introducing NHentai Async
+### Characters
+```python
+from NHentai import NHentai
 
-This is the first version of the asynchronous nhentai scrapper. The methods works in the very same way as the base nhentai scrapper, but to make it works you'll have to work with asyncio module using an event loop that you can import from it or get from NHentaiAsync class property: `event_loop`.
+nhentai = NHentai()
+doujin: CharacterListPage = nhentai.get_characters(page=1)
+```
+The expected output is a CharacterListPage instance:
+```python
+CharacterListPage(
+    page=int,
+    total_pages=int,
+    characters: List[
+        CharacterLink(
+            section: str,
+            title: str,
+            url: str,
+            total_entries: int
+        )
+    ]
+)
+```
+
+### Most Popular
+```python
+from NHentai import NHentai
+
+nhentai = NHentai()
+doujins: PopularPage = nhentai.get_popular_now()
+```
+The expected output is a PopularPage instance:
+```python
+PopularPage(
+    total_doujins: int
+    doujins: List[
+        DoujinThumbnail(
+            id: str,
+            title: str,
+            lang: str,
+            cover: str,
+            url: str,
+            tags: List[str]
+        )
+    ],
+)
+```
+
+# NHentai API Async
+
+This is the first version of the asynchronous nhentai scrapper. The methods work in the very same way as the base nhentai scrapper, but to make it work you'll have to work with asyncio module using an event loop that you can import from it or get from NHentaiAsync class property: `event_loop`.
 
 Since we're working with async functions, you can only call the NHentaiAsync methods from inside an async funcion or context.
+If you are already working in an async event loop, such as a python Discord API like `discord.py`, you can simply await calls that you would otherwise have to call `run_until_complete` on top of.
 
+Async example 1:
 ```py
 from NHentai import NHentaiAsync
 
-if __name__ == '__main__':
-    nhentai_async = NHentaiAsync()
-    event_loop = nhentai_async.event_loop
-    popular = event_loop.run_until_complete(nhentai_async.get_popular_now())
-    print(popular)
+nhentai_async = NHentaiAsync()
+event_loop = nhentai_async.event_loop
+popular = event_loop.run_until_complete(nhentai_async.get_popular_now())
+print(popular)
 ```
-
-or even
-
+Async example 2:
 ```python
 from NHentai import NHentaiAsync
 
@@ -207,7 +209,17 @@ async def get_popular():
     popular = await nhentai_async.get_popular_now()
     print(popular)
 
-if __name__ == '__main__':
-    event_loop = nhentai_async.event_loop
-    event_loop.run_until_complete(get_popular())
+event_loop = nhentai_async.event_loop
+event_loop.run_until_complete(get_popular())
 ```
+
+Await example:
+```python
+from NHentai import NHentaiAsync
+nhentai_async = NHentaiAsync()
+
+# Run in an async function or you will get an error: `'await' outside async function`.
+popular = await nhentai_async.get_popular_now()
+print(popular)
+```
+
