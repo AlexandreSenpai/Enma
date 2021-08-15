@@ -1,6 +1,9 @@
+from NHentai.entities.utils import Mimes
 from dataclasses import dataclass
 from typing import List, Optional
 from urllib.parse import urljoin
+from datetime import datetime
+
 from ..base_wrapper import BaseWrapper
 
 @dataclass
@@ -20,7 +23,7 @@ class Title:
         return cls(*args.values())
 
 @dataclass
-class Page:
+class DoujinPage:
     index: int
     media_id: int
     width: int
@@ -34,16 +37,31 @@ class Page:
                 "media_id": media_id, 
                 "width": json_object.get('w'), 
                 "height": json_object.get('h'),
-                "mime": BaseWrapper._MIMES[json_object.get('t')], 
-                "src": urljoin(BaseWrapper._IMAGE_BASE_URL, f'{media_id}/{page_index+1}.{BaseWrapper._MIMES[json_object.get("t")]}')}
+                "mime": Mimes[json_object.get('t').upper()].value, 
+                "src": urljoin(BaseWrapper._IMAGE_BASE_URL, f'{media_id}/{page_index+1}.{Mimes[json_object.get("t").upper()].value}')}
         
         return cls(*args.values())
 
 @dataclass
-class Cover(Page): ...
+class Cover:
+	media_id: int
+	width: int
+	height: int
+	mime: str
+	src: str
+
+	@classmethod
+	def from_json(cls, json_object: dict, media_id: str=None):
+		args = {"media_id": media_id,  
+                        "width": json_object.get('w'), 
+                        "height": json_object.get('h'),
+                        "mime": Mimes[json_object.get('t').upper()].value, 
+                        "src": urljoin(BaseWrapper._TINY_IMAGE_BASE_URL, f'{media_id}/cover.{Mimes[json_object.get("t").upper()].value}')}
+		
+		return cls(*args.values())
 
 @dataclass
-class Thumbnail(Page): ...
+class Thumbnail: ...
 
 @dataclass
 class Tag:
@@ -66,7 +84,9 @@ class Tag:
 
 @dataclass
 class Doujin:
-    id: str
+    id: int
+    media_id: str
+    upload_at: datetime
     title: List[Title]
     tags: List[Tag]
     artists: List[Tag]
@@ -75,35 +95,70 @@ class Doujin:
     characters: List[Tag]
     parodies: List[Tag]
     groups: List[Tag]
-    images: List[Page]
-    total_pages: int = 0
-
-@dataclass
-class DoujinThumbnail:
-    id: str
-    media_id: str
-    title: str
-    lang: str
     cover: str
-    url: str
-    tags: list
+    images: List[DoujinPage]
+    total_pages: int = 0
 
     @classmethod
     def from_json(cls, json_object: dict):
-        args = {"id": json_object.get('id'), 
-                "media_id": json_object.get('media_id'), 
-                "title": Title(english=json_object.get('title', {}).get('english'), 
-                               japanese=json_object.get('title', {}).get('japanese'), 
+
+        ALL_TAGS = json_object.get('tags')
+        MEDIA_ID = json_object.get('media_id')
+
+        TAG_DICT = {'tag': [],
+                    'artist': [],
+                    'group': [],
+                    'parody': [],
+                    'character': [],
+                    'category': [],
+                    'language': []}
+
+        for tag in ALL_TAGS:
+                if TAG_DICT.get(TAG_TYPE := tag.get('type')) is not None:
+                    TAG_DICT[TAG_TYPE].append(Tag.from_json(tag))
+
+        COVER = Cover.from_json(json_object=json_object.get('images').get('cover'), media_id=MEDIA_ID)
+        PAGES = [DoujinPage.from_json(page, index, MEDIA_ID)
+                 for index, page in enumerate(json_object.get('images').get('pages'))]
+
+        args = {"id": json_object.get('id'),
+                "media_id": json_object.get('media_id'),
+                "upload_at": datetime.fromtimestamp(json_object.get('upload_date')),
+                "title": Title(english=json_object.get('title', {}).get('english'),
+                               japanese=json_object.get('title', {}).get('japanese'),
                                chinese=json_object.get('title', {}).get('chinese'),
                                pretty=json_object.get('title', {}).get('pretty')),
-                "lang": BaseWrapper._get_lang_by_title(title=json_object.get('title', {}).get('english')),
-                "cover": Cover(index=1,
-                               media_id=json_object.get('media_id'),
-                               mime=BaseWrapper._MIMES[json_object.get("images").get("cover").get("t")],
-                               width=json_object.get("images").get("cover").get("w"),
-                               height=json_object.get("images").get("cover").get("h"),
-                               src=urljoin(BaseWrapper._TINY_IMAGE_BASE_URL, f'{json_object.get("media_id")}/cover.{BaseWrapper._MIMES[json_object.get("images").get("cover").get("t")]}')),
-                "url": urljoin(BaseWrapper._BASE_URL, f'g/{json_object.get("id")}'),
-                "tags": [Tag.from_json(tag) for tag in json_object.get('tags')]}
-
+                "tags": [Tag.from_json(tag) for tag in ALL_TAGS],
+                "artists": TAG_DICT['artist'],
+                "languages": TAG_DICT['language'],
+                "categories": TAG_DICT['category'],
+                "characters": TAG_DICT['character'],
+                "parodies": TAG_DICT['parody'],
+                "groups": TAG_DICT['group'],
+                "cover": COVER,
+                "images": PAGES,
+                "total_pages": len(PAGES)}
+        
         return cls(*args.values())
+
+@dataclass
+class DoujinThumbnail:
+	id: str
+	media_id: str
+	title: List[Title]
+	languages: List[Tag]
+	cover: Cover
+	url: str
+	tags: List[Tag]
+
+	@classmethod
+	def from_json(cls, json_object: dict):
+		args = {"id": json_object.get('id'), 
+                        "media_id": json_object.get('media_id'), 
+                        "title": Title.from_json(json_object=json_object.get('title')),
+                        "languages":  [Tag.from_json(tag) for tag in json_object.get('tags') if tag.get('type') == 'language'],
+                        "cover": Cover.from_json(json_object=json_object.get('images').get('cover')),
+                        "url": urljoin(BaseWrapper._BASE_URL, f'g/{json_object.get("id")}'),
+                        "tags": [Tag.from_json(tag) for tag in json_object.get('tags')]}
+
+		return cls(*args.values())

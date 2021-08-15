@@ -1,0 +1,9 @@
+coverage:
+  status:
+    patch:
+      default:
+        target: 90%
+        threshold: 5%
+  ignore:
+    - "setup.py"
+    - "tests/test_*.py"

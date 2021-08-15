@@ -5,8 +5,8 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from NHentai.nhentai import NHentai
-from NHentai.nhentai_async import NHentaiAsync
+from NHentai import NHentai
+from NHentai import NHentaiAsync
 
 def test_standard_payload_integrity_home_page():
     pages = NHentai().get_pages()
@@ -16,9 +16,9 @@ def test_standard_payload_integrity_home_page():
     for doujin in doujins:
         assert doujin.id is not None 
         assert doujin.title is not None 
-        assert doujin.lang is not None 
+        assert doujin.languages is not None 
         assert doujin.cover is not None 
-        assert doujin.data_tags is not None 
+        assert doujin.tags is not None 
 
 def test_standard_payload_integrity_characters_page():
     chars = NHentai().get_characters()
@@ -40,9 +40,9 @@ async def test_async_payload_integrity_home_page():
     for doujin in doujins:
         assert doujin.id is not None 
         assert doujin.title is not None 
-        assert doujin.lang is not None 
+        assert doujin.languages is not None 
         assert doujin.cover is not None 
-        assert doujin.data_tags is not None 
+        assert doujin.tags is not None 
 
 @pytest.mark.asyncio
 async def test_async_payload_integrity_characters_page():

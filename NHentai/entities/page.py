@@ -1,14 +1,15 @@
 from typing import List
 from dataclasses import dataclass
 
-from .doujin import DoujinThumbnail
+from .doujin import Doujin, DoujinThumbnail
 
 @dataclass
-class HomePage:
+class Page:
     doujins: List[DoujinThumbnail]
-    total_pages: int = 0
-    per_page: int = 0
-    page: int = 1
+    total_results: int
+    total_pages: int
+    per_page: int
+    page: int
 
 @dataclass
 class SearchPage:

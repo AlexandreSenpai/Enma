@@ -5,14 +5,13 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from NHentai.nhentai import NHentai
-from NHentai.nhentai_async import NHentaiAsync
+from NHentai import NHentai
+from NHentai import NHentaiAsync
 
 def test_standard_case01():
     doujin = NHentai().get_random()
     assert doujin.id is not None
     assert doujin.title is not None
-    assert doujin.secondary_title is not None
     assert doujin.tags is not None
     assert doujin.artists is not None
     assert doujin.languages is not None
@@ -49,7 +48,6 @@ async def test_async_case01():
     doujin = await NHentaiAsync().get_random()
     assert doujin.id is not None
     assert doujin.title is not None
-    assert doujin.secondary_title is not None
     assert doujin.tags is not None
     assert doujin.artists is not None
     assert doujin.languages is not None
