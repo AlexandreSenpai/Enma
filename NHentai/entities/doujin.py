@@ -1,3 +1,4 @@
+from NHentai.entities.base_entity import BaseClass
 from NHentai.entities.utils import Mimes
 from dataclasses import dataclass
 from typing import List, Optional
@@ -7,7 +8,7 @@ from datetime import datetime
 from ..base_wrapper import BaseWrapper
 
 @dataclass
-class Title:
+class Title(BaseClass):
     english: Optional[str]
     japanese: Optional[str]
     chinese: Optional[str]
@@ -15,15 +16,15 @@ class Title:
 
     @classmethod
     def from_json(cls, json_object):
-        args = {"english": json_object.get('title', {}).get('english'),
-                "japanese": json_object.get('title', {}).get('japanese'),
-                "chinese": json_object.get('title', {}).get('chinese'),
-                "pretty": json_object.get('title', {}).get('pretty')}
+        args = {"english": json_object.get('english'),
+                "japanese": json_object.get('japanese'),
+                "chinese": json_object.get('chinese'),
+                "pretty": json_object.get('pretty')}
         
         return cls(*args.values())
 
 @dataclass
-class DoujinPage:
+class DoujinPage(BaseClass):
     index: int
     media_id: int
     width: int
@@ -43,7 +44,7 @@ class DoujinPage:
         return cls(*args.values())
 
 @dataclass
-class Cover:
+class Cover(BaseClass):
 	media_id: int
 	width: int
 	height: int
@@ -51,20 +52,20 @@ class Cover:
 	src: str
 
 	@classmethod
-	def from_json(cls, json_object: dict, media_id: str=None):
-		args = {"media_id": media_id,  
+	def from_json(cls, json_object: dict):
+		args = {"media_id": json_object.get('media_id'),  
                         "width": json_object.get('w'), 
                         "height": json_object.get('h'),
                         "mime": Mimes[json_object.get('t').upper()].value, 
-                        "src": urljoin(BaseWrapper._TINY_IMAGE_BASE_URL, f'{media_id}/cover.{Mimes[json_object.get("t").upper()].value}')}
+                        "src": urljoin(BaseWrapper._TINY_IMAGE_BASE_URL, f'{json_object.get("media_id")}/cover.{Mimes[json_object.get("t").upper()].value}')}
 		
 		return cls(*args.values())
 
 @dataclass
-class Thumbnail: ...
+class Thumbnail(BaseClass): ...
 
 @dataclass
-class Tag:
+class Tag(BaseClass):
     id: int
     type: str
     name: str
@@ -83,7 +84,7 @@ class Tag:
         return cls(*args.values())
 
 @dataclass
-class Doujin:
+class Doujin(BaseClass):
     id: int
     media_id: str
     upload_at: datetime
@@ -95,7 +96,7 @@ class Doujin:
     characters: List[Tag]
     parodies: List[Tag]
     groups: List[Tag]
-    cover: str
+    cover: Cover
     images: List[DoujinPage]
     total_pages: int = 0
 
@@ -117,17 +118,14 @@ class Doujin:
                 if TAG_DICT.get(tag.get('type')) is not None:
                     TAG_DICT[tag.get('type')].append(Tag.from_json(tag))
 
-        COVER = Cover.from_json(json_object=json_object.get('images').get('cover'), media_id=MEDIA_ID)
+        COVER = Cover.from_json(json_object={**json_object.get('images').get('cover'), "media_id": MEDIA_ID})
         PAGES = [DoujinPage.from_json(page, index, MEDIA_ID)
                  for index, page in enumerate(json_object.get('images').get('pages'))]
 
         args = {"id": json_object.get('id'),
                 "media_id": json_object.get('media_id'),
                 "upload_at": datetime.fromtimestamp(json_object.get('upload_date')),
-                "title": Title(english=json_object.get('title', {}).get('english'),
-                               japanese=json_object.get('title', {}).get('japanese'),
-                               chinese=json_object.get('title', {}).get('chinese'),
-                               pretty=json_object.get('title', {}).get('pretty')),
+                "title": Title.from_json(json_object.get('title', {})),
                 "tags": [Tag.from_json(tag) for tag in ALL_TAGS],
                 "artists": TAG_DICT['artist'],
                 "languages": TAG_DICT['language'],
@@ -142,7 +140,7 @@ class Doujin:
         return cls(*args.values())
 
 @dataclass
-class DoujinThumbnail:
+class DoujinThumbnail(BaseClass):
 	id: str
 	media_id: str
 	title: List[Title]
@@ -153,12 +151,12 @@ class DoujinThumbnail:
 
 	@classmethod
 	def from_json(cls, json_object: dict):
-		args = {"id": json_object.get('id'), 
+                args = {"id": json_object.get('id'), 
                         "media_id": json_object.get('media_id'), 
                         "title": Title.from_json(json_object=json_object.get('title')),
                         "languages":  [Tag.from_json(tag) for tag in json_object.get('tags') if tag.get('type') == 'language'],
-                        "cover": Cover.from_json(json_object=json_object.get('images').get('cover')),
+                        "cover": Cover.from_json(json_object={**json_object.get('images').get('cover'), "media_id": json_object.get('media_id')}),
                         "url": urljoin(BaseWrapper._BASE_URL, f'g/{json_object.get("id")}'),
                         "tags": [Tag.from_json(tag) for tag in json_object.get('tags')]}
 
-		return cls(*args.values())
+                return cls(*args.values())
