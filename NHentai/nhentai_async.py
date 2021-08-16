@@ -4,20 +4,19 @@ import asyncio
 from typing import AsyncGenerator
 from urllib.parse import urljoin
 
+from .utils.cache import Cache
 from .base_wrapper import BaseWrapper
-from .entities.doujin import Doujin, DoujinThumbnail, Title, Tag, DoujinPage, Cover
+from .entities.doujin import Doujin, DoujinThumbnail
 from .entities.page import (Page, 
-                            SearchPage, 
-                            TagListPage, 
-                            GroupListPage, 
-                            CharacterListPage, 
-                            ArtistListPage, 
+                            SearchPage,
+                            CharacterListPage,
                             PopularPage)
 from .entities.links import CharacterLink 
 from .entities.options import Sort
 
 
 class NHentaiAsync(BaseWrapper):
+    @Cache(max_age_seconds=3600, max_size=100, cache_key_position=1, cache_key_name='id').async_cache
     async def get_doujin(self, id: str) -> Doujin:
         """This method fetches a doujin information based on id.
 
@@ -33,6 +32,7 @@ class NHentaiAsync(BaseWrapper):
         """
 
         print(f'INFO::Retrieving doujin with id {id}')
+        id = str(id)
 
         if not id.isnumeric() or id[0] == '0':
             print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
@@ -48,6 +48,7 @@ class NHentaiAsync(BaseWrapper):
 
         return Doujin.from_json(SOUP)
 
+    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').async_cache
     async def get_pages(self, page: int=1) -> Page:
         """This method paginates through the homepage of NHentai and returns the doujins.
 
@@ -74,7 +75,7 @@ class NHentaiAsync(BaseWrapper):
                     total_results=TOTAL_RESULTS,
                     total_pages=PAGES,
                     per_page=PER_PAGE,
-                    page=page)
+                    page=int(page))
 
     async def get_random(self) -> Doujin:
         """This method retrieves a random doujin.
@@ -156,7 +157,8 @@ class NHentaiAsync(BaseWrapper):
         for task in TASKS:
             yield await task
     
-    async def get_characters(self, page: int = 1) -> CharacterListPage:
+    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').async_cache
+    async def get_characters(self, page) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
 
         Args:

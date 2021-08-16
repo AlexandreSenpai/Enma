@@ -6,8 +6,8 @@
 
 # NHentai API
 
-An NHentai API made using python webscrapping. \
-For update notes, follow me on [Twitter](https://twitter.com/AlexandreSenpa1).
+A NHentai API made using python webscrapping. \
+For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1) or join on NHentai-API [discord server](https://discord.gg/576uSRDD)
 
 ### Installation
 ```bash

@@ -1,10 +1,10 @@
-import json
 import logging
 from typing import Optional, Union
 from urllib.parse import urljoin
+from .utils.cache import Cache
 
 from .base_wrapper import BaseWrapper
-from .entities.doujin import Doujin, DoujinThumbnail, Title, Tag, DoujinPage, Cover
+from .entities.doujin import Doujin, DoujinThumbnail
 from .entities.page import (Page, 
                             SearchPage, 
                             TagListPage, 
@@ -16,6 +16,7 @@ from .entities.links import CharacterLink
 from .entities.options import Sort
 
 class NHentai(BaseWrapper):
+    @Cache(max_age_seconds=3600, max_size=100, cache_key_position=1, cache_key_name='id').cache
     def get_doujin(self, id: str) -> Doujin:
         """This method fetches a doujin information based on id.
 
@@ -46,7 +47,8 @@ class NHentai(BaseWrapper):
 
         return Doujin.from_json(SOUP)
 
-    def get_pages(self, page: Optional[int]=1) -> Page:
+    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').cache
+    def get_pages(self, page: int) -> Page:
         """This method paginates through the homepage of NHentai and returns the doujins.
 
         Args:
@@ -132,7 +134,8 @@ class NHentai(BaseWrapper):
                           total_pages=SOUP.get('num_pages'),
                           doujins=DOUJINS)
 
-    def get_characters(self, page: int = 1) -> CharacterListPage:
+    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').cache
+    def get_characters(self, page: int) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
 
         Args:
