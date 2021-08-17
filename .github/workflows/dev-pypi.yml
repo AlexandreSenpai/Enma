@@ -2,7 +2,7 @@ name: Development Pypi
 on:
   push:
     branches:
-      - "ci/pypi-dev-workflow"
+      - "dev"
 jobs:
   pypi:
     name: Pypi
