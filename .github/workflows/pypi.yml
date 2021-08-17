@@ -14,9 +14,10 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.9
-      - name: Navigating back
+      - name: Changing package name
         run: |
-          cd ..sudo mv && NHentai ./dev_nhentai
+          cd ..
+          mv NHentai ./dev_nhentai
       - name: Create dist folder
         run: |
           python dev_setup.py sdist --dist-dir=./dev_dist
