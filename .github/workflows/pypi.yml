@@ -1,0 +1,28 @@
+name: dev-pypi
+on:
+  push:
+    branches:
+      - "dev"
+jobs:
+  pypi:
+    name: Pypi
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.9
+      - name: Renaming root folder
+          run: |
+            cd .. && sudo mv NHentai ./dev_nhentai
+      - name: Create dist folder
+        run: |
+          python dev-setup.py sdist --dist-dir=./dev_dist
+      - name: Publish a Python distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dev_dist/

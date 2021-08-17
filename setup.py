@@ -5,7 +5,7 @@ def readme():
         return f.read()
 
 setup(
-    name='NHentai-API',
+    name='dev-nhentai-build',
     version='0.0.16',
     description='NHentai Python API made using webscraping.',
     long_description=readme(),
@@ -20,8 +20,8 @@ setup(
     author_email='alexandrebsramos@hotmail.com',
     keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
     license='MIT',
-    packages=['NHentai', 'NHentai.entities', 'NHentai.utils'],
+    packages=['dev_nhentai', 'dev_nhentai.entities', 'dev_nhentai.utils'],
     install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict'],
     include_package_data=True,
-    zip_safe=False
+    zip_safe=False,
 )
