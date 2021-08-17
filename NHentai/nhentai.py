@@ -16,7 +16,7 @@ from .entities.links import CharacterLink
 from .entities.options import Sort
 
 class NHentai(BaseWrapper):
-    @Cache(max_age_seconds=3600, max_size=100, cache_key_position=1, cache_key_name='id').cache
+    @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='id').cache
     def get_doujin(self, id: str) -> Doujin:
         """This method fetches a doujin information based on id.
 
@@ -32,6 +32,7 @@ class NHentai(BaseWrapper):
         """
 
         print(f'INFO::Retrieving doujin with id {id}')
+        id = str(id)
 
         if not id.isnumeric() or id[0] == '0':
             print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
@@ -47,7 +48,7 @@ class NHentai(BaseWrapper):
 
         return Doujin.from_json(SOUP)
 
-    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').cache
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').cache
     def get_pages(self, page: int) -> Page:
         """This method paginates through the homepage of NHentai and returns the doujins.
 
@@ -134,7 +135,7 @@ class NHentai(BaseWrapper):
                           total_pages=SOUP.get('num_pages'),
                           doujins=DOUJINS)
 
-    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').cache
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').cache
     def get_characters(self, page: int) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
 

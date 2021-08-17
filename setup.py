@@ -20,8 +20,8 @@ setup(
     author_email='alexandrebsramos@hotmail.com',
     keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
     license='MIT',
-    packages=['NHentai', 'NHentai.entities'],
-    install_requires=['requests', 'beautifulsoup4', 'aiohttp'],
+    packages=['NHentai', 'NHentai.entities', 'NHentai.utils'],
+    install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict'],
     include_package_data=True,
     zip_safe=False
 )

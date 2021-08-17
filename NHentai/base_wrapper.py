@@ -15,6 +15,9 @@ class BaseWrapper:
     _TINY_IMAGE_BASE_URL = _IMAGE_BASE_URL.replace('/i.', '/t.')
 
     _event_loop = get_event_loop()
+
+    def __init__(self, cache_size: int=100):
+        self.cache_size: cache_size
     
     @property
     def event_loop(self) -> AbstractEventLoop:

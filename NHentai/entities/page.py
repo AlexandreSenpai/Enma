@@ -1,4 +1,4 @@
-from NHentai.entities.base_entity import BaseClass
+from .base_entity import BaseClass
 from typing import List
 from dataclasses import dataclass
 
