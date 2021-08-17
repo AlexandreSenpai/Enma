@@ -16,11 +16,13 @@ jobs:
           python-version: 3.9
       - name: Changing package name
         run: |
-          cd ..
           mv NHentai ./dev_nhentai
       - name: Create dist folder
         run: |
           python dev_setup.py sdist --dist-dir=./dev_dist
+      - name: Checking folder
+        run: |
+          ls
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
