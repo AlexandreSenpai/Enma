@@ -14,9 +14,9 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.9
-      - name: Renaming root folder
-          run: |
-            cd .. && sudo mv NHentai ./dev_nhentai
+      - name: Navigating back
+        run: |
+          cd ..sudo mv NHentai ./dev_nhentai
       - name: Create dist folder
         run: |
           python dev-setup.py sdist --dist-dir=./dev_dist
