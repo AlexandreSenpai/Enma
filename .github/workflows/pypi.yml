@@ -19,7 +19,7 @@ jobs:
           cd ..sudo mv NHentai ./dev_nhentai
       - name: Create dist folder
         run: |
-          python dev-setup.py sdist --dist-dir=./dev_dist
+          python dev_setup.py sdist --dist-dir=./dev_dist
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
