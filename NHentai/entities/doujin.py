@@ -1,5 +1,5 @@
-from NHentai.entities.base_entity import BaseClass
-from NHentai.entities.utils import Mimes
+from .base_entity import BaseClass
+from .utils import Mimes
 from dataclasses import dataclass
 from typing import List, Optional
 from urllib.parse import urljoin
@@ -88,6 +88,7 @@ class Doujin(BaseClass):
     id: int
     media_id: str
     upload_at: datetime
+    url: str
     title: List[Title]
     tags: List[Tag]
     artists: List[Tag]
@@ -98,6 +99,7 @@ class Doujin(BaseClass):
     groups: List[Tag]
     cover: Cover
     images: List[DoujinPage]
+    total_favorites: int = 0
     total_pages: int = 0
 
     @classmethod
@@ -125,6 +127,7 @@ class Doujin(BaseClass):
         args = {"id": json_object.get('id'),
                 "media_id": json_object.get('media_id'),
                 "upload_at": datetime.fromtimestamp(json_object.get('upload_date')),
+                "url": urljoin(BaseWrapper._BASE_URL, f'g/{json_object.get("id")}'),
                 "title": Title.from_json(json_object.get('title', {})),
                 "tags": [Tag.from_json(tag) for tag in ALL_TAGS],
                 "artists": TAG_DICT['artist'],
@@ -135,6 +138,7 @@ class Doujin(BaseClass):
                 "groups": TAG_DICT['group'],
                 "cover": COVER,
                 "images": PAGES,
+                "total_favorites": int(json_object.get('num_favorites')),
                 "total_pages": len(PAGES)}
         
         return cls(*args.values())

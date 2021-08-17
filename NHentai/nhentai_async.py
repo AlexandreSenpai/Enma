@@ -16,7 +16,7 @@ from .entities.options import Sort
 
 
 class NHentaiAsync(BaseWrapper):
-    @Cache(max_age_seconds=3600, max_size=100, cache_key_position=1, cache_key_name='id').async_cache
+    @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='id').async_cache
     async def get_doujin(self, id: str) -> Doujin:
         """This method fetches a doujin information based on id.
 
@@ -48,7 +48,7 @@ class NHentaiAsync(BaseWrapper):
 
         return Doujin.from_json(SOUP)
 
-    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').async_cache
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').async_cache
     async def get_pages(self, page: int=1) -> Page:
         """This method paginates through the homepage of NHentai and returns the doujins.
 
@@ -115,7 +115,6 @@ class NHentaiAsync(BaseWrapper):
             
             You can access the dataclasses informations at `entities` package.
         """
-        
 
         if query.isnumeric():
             any_doujin: Doujin = await self.get_doujin(id=query)
@@ -157,7 +156,7 @@ class NHentaiAsync(BaseWrapper):
         for task in TASKS:
             yield await task
     
-    @Cache(max_age_seconds=3600, max_size=5, cache_key_position=1, cache_key_name='page').async_cache
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').async_cache
     async def get_characters(self, page) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
 

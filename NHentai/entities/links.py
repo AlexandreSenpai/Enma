@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from NHentai.entities.base_entity import BaseClass
+from .base_entity import BaseClass
 
 @dataclass
 class CharacterLink(BaseClass):
