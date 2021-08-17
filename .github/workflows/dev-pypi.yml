@@ -14,12 +14,15 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.9
+      - name: Setting environment name
+        run: |
+          environment_name='dev'
       - name: Changing package name
         run: |
           mv NHentai ./dev_nhentai
       - name: Create dist folder
         run: |
-          python dev_setup.py sdist --dist-dir=./dev_dist
+          python setup.py sdist --dist-dir=./dev_dist
       - name: Checking folder
         run: |
           ls
