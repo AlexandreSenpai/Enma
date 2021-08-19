@@ -39,12 +39,13 @@ The expected output is a HomePage instance:
 Page(
     doujins: List[
         DoujinThumbnail(
-           id: str,
-           title: str,
-           lang: str,
-           cover: str,
-           url: str,
-           tags: List[str]
+	        id: str
+	        media_id: str
+	        title: List[Title]
+	        languages: List[Tag]
+	        cover: Cover
+	        url: str
+	        tags: List[Tag]
         )
     ],
 
@@ -63,20 +64,22 @@ random_doujin: Doujin = nhentai.get_random()
 The expected output is a Doujin instance:
 ```python
 Doujin(
-    id: int,
-    media_id: str,
-    upload_at: datetime,
-    title: List[Title],
-    tags: List[Tag],
-    artists: List[Tag],
-    languages: List[Tag],
-    categories: List[Tag],
-    characters: List[Tag],
-    parodies: List[Tag],
-    groups: List[Tag],
-    cover: str,
-    images: List[DoujinPage],
-    total_pages: int
+    id: int
+    media_id: str
+    upload_at: datetime
+    url: str
+    title: List[Title]
+    tags: List[Tag]
+    artists: List[Tag]
+    languages: List[Tag]
+    categories: List[Tag]
+    characters: List[Tag]
+    parodies: List[Tag]
+    groups: List[Tag]
+    cover: Cover
+    images: List[DoujinPage]
+    total_favorites: int = 0
+    total_pages: int = 0
 )
 ```
 Note: Not all doujins have certain properties like `tags`, `artists`, etc. They could be an empty list or a NoneType value.
@@ -98,12 +101,13 @@ SearchPage(
     total_pages: int
     doujins: List[
         DoujinThumbnail(
-            id: str,
-            title: str,
-            lang: str,
-            cover: str,
-            url: str,
-            tags: List[str]
+	        id: str
+	        media_id: str
+	        title: List[Title]
+	        languages: List[Tag]
+	        cover: Cover
+	        url: str
+	        tags: List[Tag]
         )
     ]
 )
@@ -119,20 +123,22 @@ doujin: Doujin = nhentai.get_doujin(id='287167')
 The expected output is a Doujin instance:
 ```python
 Doujin(
-    id: int,
-    media_id: str,
-    upload_at: datetime,
-    title: List[Title],
-    tags: List[Tag],
-    artists: List[Tag],
-    languages: List[Tag],
-    categories: List[Tag],
-    characters: List[Tag],
-    parodies: List[Tag],
-    groups: List[Tag],
-    cover: str,
-    images: List[DoujinPage],
-    total_pages: int
+    id: int
+    media_id: str
+    upload_at: datetime
+    url: str
+    title: List[Title]
+    tags: List[Tag]
+    artists: List[Tag]
+    languages: List[Tag]
+    categories: List[Tag]
+    characters: List[Tag]
+    parodies: List[Tag]
+    groups: List[Tag]
+    cover: Cover
+    images: List[DoujinPage]
+    total_favorites: int = 0
+    total_pages: int = 0
 )
 ```
 
@@ -146,13 +152,13 @@ doujin: CharacterListPage = nhentai.get_characters(page=1)
 The expected output is a CharacterListPage instance:
 ```python
 CharacterListPage(
-    page=int,
-    total_pages=int,
+    page: int
+    total_pages: int
     characters: List[
         CharacterLink(
-            section: str,
-            title: str,
-            url: str,
+            section: str
+            title: str
+            url: str
             total_entries: int
         )
     ]
@@ -172,12 +178,13 @@ PopularPage(
     total_doujins: int
     doujins: List[
         DoujinThumbnail(
-            id: str,
-            title: str,
-            lang: str,
-            cover: str,
-            url: str,
-            tags: List[str]
+	        id: str
+	        media_id: str
+	        title: List[Title]
+	        languages: List[Tag]
+	        cover: Cover
+	        url: str
+	        tags: List[Tag]
         )
     ],
 )
