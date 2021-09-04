@@ -10,7 +10,7 @@ env = os.getenv('environment_name') or 'dev'
 if env == 'prd':
     setup(
         name='NHentai-API',
-        version='0.0.16',
+        version='0.0.17',
         description='NHentai Python API made using webscraping.',
         long_description=readme(),
         long_description_content_type='text/markdown',
@@ -32,7 +32,7 @@ if env == 'prd':
 elif env == 'dev':
     setup(
         name='dev-nhentai-build',
-        version='0.0.5',
+        version='0.0.6',
         description='NHentai Python API made using webscraping.',
         long_description=readme(),
         long_description_content_type='text/markdown',
