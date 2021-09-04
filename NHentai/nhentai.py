@@ -1,137 +1,94 @@
 import logging
+from typing import Optional, Union
+from urllib.parse import urljoin
+from .utils.cache import Cache
 
 from .base_wrapper import BaseWrapper
-from .base_wrapper import (Doujin, 
-                           DoujinThumbnail,
-                           HomePage, 
-                           SearchPage, 
-                           TagListPage, 
-                           GroupListPage, 
-                           CharacterListPage, 
-                           ArtistListPage, 
-                           PopularPage,
-                           CharacterLink) 
+from .entities.doujin import Doujin, DoujinThumbnail
+from .entities.page import (Page, 
+                            SearchPage, 
+                            TagListPage, 
+                            GroupListPage, 
+                            CharacterListPage, 
+                            ArtistListPage, 
+                            PopularPage)
+from .entities.links import CharacterLink 
+from .entities.options import Sort
 
 class NHentai(BaseWrapper):
+    @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='id').cache
     def get_doujin(self, id: str) -> Doujin:
-        """This method receives a string id as parameter, 
-        gets its informations and returns as a Doujin entity.
+        """This method fetches a doujin information based on id.
+
+        Args:
+            id: 
+                Id of the target doujin.
+
+        Returns:
+            Doujin: 
+                dataclass with the doujin information within.
+            
+            You can access the dataclasses informations at `entities` package.
         """
 
-        SOUP = self._fetch(f'/g/{id}/')
+        print(f'INFO::Retrieving doujin with id {id}')
+        id = str(id)
 
-        info_box = SOUP.find('div', id='info')
-
-        if info_box is None:
+        if not id.isnumeric() or id[0] == '0':
+            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
             return None
 
-        title_section = info_box.find('h2', class_='title')
-        
-        TITLE = info_box.find('h1', class_='title').find('span', class_='pretty').text
-        SECONDARY_TITLE = title_section.text if title_section is not None else ''
-        IMAGES = []
-        TAGS_TO_DICT = {}
+        SOUP = self._fetch(urljoin(self._API_URL, f'gallery/{id}'), is_json=True)
 
-        # Getting dinamically the doujin properties
-        # This looping may return information as tags, artists, languages, categories and more.
-        tags = info_box.find_all('div', class_='tag-container field-name')
+        if SOUP.get('error'):
+            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
+            return None
+         
+        print(f'INFO::Sucessfully retrieved doujin {id}')
 
-        for item in tags:
-            for i in item.find('span', class_='tags').find_all('a', class_='tag'):
+        return Doujin.from_json(SOUP)
+
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').cache
+    def get_pages(self, page: int) -> Page:
+        """This method paginates through the homepage of NHentai and returns the doujins.
+
+        Args:
+            page: 
+                number of the pagination page.
+
+        Returns:
+            HomePage: 
+                dataclass with a list of DoujinThumbnail.
             
-                if TAGS_TO_DICT.get(item.text.strip().split()[0].lower().replace(':', '')) is None:
-                    TAGS_TO_DICT[item.text.strip().split()[0].lower().replace(':', '')] = []
-
-                TAGS_TO_DICT[item.text.strip().split()[0].lower().replace(':', '')].append(i.find('span', class_='name').text)            
-        
-        # Getting dinamically the doujin images
-        # This looping gets the images id from its thumbs then uses it to create the page final url.
-        thumbs = SOUP.findAll('div', class_='thumb-container')
-
-        for thumb in thumbs:
-            img = thumb.find('img', class_='lazyload')['data-src']
-            img_original_size = img.split('/')
-            gallery_id = img_original_size[4]
-            IMAGES.append(f'{self._IMAGE_BASE_URL}/{gallery_id}/{img_original_size[-1].replace("t", "")}')
-        
-        return Doujin(id=id,
-                      title=TITLE,
-                      secondary_title=SECONDARY_TITLE,
-                      tags=TAGS_TO_DICT.get('tags', []),
-                      artists=TAGS_TO_DICT.get('artists', []),
-                      groups=TAGS_TO_DICT.get('groups', []),
-                      languages=TAGS_TO_DICT.get('languages', []),
-                      categories=TAGS_TO_DICT.get('categories', []),
-                      characters=TAGS_TO_DICT.get('characters', []),
-                      parodies=TAGS_TO_DICT.get('parodies', []),
-                      images=IMAGES,
-                      total_pages=len(IMAGES))
-
-    def get_pages(self, page: int=1) -> HomePage:
-        """This method paginates through the homepage of NHentai and returns the doujins
-        initial information as id, title, language, cover and data-tags.
+            You can access the dataclasses informations at `entities` package.
         """
 
-        SOUP = self._fetch(f'/?page={page}')
+        print(f'INFO::Fetching page {page}')
+        SOUP = self._fetch(urljoin(self._API_URL, f'galleries/all?page={page}'), is_json=True)
 
-        pagination_section = SOUP.find('section', class_='pagination')
-        TOTAL_PAGES = int(pagination_section.find('a', class_='last')['href'].split('=')[-1])
-        DOUJINS = []
+        DOUJINS = [DoujinThumbnail.from_json(json_obj) for json_obj in SOUP.get('result')]
+        PAGES = SOUP.get('num_pages')
+        PER_PAGE = SOUP.get('per_page')
+        TOTAL_RESULTS = int(PAGES) * int(PER_PAGE)
 
-        doujin_boxes = SOUP.find_all('div', class_='gallery')
-        for item in doujin_boxes:
-            DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
-            DOUJIN_TITLE = item.find('div', class_='caption').text
-            DOUJIN_LANG = self._get_lang_by_title(DOUJIN_TITLE)
-            DOUJIN_COVER = item.find('img', class_='lazyload')['data-src']
-            DOUJIN_TAGS = item['data-tags'].split()
-
-            DOUJINS.append(DoujinThumbnail(id=DOUJIN_ID,
-                                           title=DOUJIN_TITLE,
-                                           lang=DOUJIN_LANG,
-                                           cover=DOUJIN_COVER,
-                                           url=f"{self._BASE_URL}/g/{DOUJIN_ID}",
-                                           data_tags=DOUJIN_TAGS))
-        
-        return HomePage(doujins=DOUJINS,
-                        total_pages=TOTAL_PAGES)
-    
-    def get_user_page(self, uid: str, username: str) -> dict:
-        
-        """!!!!!DEPRECATED!!!!!
-        """
-
-        SOUP = self._fetch(f'/users/{uid}/{username}')
-
-        user_container = SOUP.find('div' ,id='user-container')
-
-        profile_pic_url = user_container.find('img')['src']
-        profile_username = user_container.find('h1').text
-        profile_since = user_container.find('time').text
-
-        favs_container = SOUP.find('div', id='recent-favorites-container')
-
-        galleries = favs_container.find_all('div', class_='gallery')
-
-        favs = []
-
-        for gallery in galleries:
-            favs.append({'id': gallery.find('a', class_='cover')['href'].split('/')[2],
-                         'cover': gallery.find('img')['data-src'],
-                         'title': gallery.find('div', class_='caption').text,
-                         'data-tags': gallery['data-tags'].split(' ')})
-
-        return {
-            'uid': uid,
-            'username': profile_username,
-            'image': profile_pic_url,
-            'since': profile_since,
-            'doujins': favs
-        }
+        return Page(doujins=DOUJINS,
+                    total_results=TOTAL_RESULTS,
+                    total_pages=PAGES,
+                    per_page=PER_PAGE,
+                    page=page)
 
     def get_random(self) -> Doujin:
-        """This method retrieves a random doujin
+        """This method retrieves a random doujin.
+
+        Args:
+
+        Returns:
+            Doujin: 
+                dataclass with the doujin information within.
+            
+            You can access the dataclasses informations at `entities` package.
         """
+
 
         SOUP = self._fetch(f'/random/')
 
@@ -141,58 +98,56 @@ class NHentai(BaseWrapper):
             
         return doujin
 
-    def search(self, query: str, sort: str=None, page: int=1) -> SearchPage:
+    def search(self, query: str, page: Optional[int]=1, sort: Optional[Sort]=Sort.RECENT) -> Union[SearchPage, Doujin]:
         """This method retrieves the search page based on a query.
+
+        Args:
+            query str: 
+                searchable term string. Ex: houshou marine, boa hancock, naruto
+            sort str:
+                doujin sort order
+            page int:
+                number of the page with results
+
+        Returns:
+            SearchPage: 
+                dataclass with a list of DoujinThumbnail.
+            
+            You can access the dataclasses informations at `entities` package.
         """
         
+
         if query.isnumeric():
-            any_doujin = self.get_doujin(id=query)
+            any_doujin: Doujin = self.get_doujin(id=query)
             if any_doujin is not None:
                 return any_doujin
 
-        if sort:
-            SOUP = self._fetch(f'/search/?q={query}&page={page}&sort={sort}')
-        else:
-            SOUP = self._fetch(f'/search/?q={query}&page={page}')
+        sort = sort.value if isinstance(sort, Sort) else sort
+        params = {'query': query, 'page': page, 'sort': sort} if sort is not None else {'query': query, 'page': page}
 
-        total_results = SOUP.find('div', id='content').find('h1').text.strip().split()[0]
+        SOUP = self._fetch(urljoin(self._API_URL, f'galleries/search'), params=params, is_json=True)
 
-        TOTAL_RESULTS = int(float(total_results.replace(',', '')))
-        TOTAL_PAGES = 0
-        DOUJINS = []
-
-        pagination_section = SOUP.find('section', class_='pagination')
-        if pagination_section is not None:
-            last_page_HTMLObj = pagination_section.find('a', class_='last')
-            if last_page_HTMLObj is not None:
-                TOTAL_PAGES = int(last_page_HTMLObj['href'].split('&')[1][5:])
-            else:
-                last_page_HTMLObj = pagination_section.find('a', class_='page current')
-                TOTAL_PAGES = int(last_page_HTMLObj['href'].split('&')[1][5:])
-
-        doujin_boxes = SOUP.find_all('div', class_='gallery')
-        for item in doujin_boxes:
-            DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
-            DOUJIN_TITLE = item.find('div', class_='caption').text
-            DOUJIN_LANG = self._get_lang_by_title(item.find('div', class_='caption').text)
-            DOUJIN_COVER = item.find('img', class_='lazyload')['data-src']
-            DOUJIN_TAGS = item['data-tags'].split()
-
-            DOUJINS.append(DoujinThumbnail(id=DOUJIN_ID,
-                                           title=DOUJIN_TITLE,
-                                           lang=DOUJIN_LANG,
-                                           cover=DOUJIN_COVER,
-                                           url=f"{self._BASE_URL}/g/{DOUJIN_ID}",
-                                           data_tags=DOUJIN_TAGS))
-            
+        DOUJINS = [Doujin.from_json(json_object=doujin) for doujin in SOUP.get('result')]
+        
         return SearchPage(query=query,
-                          sort=sort or 'recente',
-                          total_results=TOTAL_RESULTS,
-                          total_pages=TOTAL_PAGES,
+                          sort=sort,
+                          total_results=SOUP.get('num_pages')*SOUP.get('per_page'),
+                          total_pages=SOUP.get('num_pages'),
                           doujins=DOUJINS)
 
-    def get_characters(self, page: int = 1) -> CharacterListPage:
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').cache
+    def get_characters(self, page: int) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
+
+        Args:
+            page: 
+                number of the pagination page.
+
+        Returns:
+            CharacterListPage: 
+                dataclass with the character list within.
+            
+            You can access the dataclasses informations at `entities` package.
         """
 
         SOUP = self._fetch(f'/characters/?page={page}')
@@ -219,7 +174,15 @@ class NHentai(BaseWrapper):
                                  characters=CHARACTERS)
     
     def get_popular_now(self):
-        """This method retrieves a list of the current most popular doujins
+        """This method retrieves a list of the current most popular doujins.
+
+        Args:
+
+        Returns:
+            PopularPage: 
+                dataclass with the current popular doujin list within.
+            
+            You can access the dataclasses informations at `entities` package.
         """
 
         SOUP = self._fetch(f'/')
@@ -228,20 +191,24 @@ class NHentai(BaseWrapper):
         DOUJINS = []
 
         for item in popular_section.find_all('div', class_='gallery'):
-            DOUJIN_TITLE = item.find('div', class_='caption').text
-            DOUJIN_LANG = self._get_lang_by_title(DOUJIN_TITLE)
             DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
-            DOUJIN_COVER = item.find('img', class_='lazyload')['data-src']
 
-            DOUJINS.append(DoujinThumbnail(id=DOUJIN_ID,
-                                           title=DOUJIN_TITLE,
-                                           lang=DOUJIN_LANG,
-                                           cover=DOUJIN_COVER,
-                                           url=f"{self._BASE_URL}/g/{DOUJIN_ID}",
-                                           data_tags=item['data-tags'].split()))
+            POPULAR_DOUJIN = self.get_doujin(DOUJIN_ID)
+
+            if POPULAR_DOUJIN is not None:
+                DOUJINS.append(DoujinThumbnail(id=POPULAR_DOUJIN.id,
+                                               media_id=POPULAR_DOUJIN.media_id,
+                                               title=POPULAR_DOUJIN.title,
+                                               languages=POPULAR_DOUJIN.languages,
+                                               cover=POPULAR_DOUJIN.cover,
+                                               url=urljoin(self._BASE_URL, f"/g/{POPULAR_DOUJIN.id}"),
+                                               tags=POPULAR_DOUJIN.tags))
         
         return PopularPage(doujins=DOUJINS,
                            total_doujins=len(DOUJINS))
+
+    def get_home_page():
+        raise NotImplementedError 
 
     def get_artists(self, page: int = 1) -> ArtistListPage:
         raise NotImplementedError
