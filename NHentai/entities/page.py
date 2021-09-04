@@ -3,6 +3,7 @@ from typing import List
 from dataclasses import dataclass
 
 from .doujin import Doujin, DoujinThumbnail
+from .links import CharacterLink
 
 @dataclass
 class Page(BaseClass):
