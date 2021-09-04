@@ -30,7 +30,7 @@ class GroupListPage(BaseClass):
 class CharacterListPage(BaseClass):
     page: int
     total_pages: int
-    characters: List[CharacterLink]
+    characters: List[str]
 
 @dataclass
 class ArtistListPage(BaseClass):

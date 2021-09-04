@@ -98,7 +98,7 @@ class NHentaiAsync(BaseWrapper):
             
         return doujin
 
-    async def search(self, query: str, sort: str=None, page: int=1) -> SearchPage:
+    async def search(self, query: str, sort: str=Sort.RECENT, page: int=1) -> SearchPage:
         """This method retrieves the search page based on a query.
 
         Args:
@@ -136,7 +136,7 @@ class NHentaiAsync(BaseWrapper):
     
     async def search_pages(self,
                            query: str,
-                           sort: str=None,
+                           sort: str=Sort.RECENT,
                            max_pages: int=1,
                            *, concurrent_tasks: int=3) -> AsyncGenerator[SearchPage, None]:
         TASKS = []
