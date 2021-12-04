@@ -31,20 +31,20 @@ class NHentai(BaseWrapper):
             You can access the dataclasses informations at `entities` package.
         """
 
-        print(f'INFO::Retrieving doujin with id {id}')
+        self.log(f'INFO::Retrieving doujin with id {id}')
         id = str(id)
 
         if not id.isnumeric() or id[0] == '0':
-            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
+            self.log('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
             return None
 
         SOUP = self._fetch(urljoin(self._API_URL, f'gallery/{id}'), is_json=True)
 
         if SOUP.get('error'):
-            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
+            self.log('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
             return None
          
-        print(f'INFO::Sucessfully retrieved doujin {id}')
+        self.log(f'INFO::Sucessfully retrieved doujin {id}')
 
         return Doujin.from_json(SOUP)
 
@@ -63,7 +63,7 @@ class NHentai(BaseWrapper):
             You can access the dataclasses informations at `entities` package.
         """
 
-        print(f'INFO::Fetching page {page}')
+        self.log(f'INFO::Fetching page {page}')
         SOUP = self._fetch(urljoin(self._API_URL, f'galleries/all?page={page}'), is_json=True)
 
         DOUJINS = [DoujinThumbnail.from_json(json_obj) for json_obj in SOUP.get('result')]
@@ -218,3 +218,11 @@ class NHentai(BaseWrapper):
 
     def get_groups(self, page: int = 1) -> GroupListPage:
         raise NotImplementedError
+
+    def log(self, *args):
+        if self.logging:
+            print(*args)
+
+    def __init__(self, logging=True):
+        super().__init__()
+        self.logging = logging
