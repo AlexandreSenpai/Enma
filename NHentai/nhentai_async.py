@@ -1,50 +1,46 @@
 import asyncio
 import logging
 import asyncio
+from random import randint
 from typing import AsyncGenerator
 from urllib.parse import urljoin
 
 from .utils.cache import Cache
 from .base_wrapper import BaseWrapper
 from .entities.doujin import Doujin, DoujinThumbnail
-from .entities.page import (Page, 
-                            SearchPage,
-                            CharacterListPage,
-                            PopularPage)
+from .entities.page import (
+    Page, 
+    SearchPage, 
+    TagListPage, 
+    GroupListPage, 
+    CharacterListPage, 
+    ArtistListPage, 
+    PopularPage)
 from .entities.links import CharacterLink 
 from .entities.options import Sort
 
 
 class NHentaiAsync(BaseWrapper):
     @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='id').async_cache
-    async def get_doujin(self, id: str) -> Doujin:
-        """This method fetches a doujin information based on id.
+    async def get_doujin(self, doujin_id: int) -> Doujin:
+        """This method fetches a doujin information based on ID.
 
-        Args:
-            id: 
-                Id of the target doujin.
+        Args: id: ID of the target doujin.
 
         Returns:
-            Doujin: 
-                dataclass with the doujin information within.
-            
-            You can access the dataclasses informations at `entities` package.
+            Doujin: dataclass with the doujin information as attributes.
+                You can access dataclass information in the `entities` folder.
         """
 
-        print(f'INFO::Retrieving doujin with id {id}')
-        id = str(id)
+        self.log(f"[INFO] Retrieving doujin with ID {doujin_id}...", end="\r")
 
-        if not id.isnumeric() or id[0] == '0':
-            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
-            return None
-
-        SOUP = await self._async_fetch(urljoin(self._API_URL, f'gallery/{id}'), is_json=True)
+        SOUP = await self._async_fetch(f'gallery/{doujin_id}', is_json=True)
 
         if SOUP.get('error'):
-            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
+            self.log(f"[ERROR] No doujin with ID \"{doujin_id}\" exists.")
             return None
          
-        print(f'INFO::Sucessfully retrieved doujin {id}')
+        self.log(f"[INFO] Sucessfully retrieved doujin with ID\"{doujin_id}\".")
 
         return Doujin.from_json(SOUP)
 
@@ -53,17 +49,14 @@ class NHentaiAsync(BaseWrapper):
         """This method paginates through the homepage of NHentai and returns the doujins.
 
         Args:
-            page: 
-                number of the pagination page.
+            page: number of the pagination page.
 
         Returns:
-            HomePage: 
-                dataclass with a list of DoujinThumbnail.
-            
-            You can access the dataclasses informations at `entities` package.
+            HomePage: dataclass with a list of DoujinThumbnail.
+                You can access the dataclass information in the `entities` folder.
         """
 
-        print(f'INFO::Fetching page {page}')
+        self.log(f'[INFO] Fetching page {page} on the homepage...', end="\r")
         SOUP = await self._async_fetch(urljoin(self._API_URL, f'galleries/all?page={page}'), is_json=True)
 
         DOUJINS = [DoujinThumbnail.from_json(json_obj) for json_obj in SOUP.get('result')]
@@ -71,49 +64,45 @@ class NHentaiAsync(BaseWrapper):
         PER_PAGE = SOUP.get('per_page')
         TOTAL_RESULTS = int(PAGES) * int(PER_PAGE)
 
-        return Page(doujins=DOUJINS,
-                    total_results=TOTAL_RESULTS,
-                    total_pages=PAGES,
-                    per_page=PER_PAGE,
-                    page=int(page))
+        return Page(
+            doujins=DOUJINS,
+            total_results=TOTAL_RESULTS,
+            total_pages=PAGES,
+            per_page=PER_PAGE,
+            page=int(page))
 
     async def get_random(self) -> Doujin:
         """This method retrieves a random doujin.
 
-        Args:
+        Args: None
 
         Returns:
-            Doujin: 
-                dataclass with the doujin information within.
-            
-            You can access the dataclasses informations at `entities` package.
+            Doujin: dataclass with the doujin information within.
+            You can access the dataclass information in the `entities` folder.
         """
 
 
-        SOUP = await self._async_fetch(f'/random/')
+        lrtd = 394488  
+        # Latest Recorded Total Doujin count 
+        # Found by sequentially trying and erroring manually, from the highest tens place to the ones place. >3<00000 -> 39448>8<
 
-        id = SOUP.find('h3', id='gallery_id').text.replace('#', '')
+        id = randint(1, lrtd)
 
         doujin: Doujin = await self.get_doujin(id=id)
-            
+
         return doujin
 
     async def search(self, query: str, sort: str=Sort.RECENT, page: int=1) -> SearchPage:
         """This method retrieves the search page based on a query.
 
         Args:
-            query str: 
-                searchable term string. Ex: houshou marine, boa hancock, naruto
-            sort str:
-                doujin sort order
-            page int:
-                number of the page with results
+            query str: searchable term string. Ex: houshou marine, boa hancock, naruto
+            sort Sort: doujin sort order (Sort.DAY/MONTH/YEAR/RECENT/ALL_TIME)
+            page int: number of the page with results
 
         Returns:
-            SearchPage: 
-                dataclass with a list of DoujinThumbnail.
-            
-            You can access the dataclasses informations at `entities` package.
+            SearchPage: dataclass with a list of DoujinThumbnail.
+                You can access the dataclass information in the `entities` folder.
         """
 
         if query.isnumeric():
@@ -122,23 +111,27 @@ class NHentaiAsync(BaseWrapper):
                 return any_doujin
 
         sort = sort.value if isinstance(sort, Sort) else sort
-        params = {'query': query, 'page': page, 'sort': sort} if sort is not None else {'query': query, 'page': page}
+        if not sort: sort = Sort.ALL_TIME.value
+        params = {'query': query, 'page': page, 'sort': sort}
 
-        SOUP = await self._async_fetch(urljoin(self._API_URL, f'galleries/search'), params=params, is_json=True)
+        SOUP = self._async_fetch(f'galleries/search', params=params, is_json=True)
 
         DOUJINS = [Doujin.from_json(json_object=doujin) for doujin in SOUP.get('result')]
         
-        return SearchPage(query=query,
-                          sort=sort,
-                          total_results=SOUP.get('num_pages')*SOUP.get('per_page'),
-                          total_pages=SOUP.get('num_pages'),
-                          doujins=DOUJINS)
+        return SearchPage(
+            query=query,
+            sort=sort,
+            total_results=SOUP.get('num_pages')*SOUP.get('per_page'),
+            total_pages=SOUP.get('num_pages'),
+            doujins=DOUJINS)
     
-    async def search_pages(self,
-                           query: str,
-                           sort: str=Sort.RECENT,
-                           max_pages: int=1,
-                           *, concurrent_tasks: int=3) -> AsyncGenerator[SearchPage, None]:
+    async def search_pages(
+        self,
+        query: str,
+        sort: str=Sort.ALL_TIME,
+        max_pages: int=1,
+        *, concurrent_tasks: int=3) -> AsyncGenerator[SearchPage, None]:
+        
         TASKS = []
         
         for page in range(1, max_pages + 1):
@@ -156,19 +149,17 @@ class NHentaiAsync(BaseWrapper):
         for task in TASKS:
             yield await task
     
+    # Depreciation notice: NHentai uses Cloudflare, which may make this function unusable.
     @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').async_cache
     async def get_characters(self, page) -> CharacterListPage:
         """This method retrieves a list of characters that are available on NHentai site.
 
         Args:
-            page: 
-                number of the pagination page.
+            page: number of the pagination page.
 
         Returns:
-            CharacterListPage: 
-                dataclass with the character list within.
-            
-            You can access the dataclasses informations at `entities` package.
+            CharacterListPage: dataclass with the character list within.
+                You can access the dataclass information in the `entities` folder.
         """
 
         SOUP = await self._async_fetch(f'/characters/?page={page}')
@@ -183,27 +174,29 @@ class NHentaiAsync(BaseWrapper):
             for character in link:
                 try:
                     TITLE = character.find('span', class_='name').text
-                    CHARACTERS.append(CharacterLink(section=TITLE[0] if not TITLE[0].isnumeric() else '#',
-                                                    title=TITLE,
-                                                    url=character['href'],
-                                                    total_entries=int(character.find('span', class_='count').text)))
+                    CHARACTERS.append(
+                        CharacterLink(
+                            section=TITLE[0] if not TITLE[0].isnumeric() else '#',
+                            title=TITLE,
+                            url=character['href'],
+                            total_entries=int(character.find('span', class_='count').text)))
                 except Exception as err:
                     logging.error(err)
         
-        return CharacterListPage(page=page,
-                                 total_pages=int(TOTAL_PAGES),
-                                 characters=CHARACTERS)
+        return CharacterListPage(
+            page=page,
+            total_pages=int(TOTAL_PAGES),
+            characters=CHARACTERS)
 
+    # Depreciation notice: NHentai uses Cloudflare, which may make this function unusable.
     async def get_popular_now(self):
         """This method retrieves a list of the current most popular doujins.
 
-        Args:
+        Args: None
 
         Returns:
-            PopularPage: 
-                dataclass with the current popular doujin list within.
-            
-            You can access the dataclasses informations at `entities` package.
+            PopularPage: dataclass with the current popular doujin list within.
+                You can access the dataclass information in the `entities` folder.
         """
 
         SOUP = await self._async_fetch(f'/')
@@ -218,22 +211,36 @@ class NHentaiAsync(BaseWrapper):
 
         for popular_doujin in DOUJINS:
             if popular_doujin is not None:
-                DOUJIN_LIST.append(DoujinThumbnail(id=popular_doujin.id,
-                                                media_id=popular_doujin.media_id,
-                                                title=popular_doujin.title,
-                                                languages=popular_doujin.languages,
-                                                cover=popular_doujin.cover,
-                                                url=urljoin(self._BASE_URL, f"/g/{popular_doujin.id}"),
-                                                tags=popular_doujin.tags))
+                DOUJIN_LIST.append(
+                    DoujinThumbnail(
+                        id=popular_doujin.id,
+                        media_id=popular_doujin.media_id,
+                        title=popular_doujin.title,
+                        languages=popular_doujin.languages,
+                        cover=popular_doujin.cover,
+                        url=urljoin(self._BASE_URL, f"/g/{popular_doujin.id}"),
+                        tags=popular_doujin.tags))
         
-        return PopularPage(doujins=DOUJIN_LIST,
-                           total_doujins=len(DOUJIN_LIST))
+        return PopularPage(
+            doujins=DOUJIN_LIST,
+            total_doujins=len(DOUJIN_LIST))
 
-    # def get_artists(self, page: int = 1) -> ArtistListPage:
-    #     raise NotImplementedError
+    async def get_home_page():
+        raise NotImplementedError 
 
-    # def get_tags(self, page: int = 1) -> TagListPage:
-    #     raise NotImplementedError
+    async def get_artists(self, page: int = 1) -> ArtistListPage:
+        raise NotImplementedError
 
-    # def get_groups(self, page: int = 1) -> GroupListPage:
-    #     raise NotImplementedError
+    async def get_tags(self, page: int = 1) -> TagListPage:
+        raise NotImplementedError
+
+    async def get_groups(self, page: int = 1) -> GroupListPage:
+        raise NotImplementedError
+
+    def log(self, *args):
+        if self.logging:
+            print(*args)
+
+    def __init__(self, logging=True):
+        super().__init__()
+        self.logging = logging
