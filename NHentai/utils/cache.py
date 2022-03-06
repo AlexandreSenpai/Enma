@@ -16,7 +16,7 @@ class Cache:
       key = kwargs.get(self.cache_key_name) if kwargs.get(self.cache_key_name) is not None else args[self.cache_key_position]
 
       if self._CACHE.get(key) is not None:
-        print(f'INFO::retrieving cached object with key {key}')
+        print(f"[INFO] Retrieving cached object with key {key}...", end="\r")
         return self._CACHE.get(key)
       else:
         new_execution = function(*args, **kwargs)
@@ -32,7 +32,7 @@ class Cache:
       key = kwargs.get(self.cache_key_name) if kwargs.get(self.cache_key_name) is not None else args[self.cache_key_position]
 
       if self._CACHE.get(key) is not None:
-        print(f'INFO::retrieving cached object with key {key}')
+        print(f"[INFO] Retrieving cached object with key {key}...")
         return self._CACHE.get(key)
       else:
         new_execution = await function(*args, **kwargs)
