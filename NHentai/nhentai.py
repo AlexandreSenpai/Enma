@@ -207,7 +207,7 @@ class NHentai(BaseWrapper):
     def get_groups(self, page: int = 1) -> GroupListPage:
         raise NotImplementedError
 
-    def log(self, *args):
+    def log(self, *args, **kwargs):
         if self.logging:
             print(*args)
 

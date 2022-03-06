@@ -237,9 +237,9 @@ class NHentaiAsync(BaseWrapper):
     async def get_groups(self, page: int = 1) -> GroupListPage:
         raise NotImplementedError
 
-    def log(self, *args):
+    def log(self, *args, **kwargs):
         if self.logging:
-            print(*args)
+            print(*args, **kwargs)
 
     def __init__(self, logging=True):
         super().__init__()
