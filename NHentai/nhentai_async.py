@@ -114,7 +114,7 @@ class NHentaiAsync(BaseWrapper):
         if not sort: sort = Sort.ALL_TIME.value
         params = {'query': query, 'page': page, 'sort': sort}
 
-        SOUP = self._async_fetch(f'galleries/search', params=params, is_json=True)
+        SOUP = await self._async_fetch(f'galleries/search', params=params, is_json=True)
 
         DOUJINS = [Doujin.from_json(json_object=doujin) for doujin in SOUP.get('result')]
         
