@@ -25,7 +25,7 @@ class NHentaiAsync(BaseWrapper):
     async def get_doujin(self, doujin_id: int) -> Doujin:
         """This method fetches a doujin information based on ID.
 
-        Args: id: ID of the target doujin.
+        Args: doujin_id: ID of the target doujin.
 
         Returns:
             Doujin: dataclass with the doujin information as attributes.
@@ -86,9 +86,9 @@ class NHentaiAsync(BaseWrapper):
         # Latest Recorded Total Doujin count 
         # Found by sequentially trying and erroring manually, from the highest tens place to the ones place. >3<00000 -> 39448>8<
 
-        id = randint(1, lrtd)
+        doujin_id = randint(1, lrtd)
 
-        doujin: Doujin = await self.get_doujin(id=id)
+        doujin: Doujin = await self.get_doujin(doujin_id)
 
         return doujin
 
@@ -106,7 +106,7 @@ class NHentaiAsync(BaseWrapper):
         """
 
         if query.isnumeric():
-            any_doujin: Doujin = await self.get_doujin(id=query)
+            any_doujin: Doujin = await self.get_doujin(doujin_id=int(query))
             if any_doujin is not None:
                 return any_doujin
 

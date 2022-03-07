@@ -19,26 +19,26 @@ from .entities.options import Sort
 
 class NHentai(BaseWrapper):
     @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='id').cache
-    def get_doujin(self, id: str) -> Doujin:
+    def get_doujin(self, doujin_id: int) -> Doujin:
         """This method fetches a doujin information based on id.
 
         Args:
-            id: ID of the target doujin.
+            doujin_id: ID of the target doujin.
 
         Returns:
             Doujin: dataclass with the doujin information as attributes.
                 You can access dataclass information in the `entities` folder.
         """
 
-        self.log(f"[INFO] Retrieving doujin with ID {id}...", end="\r")
+        self.log(f"[INFO] Retrieving doujin with ID {doujin_id}...", end="\r")
 
-        SOUP = self._fetch(f'gallery/{id}', is_json=True)
+        SOUP = self._fetch(f'gallery/{doujin_id}', is_json=True)
 
         if SOUP.get('error'):
-            self.log(f"[ERROR] No doujin with ID \"{id}\" exists.")
+            self.log(f"[ERROR] No doujin with ID \"{doujin_id}\" exists.")
             return None
          
-        self.log(f"[INFO] Sucessfully retrieved doujin with ID\"{id}\".")
+        self.log(f"[INFO] Sucessfully retrieved doujin with ID\"{doujin_id}\".")
 
         return Doujin.from_json(SOUP)
 
@@ -85,9 +85,9 @@ class NHentai(BaseWrapper):
         # Latest Recorded Total Doujin count 
         # Found by sequentially trying and erroring manually, from the highest tens place to the ones place. >3<00000 -> 39448>8<
 
-        id = randint(1, lrtd)
+        doujin_id = randint(1, lrtd)
 
-        doujin: Doujin = self.get_doujin(id=id)
+        doujin: Doujin = self.get_doujin(doujin_id)
 
         return doujin
 
@@ -107,7 +107,7 @@ class NHentai(BaseWrapper):
         
 
         if query.isnumeric():
-            any_doujin: Doujin = self.get_doujin(id=query)
+            any_doujin: Doujin = self.get_doujin(doujin_id=int(query))
             if any_doujin is not None:
                 return any_doujin
 
