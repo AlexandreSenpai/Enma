@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from typing import Union
 
 from bs4 import BeautifulSoup
-from aiohttp import ClientSession
+from aiohttp import ClientSession, ContentTypeError
 import requests
 
 class BaseWrapper:
@@ -29,7 +29,7 @@ class BaseWrapper:
         PAGE_REQUEST = requests.get(urljoin(self._API_URL if is_json else self._BASE_URL, page_path), params=params)
         try:  # Detect the format of the response in case of runtime error
             PAGE_REQUEST.json()
-        except JSONDecodeError:
+        except ContentTypeError:
             is_json_response = False
         else:
             is_json_response = True
@@ -48,7 +48,7 @@ class BaseWrapper:
             async with session.get(urljoin(self._API_URL if is_json else self._BASE_URL, page_path), params=params) as response:
                 try:  # Detect the format of the response in case of runtime error
                     await response.json()
-                except JSONDecodeError:
+                except ContentTypeError:
                     is_json_response = False
                 else:
                     is_json_response = True
