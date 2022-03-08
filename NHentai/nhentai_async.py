@@ -32,7 +32,7 @@ class NHentaiAsync(BaseWrapper):
                 You can access dataclass information in the `entities` folder.
         """
 
-        self.log(f"[INFO] Retrieving doujin with ID {doujin_id}...", end="\r")
+        self.log(f"[INFO] Retrieving doujin with ID \"{doujin_id}\"...", end="\r")
 
         SOUP = await self._async_fetch(f'gallery/{doujin_id}', is_json=True)
 
