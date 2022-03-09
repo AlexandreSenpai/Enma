@@ -1,4 +1,5 @@
 import logging
+import requests
 from random import randint
 from typing import Optional, Union
 from urllib.parse import urljoin
@@ -38,7 +39,7 @@ class NHentai(BaseWrapper):
             self.log(f"[ERROR] No doujin with ID \"{doujin_id}\" exists.")
             return None
          
-        self.log(f"[INFO] Sucessfully retrieved doujin with ID\"{doujin_id}\".")
+        self.log(f"[INFO] Sucessfully retrieved doujin with ID \"{doujin_id}\".")
 
         return Doujin.from_json(SOUP)
 
@@ -81,12 +82,11 @@ class NHentai(BaseWrapper):
                 You can access the dataclass information in the `entities` package.
         """
 
-        lrtd = 394488  
-        # Latest Recorded Total Doujin count 
-        # Found by sequentially trying and erroring manually, from the highest tens place to the ones place. >3<00000 -> 39448>8<
-
-        doujin_id = randint(1, lrtd)
-
+        self.log(f'[INFO] Fetching random doujin...', end="\r")
+        resp = requests.get("https://nhentai.net/random")
+        new_url = str(resp.url)
+        new_url = new_url.strip("/")
+        doujin_id = new_url.split("/")[-1]
         doujin: Doujin = self.get_doujin(doujin_id)
 
         return doujin

@@ -5,6 +5,8 @@ from random import randint
 from typing import AsyncGenerator
 from urllib.parse import urljoin
 
+from aiohttp import ClientSession, ContentTypeError
+
 from .utils.cache import Cache
 from .base_wrapper import BaseWrapper
 from .entities.doujin import Doujin, DoujinThumbnail
@@ -40,7 +42,7 @@ class NHentaiAsync(BaseWrapper):
             self.log(f"[ERROR] No doujin with ID \"{doujin_id}\" exists.")
             return None
          
-        self.log(f"[INFO] Sucessfully retrieved doujin with ID\"{doujin_id}\".")
+        self.log(f"[INFO] Sucessfully retrieved doujin with ID \"{doujin_id}\".")
 
         return Doujin.from_json(SOUP)
 
@@ -81,13 +83,13 @@ class NHentaiAsync(BaseWrapper):
             You can access the dataclass information in the `entities` folder.
         """
 
+        self.log(f'[INFO] Fetching random doujin...', end="\r")
+        async with ClientSession as session:
+            async with session.get("https://nhentai.net/random") as resp:
+                new_url = str(resp.url)
 
-        lrtd = 394488  
-        # Latest Recorded Total Doujin count 
-        # Found by sequentially trying and erroring manually, from the highest tens place to the ones place. >3<00000 -> 39448>8<
-
-        doujin_id = randint(1, lrtd)
-
+        new_url = new_url.strip("/")
+        doujin_id = new_url.split("/")[-1]
         doujin: Doujin = await self.get_doujin(doujin_id)
 
         return doujin
