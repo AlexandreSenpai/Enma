@@ -1,6 +1,8 @@
 import pytest
 import sys
 import os
+from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces.doujin import DoujinThumbnail
+from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces.page import PopularPage
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -52,3 +54,12 @@ class TestRandom:
         
         assert doujin is not None
         assert isinstance(doujin, Doujin)
+
+class TestPopularNow:
+    def test_successfully_get_popular_now(self):
+        sut = NHentai()
+        popular = sut.get_popular_now()
+        
+        assert popular is not None
+        assert isinstance(popular, PopularPage)
+        assert isinstance(popular.doujins[0], DoujinThumbnail)

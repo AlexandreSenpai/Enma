@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from NHentai.nhentai.infra.utils import ThreadWithReturnValue
 
 from NHentai.nhentai.infra.adapters.repositories.hentai.hentai_interface import NhentaiInterface
-from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort
+from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage, DoujinThumbnail
 
 from NHentai.nhentai.infra.adapters.request.implementations.http import RequestsAdapter
 
@@ -134,3 +134,42 @@ class NHentaiAdapter(NhentaiInterface):
             
         return doujin
     
+    def get_popular_now(self) -> PopularPage:
+        """This method retrieves a list of the current most popular doujins.
+        Args:
+        Returns:
+            PopularPage: 
+                dataclass with the current popular doujin list within.
+            
+            You can access the dataclasses informations at `entities` package.
+        """
+
+        request_response = self.request_adapter.get(self._BASE_URL)
+
+        if request_response.status_code != 200:
+            print('ERROR::Something went wrong while getting popular page doujin.')
+            print(f'ERROR::Status code: {request_response.status_code}')
+            print(f'ERROR::Response: {request_response.text}')
+            return
+        
+        soup = self.scrapper_adapter(request_response.text, 'html.parser')
+        
+        popular_section = soup.find('div', class_='index-popular')
+        DOUJINS = []
+
+        for item in popular_section.find_all('div', class_='gallery'):
+            DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
+
+            POPULAR_DOUJIN = self.get_doujin(DOUJIN_ID)
+
+            if POPULAR_DOUJIN is not None:
+                DOUJINS.append(DoujinThumbnail(id=POPULAR_DOUJIN.id,
+                                               media_id=POPULAR_DOUJIN.media_id,
+                                               title=POPULAR_DOUJIN.title,
+                                               languages=POPULAR_DOUJIN.languages,
+                                               cover=POPULAR_DOUJIN.cover,
+                                               url=urljoin(self._BASE_URL, f"/g/{POPULAR_DOUJIN.id}"),
+                                               tags=POPULAR_DOUJIN.tags))
+        
+        return PopularPage(doujins=DOUJINS,
+                           total_doujins=len(DOUJINS))
