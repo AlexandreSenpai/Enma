@@ -44,4 +44,11 @@ class TestSearchDoujin:
         assert isinstance(search, SearchResult)
         assert len(search.doujins) > 0
         assert True if len(search.doujins) <= 25 and len(search.doujins) == search.total_results else len(search.doujins) == 25 
+
+class TestRandom:
+    def test_successfully_get_random(self):
+        sut = NHentai()
+        doujin = sut.get_random()
         
+        assert doujin is not None
+        assert isinstance(doujin, Doujin)

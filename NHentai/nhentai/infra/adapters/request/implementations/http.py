@@ -19,6 +19,7 @@ class RequestsAdapter(RequestInterface):
                                host=response.url,
                                headers=response.headers, 
                                text=response.text, 
-                               json=response.json)
+                               json=response.json,
+                               history=[redirect.url for redirect in response.history])
         
         

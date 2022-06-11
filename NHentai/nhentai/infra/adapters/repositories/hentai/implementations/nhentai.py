@@ -117,6 +117,20 @@ class NHentaiAdapter(NhentaiInterface):
                             total_results=25*total_pages if pagination_container else len(doujin_ids),
                             doujins=[thread.join() for thread in threads])
         
+    def get_random(self) -> Doujin:
+        request_response = self.request_adapter.get(urljoin(self._BASE_URL, 'random'))
 
+        if request_response.status_code != 200:
+            print('ERROR::Something went wrong while getting random doujin.')
+            print(f'ERROR::Status code: {request_response.status_code}')
+            print(f'ERROR::Response: {request_response.text}')
+            return
+        
+        soup = self.scrapper_adapter(request_response.text, 'html.parser')
 
+        id = soup.find('h3', id='gallery_id').text.replace('#', '')
+
+        doujin = self.get_doujin(doujin_id=id)
+            
+        return doujin
     
