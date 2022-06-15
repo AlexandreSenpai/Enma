@@ -1,8 +1,11 @@
 import sys
 
-from .nhentai.infra.entrypoints.lib import NHentai
+from .core.logging import logger
+from .sync.infra.entrypoints.lib import NHentai
+from .asynch.infra.entrypoints.lib import NHentaiAsync
 
-__all__ = ['nhentai']
+
+__all__ = ['sync', 'asynch']
 __version__ = '2.0.0'
 
 package_name = "nhentai-api"

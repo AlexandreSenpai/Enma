@@ -1,13 +1,11 @@
 import pytest
 import sys
 import os
-from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces.doujin import DoujinThumbnail
-from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces.page import PopularPage
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.nhentai.infra.entrypoints.lib import NHentai
-from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces import Doujin, Sort, SearchResult
+from NHentai.sync.infra.entrypoints.lib import NHentai
+from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Doujin, Sort, SearchResult, DoujinThumbnail, PopularPage
 
 class TestGetDoujin:
     def test_success_doujin_retrieve(self):

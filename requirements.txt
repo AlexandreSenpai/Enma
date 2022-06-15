@@ -2,3 +2,4 @@ requests==2.27.1
 pytest==7.0.1
 pytest-watch==4.2.0
 beautifulsoup4==4.10.0
+requests-async==0.6.2
