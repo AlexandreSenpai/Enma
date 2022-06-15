@@ -4,7 +4,7 @@ import time
 from urllib.parse import urljoin
 
 from NHentai.sync.infra.utils import ThreadWithReturnValue
-
+from NHentai.core.logging import logger
 from NHentai.sync.infra.adapters.repositories.hentai.hentai_interface import NhentaiInterface
 from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage, DoujinThumbnail
 
@@ -35,17 +35,11 @@ class NHentaiAdapter(NhentaiInterface):
                 dataclass with the doujin information within.
         """
 
-        print(f'INFO::Retrieving doujin with id {doujin_id}')
+        logger.info(f'Retrieving doujin with id {doujin_id}')
 
-        request_response = asyncio.get_event_loop().run_in_executor(executor=self.request_adapter.get(urljoin(self._API_URL, f'gallery/{doujin_id}')))
+        request_response = self.request_adapter.get(urljoin(self._API_URL, f'gallery/{doujin_id}'))
 
-        if request_response.status_code != 200:
-            print('ERROR::Maybe you mistyped the doujin id or it doesnt exists.')
-            print(f'ERROR::Status code: {request_response.status_code}')
-            print(f'ERROR::Response: {request_response.text}')
-            return
-         
-        print(f'INFO::Sucessfully retrieved doujin {doujin_id}')
+        logger.info(f'Sucessfully retrieved doujin {doujin_id}')
 
         return Doujin.from_json(json_object=request_response.json(), 
                                 base_url=self._BASE_URL,
@@ -59,13 +53,6 @@ class NHentaiAdapter(NhentaiInterface):
                                                             'page': page},
                                                     headers={'User-Agent': 'Mozilla/5.0'})
 
-        if request_response.status_code != 200:
-            print('ERROR::Something went wrong while searching for doujin.')
-            print(f'ERROR::Host: {request_response.host}')
-            print(f'ERROR::Status code: {request_response.status_code}')
-            print(f'ERROR::Response: {request_response.text}')
-            return
-        
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
 
         search_results_container = soup.find('div', {'class': 'container'})
@@ -75,7 +62,7 @@ class NHentaiAdapter(NhentaiInterface):
         total_pages = int(last_page_a_tag['href'].split('=')[-1]) if last_page_a_tag else 1
         
         if not search_results_container:
-            print('ERROR::Could not find search result container.')
+            logger.error('Could not find search result container.')
             return SearchResult(query=search_term,
                                 sort=sort if isinstance(sort, str) else sort.value,
                                 total_pages=total_pages,
@@ -86,7 +73,7 @@ class NHentaiAdapter(NhentaiInterface):
         search_results = search_results_container.find_all('div', {'class': 'gallery'})
 
         if not search_results:
-            print('ERROR::Could not find any search results.')
+            logger.error('Could not find any search results.')
             return SearchResult(query=search_term,
                                 sort=sort if isinstance(sort, str) else sort.value,
                                 total_pages=total_pages,
@@ -121,12 +108,6 @@ class NHentaiAdapter(NhentaiInterface):
     def get_random(self) -> Doujin:
         request_response = self.request_adapter.get(urljoin(self._BASE_URL, 'random'))
 
-        if request_response.status_code != 200:
-            print('ERROR::Something went wrong while getting random doujin.')
-            print(f'ERROR::Status code: {request_response.status_code}')
-            print(f'ERROR::Response: {request_response.text}')
-            return
-        
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
 
         id = soup.find('h3', id='gallery_id').text.replace('#', '')
@@ -146,12 +127,6 @@ class NHentaiAdapter(NhentaiInterface):
         """
 
         request_response = self.request_adapter.get(self._BASE_URL)
-
-        if request_response.status_code != 200:
-            print('ERROR::Something went wrong while getting popular page doujin.')
-            print(f'ERROR::Status code: {request_response.status_code}')
-            print(f'ERROR::Response: {request_response.text}')
-            return
         
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
         

@@ -14,13 +14,15 @@ class RequestsAdapter(RequestInterface):
     async def handle_error(self, request: aiohttp.ClientResponse):
         if request.status == 200: return
         
+        stack = await request.text()
+        
         handlers = {
-            500: ApiError.communication_error,
-            404: ApiError.not_found,
-            403: ApiError.forbidden,
-            401: ApiError.unauthorized,
-            400: ApiError.bad_request,
-            426: ApiError.too_many_requests,
+            500: lambda: ApiError.communication_error(message=f'Could not communicate with {request.url}', payload=request.url, stack=stack),
+            404: lambda: ApiError.not_found(message=f'Could not find this resource', payload=request.url, stack=stack),
+            403: lambda: ApiError.forbidden(message=f'You are not allowed to access this resource', payload=request.url, stack=stack),
+            401: lambda: ApiError.unauthorized(message=f'You are not authorized to access this resource', payload=request.url, stack=stack),
+            400: lambda: ApiError.bad_request(message=f'Bad request', payload=request.url, stack=stack),
+            426: lambda: ApiError.too_many_requests(message=f'Too many requests', payload=request.url, stack=stack),
         }
         
         handler = handlers.get(request.status)
@@ -39,7 +41,7 @@ class RequestsAdapter(RequestInterface):
             async with session.get(f'{url}?{self.parse_params_to_url_safe(params=params) if params else ""}',  
                                     headers=headers or {}) as response:
 
-                
+                await self.handle_error(request=response)
 
                 try:
                 

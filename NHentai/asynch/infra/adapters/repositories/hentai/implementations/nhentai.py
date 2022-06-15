@@ -1,5 +1,6 @@
 import asyncio
 from urllib.parse import urljoin
+from NHentai.core.handler import ApiError
 
 from NHentai.core.logging import logger
 from NHentai.asynch.infra.adapters.repositories.hentai.hentai_interface import NhentaiInterface
@@ -35,12 +36,6 @@ class NHentaiAdapter(NhentaiInterface):
         logger.info(f'Retrieving doujin with id {doujin_id}')
 
         request_response = await self.request_adapter.get(urljoin(self._API_URL, f'gallery/{doujin_id}'))
-
-        if request_response.status_code != 200:
-            logger.error('Maybe you mistyped the doujin id or it doesnt exists.')
-            logger.error(f'Status code: {request_response.status_code}')
-            logger.error(f'Response: {request_response.text}')
-            return
          
         logger.info(f'Sucessfully retrieved doujin {doujin_id}')
 
@@ -55,13 +50,6 @@ class NHentaiAdapter(NhentaiInterface):
                                                                 'sort': sort if isinstance(sort, str) else sort.value, 
                                                                 'page': page},
                                                           headers={'User-Agent': 'Mozilla/5.0'})
-
-        if request_response.status_code != 200:
-            print('Something went wrong while searching for doujin.')
-            print(f'Host: {request_response.host}')
-            print(f'Status code: {request_response.status_code}')
-            print(f'Response: {request_response.text}')
-            return
         
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
 
@@ -72,7 +60,7 @@ class NHentaiAdapter(NhentaiInterface):
         total_pages = int(last_page_a_tag['href'].split('=')[-1]) if last_page_a_tag else 1
         
         if not search_results_container:
-            print('Could not find search result container.')
+            logger.error('Could not find search result container.')
             return SearchResult(query=search_term,
                                 sort=sort if isinstance(sort, str) else sort.value,
                                 total_pages=total_pages,
@@ -83,7 +71,7 @@ class NHentaiAdapter(NhentaiInterface):
         search_results = search_results_container.find_all('div', {'class': 'gallery'})
 
         if not search_results:
-            print('Could not find any search results.')
+            logger.warn('Could not find any search results.')
             return SearchResult(query=search_term,
                                 sort=sort if isinstance(sort, str) else sort.value,
                                 total_pages=total_pages,
@@ -118,12 +106,6 @@ class NHentaiAdapter(NhentaiInterface):
         
     async def get_random(self) -> Doujin:
         request_response = await self.request_adapter.get(urljoin(self._BASE_URL, 'random'))
-
-        if request_response.status_code != 200:
-            print('Something went wrong while getting random doujin.')
-            print(f'Status code: {request_response.status_code}')
-            print(f'Response: {request_response.text}')
-            return
         
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
 
@@ -145,12 +127,6 @@ class NHentaiAdapter(NhentaiInterface):
 
         request_response = await self.request_adapter.get(self._BASE_URL)
 
-        if request_response.status_code != 200:
-            print('Something went wrong while getting popular page doujin.')
-            print(f'Status code: {request_response.status_code}')
-            print(f'Response: {request_response.text}')
-            return
-        
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
         
         popular_section = soup.find('div', class_='index-popular')
