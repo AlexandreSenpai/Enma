@@ -21,7 +21,7 @@ class Logger:
         self.logger.setLevel(level)
         return self
     
-    def disable_logger(self, logger_name: str):
+    def disable_logger(self, logger_name: str='NHentai'):
         logging.getLogger(logger_name).disabled = True
         return self
     

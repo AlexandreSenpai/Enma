@@ -1,12 +1,13 @@
 import pytest
 import sys
 import os
+from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.nhentai.infra.adapters.repositories.hentai.interfaces import Cover, Doujin, DoujinPage, Tag, Sort
-from NHentai.nhentai.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
-from NHentai.nhentai.infra.adapters.request.implementations.http import RequestsAdapter
+from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Cover, Doujin, DoujinPage, Tag, Sort
+from NHentai.sync.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
+from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter
 
 class TestGetDoujin:
     def test_get_doujin_successfully(self):
@@ -15,12 +16,14 @@ class TestGetDoujin:
 
         assert doujin.id == 279406
     
-    def test_get_inexistent_doujin(self):
+    def test_it_should_throw_exception_when_doujin_was_not_found(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        doujin = sut.get_doujin(doujin_id=0)
-
-        assert doujin is None
-
+        try:
+            sut.get_doujin(doujin_id=0)
+            assert False
+        except ApiError as e:
+            assert e.status_code == 404
+            
     def test_get_doujin_successfully_passing_string_id(self):
         sut = NHentaiAdapter(RequestsAdapter())
         doujin = sut.get_doujin(doujin_id='279406')

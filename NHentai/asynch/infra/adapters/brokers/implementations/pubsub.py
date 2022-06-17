@@ -3,6 +3,7 @@ from dataclasses import asdict, dataclass
 import json
 import os
 from typing import Optional, List
+from attr import attributes
 
 from google.cloud import pubsub_v1
 
@@ -67,5 +68,7 @@ class PubSubBroker(BrokerInterface[PubSubMessage]):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../core/auth/google/pubsub.json'))
     
     def publish(self, message: PubSubMessage):
-        future: Future = self.client.publish(self.topic, bytes(message.to_json(), encoding='utf-8'))
+        future: Future = self.client.publish(self.topic, 
+                                             bytes(message.to_json(), encoding='utf-8'),
+                                             action='create-doujin')
         return future.result()

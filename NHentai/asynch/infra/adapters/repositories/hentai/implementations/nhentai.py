@@ -4,7 +4,7 @@ from NHentai.core.handler import ApiError
 
 from NHentai.core.logging import logger
 from NHentai.asynch.infra.adapters.repositories.hentai.hentai_interface import NhentaiInterface
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage, DoujinThumbnail
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage
 
 from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
 

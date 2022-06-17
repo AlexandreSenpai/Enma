@@ -1,10 +1,11 @@
 import pytest
 import sys
 import os
+from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.nhentai.infra.adapters.request.implementations.http import RequestsAdapter, RequestResponse
+from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter, RequestResponse
 
 class TestRequest:
     def test_success_get_request(self):
@@ -15,11 +16,13 @@ class TestRequest:
         assert response.text != ''
     
     def test_404_page(self):
-        sut = RequestsAdapter()
-        response = sut.get('https://www.alexandre-ramos.space/teste')
-        
-        assert response.status_code == 404
-    
+        try:
+            sut = RequestsAdapter()
+            sut.get('https://www.alexandre-ramos.space/teste')
+            assert False
+        except ApiError as err:
+            assert err.status_code == 404
+            
     def test_request_with_params(self):
         sut = RequestsAdapter()
         response = sut.get('https://www.alexandre-ramos.space', params={'teste': 'teste'})
@@ -31,13 +34,13 @@ class TestRequest:
         sut = RequestsAdapter()
         encoded_string = sut.parse_params_to_url_safe(params={'id': 'Hellö Wörld@'})
         
-        assert encoded_string.get('id', '') == 'Hell%C3%B6%20W%C3%B6rld%40'
+        assert encoded_string == 'id=Hell%C3%B6%20W%C3%B6rld%40'
     
     def test_parse_params_to_url_encode_safe_without_special_chars(self):
         sut = RequestsAdapter()
         encoded_string = sut.parse_params_to_url_safe(params={'id': 'HelloWorld'})
 
-        assert encoded_string.get('id', '') == 'HelloWorld'
+        assert encoded_string == 'id=HelloWorld'
     
     def test_response_matches_with_interface(self):
         sut = RequestsAdapter()

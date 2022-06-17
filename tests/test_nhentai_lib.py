@@ -1,6 +1,7 @@
 import pytest
 import sys
 import os
+from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -24,10 +25,13 @@ class TestGetDoujin:
         doujin = sut.get_doujin(doujin_id=2)
         assert isinstance(doujin, Doujin)
     
-    def test_get_none_doujin_if_it_doesnt_exists(self):
+    def test_it_should_throw_error_if_it_doesnt_exists(self):
         sut = NHentai()
-        doujin = sut.get_doujin(doujin_id=99999999999)
-        assert doujin is None
+        try:
+            sut.get_doujin(doujin_id=0)
+            assert False
+        except ApiError as e:
+            assert e.status_code == 404
 
 class TestSearchDoujin:
     def test_success_doujin_searching_with_complex_query(self):
@@ -60,4 +64,4 @@ class TestPopularNow:
         
         assert popular is not None
         assert isinstance(popular, PopularPage)
-        assert isinstance(popular.doujins[0], DoujinThumbnail)
+        assert isinstance(popular.doujins[0], Doujin)
