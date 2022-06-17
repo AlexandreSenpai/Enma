@@ -1,0 +1,13 @@
+{
+    "type": "service_account",
+    "project_id": "eroneko",
+    "private_key_id": "a9dee816bf63d1ce282983d0793f7130ac71363d",
+    "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCY89jB6MWku2KG\nzCPNYrqMZz8t0kvjcdNf8MW4zfXSbsd6R8tt07EcGee0Rx1uHPn9E5huDW4Ns07u\nye2ZtBbpUdDit/QW2fqrj36oqmpPavz5EUC9xSb4OgjSFbA0a9clkNbV0drbXQ1Q\n/EHiYkXF1W+bAS1RRQGuEv49O0uPE69kXh28kjri8KBpIwLUfvDLz6bQ0mMkPyBG\ncg8cOc0/DtYl8fQKXI2GkGiKHaSW8DcUg+yqUmrTDjxC1T7PV1EbQ0ClRnuQuDTL\nHzFvWcYEH+UHBN7iNEY/B16h0nZDzsNFjFXIMrHJ19UYGdpC4pmAG3dvR9hCNfq3\noI9ScjMLAgMBAAECggEAPFnDBkgVbDlv1+ZGniy9lNbMTAU1YmowUCPNsGy7+Ssy\n1GHtt8kWkhL6pNyGlUMjtKL9uzbbXNaKZ5gPg11WyPs6Y6rXygh6ayU0gdK0HeAG\nLzSKihZ3mOw1PMfH/fcrLixnSHkEVRfzQCg4yt2h0Dy2S7/8JJwI3Kmr3Xc/ChXK\n57CssNyldk4nUL0KMN67tVwX2kIjEjR4+WebnCVYhGbKDtawM+fDdTDC8Al7/TPc\nodVlfbD8gBJfGAdJloLBAI/W3/abD71wOMUQklptT7+nhkZEI5lDdwHtXR2QMvZF\nlKS97m3180yUt6c7S8VPqZOKiOHxZqI8RPOUFSFOCQKBgQDSIBwCyvu7wapTe1CN\ncxqoZO0hxnapHVJM2s0FccXBF5tUyi7vdUbsgXkJU+TQmJJTSBHm8x/PKRXpA8eP\nL5yYm0BQlbQH7dAM2wdjBOBLaNpvKuEaQ2eNZESgvcwH3ZIvVvxwQ3AIkilpjbGC\n4E++WFpMtpiUzLAII147ckzplQKBgQC6WFliypved0dBMFh0HTjgTdwpcZL7/H7E\nfiRHwAuY+1qxFtn8MPpFqiOoBvIxReUDsGOTQz77IKaNBI+5aDAZGX2DZGixpUIR\nFkOR9BUT+6gR6/Y0c0QfmjCn8T38bVwfj2G/aZOVYCqagNCtIKeNZy5Krw6n0+6F\nQ2OIB+PCHwKBgHIJ2yno4BZWVQpZsq4R+jXKEKhz/ZJqx2/Oj9aUmK7jEPpDgJWV\nIJja68WUMmrDYyavxoeBC5JyyeFcm8GqJWLtX0pc9QgYmQFhHfEvhEto7KPIscJ/\nMoQaFuTmHQVnyx7GJtsGvpboPHF85QoSkzTK3rcjokufiynfiBTbQ8LBAoGAX6i5\nAjD2QQbESl+yGLFjoCn4CkJmbPsabG5A26Bnk7n8vYn4jzDpWVfVBA3EyKyTuwgS\npedQboQ9W4jq6wfkIQ5n00p5QDCQsMrYFxXQuDho+AJEmnpNj1eNALmj03CkaQMm\n76cX/wel9ziHZ0irGrjMF8Sz5k2yVTDZ6Fv8fIsCgYAmr1Vv9VuNswHkaleahvTW\ngdTUDu5CBA/9YP5cjR7jicy4v90QKQWBGMrbjkp0GNcJ3Ajov/pmp3uNwgebahYM\ngU0Gc4eH3YAidmXN+8YHsHs/ZRIuMBwOyDNFt9nh0W3FChAMioiHSDoQkSJ4DiGE\nPbhQZJFA0Do6RDbozsULXg==\n-----END PRIVATE KEY-----\n",
+    "client_email": "pubsub-publisher@eroneko.iam.gserviceaccount.com",
+    "client_id": "110214826007614819147",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/pubsub-publisher%40eroneko.iam.gserviceaccount.com"
+  }
+  

@@ -48,5 +48,5 @@ class TagListPage(BaseDataclass):
 
 @dataclass
 class PopularPage(BaseDataclass):
-    doujins: List[DoujinThumbnail]
+    doujins: List[Doujin]
     total_doujins: int

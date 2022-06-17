@@ -83,7 +83,7 @@ class NHentaiAdapter(NhentaiInterface):
 
         doujin_ids = [[]]
         doujins = []
-        doujin_per_async_request = 3
+        doujin_per_async_request = 2
         for a_tag in a_tags_with_doujin_id:
             if a_tag is None:
                 continue
@@ -135,16 +135,10 @@ class NHentaiAdapter(NhentaiInterface):
         for item in popular_section.find_all('div', class_='gallery'):
             DOUJIN_ID = item.find('a', class_='cover')['href'].split('/')[2]
 
-            POPULAR_DOUJIN = self.get_doujin(DOUJIN_ID)
+            POPULAR_DOUJIN = await self.get_doujin(DOUJIN_ID)
 
             if POPULAR_DOUJIN is not None:
-                DOUJINS.append(DoujinThumbnail(id=POPULAR_DOUJIN.id,
-                                               media_id=POPULAR_DOUJIN.media_id,
-                                               title=POPULAR_DOUJIN.title,
-                                               languages=POPULAR_DOUJIN.languages,
-                                               cover=POPULAR_DOUJIN.cover,
-                                               url=urljoin(self._BASE_URL, f"/g/{POPULAR_DOUJIN.id}"),
-                                               tags=POPULAR_DOUJIN.tags))
+                DOUJINS.append(POPULAR_DOUJIN)
         
         return PopularPage(doujins=DOUJINS,
                            total_doujins=len(DOUJINS))
