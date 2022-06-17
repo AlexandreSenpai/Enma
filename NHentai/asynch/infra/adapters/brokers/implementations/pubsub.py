@@ -3,7 +3,6 @@ from dataclasses import asdict, dataclass
 import json
 import os
 from typing import Optional, List
-from attr import attributes
 
 from google.cloud import pubsub_v1
 
@@ -40,19 +39,11 @@ class Title:
     chinese: str
 
 @dataclass
-class Language:
-    main: str
-    english: str
-    japanese: str
-    chinese: str
-    translated: str
-
-@dataclass
 class PubSubMessage:
     title: Title
     created_at: str
     updated_at: str
-    language: Language
+    language: List[str]
     source: Source
     tags: List[str]
     groups: List[str]

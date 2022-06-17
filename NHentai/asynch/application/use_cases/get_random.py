@@ -1,7 +1,7 @@
 import asyncio
 from NHentai.core.logging import logger
 from NHentai.asynch.infra.adapters.brokers.broker_interface import BrokerInterface
-from NHentai.asynch.infra.adapters.brokers.implementations.pubsub import Language, PubSubMessage, Title, Image, Images, Source
+from NHentai.asynch.infra.adapters.brokers.implementations.pubsub import PubSubMessage, Title, Image, Images, Source
 from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NhentaiInterface
 from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import Doujin
 
@@ -20,10 +20,7 @@ class GetRandomDoujinUseCase:
                             chinese=doujin.title.chinese,
                             english=doujin.title.english,
                             japanese=doujin.title.japanese),
-                language=Language(chinese=[chinese for chinese in doujin.languages if chinese.name.lower() == 'chinese'][0] or None,
-                                    english=[english for english in doujin.languages if english.name.lower() == 'english'][0] or None,
-                                    japanese=[japanese for japanese in doujin.languages if japanese.name.lower() == 'japanese'][0] or None,
-                                    translated=[translated for translated in doujin.languages if translated.name.lower() == 'translated'][0] or None),
+                language=[language.name for language in doujin.languages],
                 created_at=doujin.upload_at,
                 updated_at=doujin.upload_at,
                 characters=[char.name for char in doujin.characters],
