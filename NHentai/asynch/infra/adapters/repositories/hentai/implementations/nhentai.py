@@ -1,6 +1,7 @@
 import asyncio
 from urllib.parse import urljoin
 from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import Comment, CommentPage
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.page import Page
 from NHentai.core.handler import ApiError
 
 from NHentai.core.logging import logger
@@ -160,4 +161,33 @@ class NHentaiAdapter(NhentaiInterface):
         return CommentPage(comments=comments,
                            total_comments=len(comments))
         
+    async def get_page(self, page: int=1) -> Page:
+        """This method paginates through the homepage of NHentai and returns the doujins.
+        Args:
+            page: number of the pagination page.
+        Returns:
+            HomePage: dataclass with a list of Doujin.
+                You can access the dataclass information in the `entities` folder.
+        """
+
+        logger.info(f'Fetching page {page} of homepage')
+        request_response = await self.request_adapter.get(urljoin(self._API_URL, f'galleries/all'),
+                                                          params={'page': page})
+        data = request_response.json
         
+
+        DOUJINS = [Doujin.from_json(json_obj,
+                                    self._BASE_URL,
+                                    self._IMAGE_BASE_URL,
+                                    self._TINY_IMAGE_BASE_URL) for json_obj in data.get('result')]
+
+        PAGES = data.get('num_pages', 0)
+        PER_PAGE = data.get('per_page', 0)
+        TOTAL_RESULTS = int(PAGES) * int(PER_PAGE)
+
+        return Page(
+            doujins=DOUJINS,
+            total_results=TOTAL_RESULTS,
+            total_pages=PAGES,
+            per_page=PER_PAGE,
+            page=int(page))

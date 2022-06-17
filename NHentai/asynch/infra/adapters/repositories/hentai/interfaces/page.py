@@ -2,12 +2,12 @@ from .base_dataclass import BaseDataclass
 from typing import List
 from dataclasses import dataclass
 
-from .doujin import Doujin, DoujinThumbnail
+from .doujin import Doujin
 # from .links import CharacterLink
 
 @dataclass
 class Page(BaseDataclass):
-    doujins: List[DoujinThumbnail]
+    doujins: List[Doujin]
     total_results: int
     total_pages: int
     per_page: int

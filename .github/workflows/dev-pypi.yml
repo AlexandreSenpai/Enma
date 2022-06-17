@@ -16,7 +16,7 @@ jobs:
           python-version: 3.9
       - name: Setting environment name
         run: |
-          environment_name='dev'
+          export environment_name=dev
       - name: Changing package name
         run: |
           mv NHentai ./dev_nhentai

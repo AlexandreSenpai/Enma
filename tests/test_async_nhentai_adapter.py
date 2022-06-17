@@ -4,6 +4,7 @@ import os
 
 import requests
 from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import Comment, CommentPage
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.page import Page
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -147,3 +148,17 @@ class TestGetComments:
         comments = await sut.get_comments(doujin_id=216581)
         req = requests.get(comments.comments[0].poster.avatar_url)
         assert req.status_code == 200
+
+class TestGetPage:
+    @pytest.mark.asyncio
+    async def test_it_should_get_first_page_successfully(self):
+        sut = NHentaiAdapter(RequestsAdapter())
+        page = await sut.get_page(page=1)
+        assert isinstance(page, Page)
+        assert isinstance(page.doujins[0], Doujin)
+    
+    @pytest.mark.asyncio
+    async def test_it_should_throw_error_when_it_doesnt_find_page(self):
+        sut = NHentaiAdapter(RequestsAdapter())
+        page = await sut.get_page(page=-10)
+        assert len(page.doujins) == 0

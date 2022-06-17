@@ -16,7 +16,7 @@ jobs:
           python-version: 3.9
       - name: Setting environment name
         run: |
-          export environment_name='prd'
+          export environment_name=prd
       - name: Create dist folder
         run: |
           python setup.py sdist --dist-dir=./dist

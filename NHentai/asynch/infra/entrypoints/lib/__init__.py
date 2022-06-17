@@ -1,8 +1,10 @@
 from NHentai.asynch.application.use_cases.get_comments import GetCommentsUseCase
+from NHentai.asynch.application.use_cases.get_page import GetPageUseCase
 from NHentai.asynch.infra.adapters.brokers.implementations.pubsub import PubSubBroker
 from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
 from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Sort, Doujin, PopularPage
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import CommentPage 
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import CommentPage
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.page import Page 
 from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
 from NHentai.asynch.application.use_cases import (SearchDoujinUseCase,
                                                    GetDoujinUseCase,
@@ -34,3 +36,8 @@ class NHentaiAsync:
     @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='doujin_id').async_cache
     async def get_comments(self, doujin_id: int) -> CommentPage:
         return await GetCommentsUseCase(nhentai_repo=self._NHENTAI_ADAPTER).execute(doujin_id=doujin_id)
+
+    @Cache(max_age_seconds=3600, max_size=15, cache_key_position=1, cache_key_name='page').async_cache
+    async def get_page(self, page:int=1) -> Page:
+        return await GetPageUseCase(nhentai_repo=self._NHENTAI_ADAPTER,
+                                    message_broker=self._PUBSUB_MESSAGE_BROKER).execute(page=page)
