@@ -1,44 +1,52 @@
 import pytest
 import sys
 import os
-from NHentai.core.handler import ApiError
+
+import requests
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import Comment, CommentPage
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Cover, Doujin, DoujinPage, Tag, Sort
-from NHentai.sync.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
-from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter
+from NHentai.core.handler import ApiError
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Cover, Doujin, DoujinPage, Tag, Sort
+from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
+from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
 
 class TestGetDoujin:
-    def test_get_doujin_successfully(self):
+    @pytest.mark.asyncio
+    async def test_get_doujin_successfully(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        doujin = sut.get_doujin(doujin_id=279406)
+        doujin = await sut.get_doujin(doujin_id=279406)
 
         assert doujin.id == 279406
     
-    def test_it_should_throw_exception_when_doujin_was_not_found(self):
+    @pytest.mark.asyncio
+    async def test_it_should_throw_exception_when_doujin_was_not_found(self):
         sut = NHentaiAdapter(RequestsAdapter())
         try:
-            sut.get_doujin(doujin_id=0)
+            await sut.get_doujin(doujin_id=0)
             assert False
         except ApiError as e:
             assert e.status_code == 404
             
-    def test_get_doujin_successfully_passing_string_id(self):
+    @pytest.mark.asyncio
+    async def test_get_doujin_successfully_passing_string_id(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        doujin = sut.get_doujin(doujin_id='279406')
+        doujin = await sut.get_doujin(doujin_id='279406')
 
         assert doujin.id == 279406
     
-    def test_get_doujin_response_instance(self):
+    @pytest.mark.asyncio
+    async def test_get_doujin_response_instance(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        doujin = sut.get_doujin(doujin_id=279406)
+        doujin = await sut.get_doujin(doujin_id=279406)
 
         assert isinstance(doujin, Doujin)
     
-    def test_get_doujin_should_not_have_none_fields(self):
+    @pytest.mark.asyncio
+    async def test_get_doujin_should_not_have_none_fields(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        doujin = sut.get_doujin(doujin_id=279406)
+        doujin = await sut.get_doujin(doujin_id=279406)
 
         assert doujin.id == 279406
         assert doujin.title.english is not None and isinstance(doujin.title.english, str)
@@ -58,47 +66,84 @@ class TestGetDoujin:
         assert doujin.images is not None and [isinstance(image, DoujinPage) for image in doujin.images]
         assert doujin.total_favorites is not None and isinstance(doujin.total_favorites, int)
         assert doujin.total_pages is not None and isinstance(doujin.total_pages, int)
+        
+    @pytest.mark.asyncio
+    async def test_doujin_pages_url_should_exist(self):
+        sut = NHentaiAdapter(RequestsAdapter())
+        doujin = await sut.get_doujin(doujin_id=216581)
+        req = requests.get(doujin.images[0].src)
+        assert req.status_code == 200
 
 class TestSearchDoujin:
-    def test_searching_doujin_successfully_excluding_tags(self):
+    @pytest.mark.asyncio
+    async def test_searching_doujin_successfully_excluding_tags(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        searching_result = sut.search_doujin(search_term='esdeath -lolicon -shotacon -incest -rape')
+        searching_result = await sut.search_doujin(search_term='esdeath -lolicon -shotacon -incest -rape')
         
         assert searching_result is not None
         assert searching_result.doujins is not None and False not in [isinstance(doujin, Doujin) for doujin in searching_result.doujins]
         assert searching_result.total_pages is not None and searching_result.total_pages > 0
         assert searching_result.total_results == len(searching_result.doujins) if searching_result.total_pages == 1 else False
 
-    def test_searching_doujin_successfully(self):
+    @pytest.mark.asyncio
+    async def test_searching_doujin_successfully(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        searching_result = sut.search_doujin(search_term='araragi')
+        searching_result = await sut.search_doujin(search_term='araragi')
 
         assert searching_result is not None
         assert searching_result.doujins is not None and False not in [isinstance(doujin, Doujin) for doujin in searching_result.doujins]
         assert searching_result.total_pages is not None and searching_result.total_pages > 0
     
-    def test_searching_with_custom_sort(self):
+    @pytest.mark.asyncio
+    async def test_searching_with_custom_sort(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        searching_result = sut.search_doujin(search_term='houshou marine', sort=Sort.WEEK)
+        searching_result = await sut.search_doujin(search_term='houshou marine', sort=Sort.WEEK)
 
         assert searching_result is not None
         assert searching_result.doujins is not None and False not in [isinstance(doujin, Doujin) for doujin in searching_result.doujins]
         assert searching_result.sort == 'popular-week'
   
-    def test_searching_with_no_results(self):
+    @pytest.mark.asyncio
+    async def test_searching_with_no_results(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        searching_result = sut.search_doujin(search_term='alexandresenpai')
+        searching_result = await sut.search_doujin(search_term='alexandresenpai')
 
         assert searching_result is not None
         assert searching_result.doujins == []
         assert searching_result.total_pages == 1
         assert searching_result.total_results == 0
   
-    def test_searching_paginating(self):
+    @pytest.mark.asyncio
+    async def test_searching_paginating(self):
         sut = NHentaiAdapter(RequestsAdapter())
-        searching_result = sut.search_doujin(search_term='houshou marine', page=2)
+        searching_result = await sut.search_doujin(search_term='houshou marine', page=2)
 
         assert searching_result is not None
         assert searching_result.doujins is not None and False not in [isinstance(doujin, Doujin) for doujin in searching_result.doujins]
         assert searching_result.sort is None
         assert searching_result.page == 2
+
+class TestGetComments:
+    @pytest.mark.asyncio
+    async def test_it_should_get_all_comments_successfully(self):
+        sut = NHentaiAdapter(RequestsAdapter())
+        comments = await sut.get_comments(doujin_id=216581)
+        assert isinstance(comments, CommentPage)
+        assert len(comments.comments) == comments.total_comments
+        assert isinstance(comments.comments[0], Comment)
+    
+    @pytest.mark.asyncio
+    async def test_it_should_throw_error_when_it_doesnt_find_comments(self):
+        sut = NHentaiAdapter(RequestsAdapter())
+        try:
+            await sut.get_comments(doujin_id=0)
+            assert False
+        except ApiError as err:
+            assert err.status_code == 404
+    
+    @pytest.mark.asyncio
+    async def test_avatar_url_should_exist(self):
+        sut = NHentaiAdapter(RequestsAdapter())
+        comments = await sut.get_comments(doujin_id=216581)
+        req = requests.get(comments.comments[0].poster.avatar_url)
+        assert req.status_code == 200

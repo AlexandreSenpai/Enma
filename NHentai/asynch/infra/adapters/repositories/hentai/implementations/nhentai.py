@@ -1,5 +1,6 @@
 import asyncio
 from urllib.parse import urljoin
+from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import Comment, CommentPage
 from NHentai.core.handler import ApiError
 
 from NHentai.core.logging import logger
@@ -16,8 +17,8 @@ class NHentaiAdapter(NhentaiInterface):
     _BASE_URL = 'https://nhentai.net/'
     _API_URL = 'https://nhentai.net/api/'
     _IMAGE_BASE_URL = 'https://i.nhentai.net/galleries/'
+    _AVATAR_URL = 'https://i5.nhentai.net/'
     _TINY_IMAGE_BASE_URL = _IMAGE_BASE_URL.replace('/i.', '/t.')
-
 
     def __init__(self, request_adapter: RequestsAdapter):
         self.request_adapter = request_adapter
@@ -142,3 +143,21 @@ class NHentaiAdapter(NhentaiInterface):
         
         return PopularPage(doujins=DOUJINS,
                            total_doujins=len(DOUJINS))
+
+    async def get_comments(self, doujin_id: int) -> CommentPage:
+        """This method returns all comments of a doujin.
+        Args:
+            doujin_id:
+                Id of the doujin.
+        Returns:
+
+        """
+        
+        request_response = await self.request_adapter.get(urljoin(self._API_URL, f'gallery/{doujin_id}/comments'))
+        
+        comments = [Comment.from_json(json_object=comment_json, avatar_url=self._AVATAR_URL) for comment_json in request_response.json]
+        
+        return CommentPage(comments=comments,
+                           total_comments=len(comments))
+        
+        

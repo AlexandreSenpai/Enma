@@ -168,3 +168,45 @@ class DoujinThumbnail(BaseDataclass):
                         "tags": [Tag.from_json(tag) for tag in json_object.get('tags')]}
 
                 return cls(*args.values())
+
+@dataclass
+class User(BaseDataclass):
+        id: int
+        username: str
+        slug: str
+        avatar_url: str
+        is_superuser: bool
+        is_staff: bool
+
+@dataclass
+class Comment(BaseDataclass):
+        id: int
+        gallery_id: int
+        poster: User
+        post_date: int
+        body: str
+        
+        @classmethod
+        def from_json(cls, 
+                        json_object: dict, 
+                        avatar_url: str):
+
+                user = User(id=json_object.get('poster', {}).get('id'),
+                            username=json_object.get('poster', {}).get('username'),
+                            avatar_url=urljoin(avatar_url, json_object.get('poster', {}).get('avatar_url')),
+                            is_staff=json_object.get('poster', {}).get('is_staff'),
+                            is_superuser=json_object.get('poster', {}).get('is_superuser'),
+                            slug=json_object.get('poster', {}).get('slug'))
+
+                args = {"id": int(json_object.get('id')),
+                        "gallery_id": int(json_object.get('gallery_id')),
+                        "poster": user,
+                        "post_date": datetime.fromtimestamp(json_object.get('post_date')).strftime('%Y-%m-%d %H:%M:%S'),
+                        "body": json_object.get('body', "")}
+                
+                return cls(*args.values())
+
+@dataclass
+class CommentPage(BaseDataclass):
+        total_comments: int
+        comments: List[Comment]

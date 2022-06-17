@@ -6,7 +6,7 @@ from urllib.parse import urljoin
 from NHentai.sync.infra.utils import ThreadWithReturnValue
 from NHentai.core.logging import logger
 from NHentai.sync.infra.adapters.repositories.hentai.hentai_interface import NhentaiInterface
-from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage, DoujinThumbnail
+from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage
 
 from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter
 
@@ -139,13 +139,7 @@ class NHentaiAdapter(NhentaiInterface):
             POPULAR_DOUJIN = self.get_doujin(DOUJIN_ID)
 
             if POPULAR_DOUJIN is not None:
-                DOUJINS.append(DoujinThumbnail(id=POPULAR_DOUJIN.id,
-                                               media_id=POPULAR_DOUJIN.media_id,
-                                               title=POPULAR_DOUJIN.title,
-                                               languages=POPULAR_DOUJIN.languages,
-                                               cover=POPULAR_DOUJIN.cover,
-                                               url=urljoin(self._BASE_URL, f"/g/{POPULAR_DOUJIN.id}"),
-                                               tags=POPULAR_DOUJIN.tags))
+                DOUJINS.append(POPULAR_DOUJIN)
         
         return PopularPage(doujins=DOUJINS,
                            total_doujins=len(DOUJINS))
