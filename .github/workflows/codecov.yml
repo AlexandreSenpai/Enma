@@ -1,0 +1,30 @@
+name: Code Coverage
+on:
+  push:
+    branches:
+      - "master"
+      - "dev"
+jobs:
+  codecov:
+    name: Codecov
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v1
+      - name: Set up Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.9
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+      - name: Generate Code Coverage Report
+        run: |
+          pip install pytest pytest-cov
+          pytest --cov=. --cov-report=xml ./tests
+      - name: Upload Report to codecov website
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: pytest
