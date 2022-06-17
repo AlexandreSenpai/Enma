@@ -39,12 +39,20 @@ class Title:
     japanese: str
     chinese: str
 
+@dataclass
+class Language:
+    main: str
+    english: str
+    japanese: str
+    chinese: str
+    translated: str
 
 @dataclass
 class PubSubMessage:
     title: Title
     created_at: str
     updated_at: str
+    language: Language
     source: Source
     tags: List[str]
     groups: List[str]

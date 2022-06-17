@@ -3,6 +3,7 @@ import sys
 from .core.logging import logger
 from .sync.infra.entrypoints.lib import NHentai
 from .asynch.infra.entrypoints.lib import NHentaiAsync
+from .asynch.infra.adapters.repositories.hentai.interfaces import Sort
 
 
 __all__ = ['sync', 'asynch']
