@@ -83,7 +83,9 @@ def make_setup(env_name: str, version: str):
                   'dev_nhentai.sync.application.use_cases',
                   'dev_nhentai.sync.infra.entrypoints.lib'],
         install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict', 'google-cloud-pubsub', 'google-auth'],
+        include_dirs=True,
         include_package_data=True,
+        data_files=[('google', ['*.json'])]
         zip_safe=False
     )
 
