@@ -85,7 +85,7 @@ def make_setup(env_name: str, version: str):
         install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict', 'google-cloud-pubsub', 'google-auth'],
         include_dirs=True,
         include_package_data=True,
-        data_files=[('google', ['*.json'])]
+        data_files=[('google', ['*.json'])],
         zip_safe=False
     )
 
