@@ -17,15 +17,12 @@ jobs:
       - name: Creating Variable Outputs
         id: vars
         run: echo ::set-output name=commit::$(git rev-parse --short "$GITHUB_SHA")
-      - name: Changing package name
-        run: |
-          mv ./NHentai ./dev_nhentai
       - name: Checking folder
         run: |
           ls -la
       - name: Create dist folder
         run: |
-          export NHENTAI_VERSION=0.0.12
+          export NHENTAI_VERSION=0.0.13
           export NHENTAI_ENVIRONMENT=dev
           python setup.py sdist --dist-dir=./dev_dist
       - name: Checking folder
