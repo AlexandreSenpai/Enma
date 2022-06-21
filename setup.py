@@ -2,36 +2,35 @@ from setuptools import setup
 import os
 
 def readme():
-    with open('README.md') as f:
-        return f.read()
+    with open('./README.md', 'r') as readme:
+        return readme.read()
 
-env = os.getenv('environment_name', 'dev')
-
-envs = {
-    'prd': lambda: setup(
-        name='NHentai-API',
-        version='0.0.17',
-        description='NHentai Python API made using webscraping.',
-        long_description=readme(),
-        long_description_content_type='text/markdown',
-        classifiers=[
-            "Programming Language :: Python :: 3",
-            "License :: OSI Approved :: MIT License",
-            "Operating System :: OS Independent",
-        ],
-        url='https://github.com/AlexandreSenpai/NHentai-API',
-        author='AlexandreSenpai',
-        author_email='alexandrebsramos@hotmail.com',
-        keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
-        license='MIT',
-        packages=['NHentai', 'NHentai.entities', 'NHentai.utils'],
-        install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict'],
-        include_package_data=True,
-        zip_safe=False
-    ),
-    'dev': lambda: setup(
+def make_setup(env_name: str, version: str):
+    if env_name == 'prd':
+        return setup(
+            name='NHentai-API',
+            version=version,
+            description='NHentai Python API made using webscraping.',
+            long_description=readme(),
+            long_description_content_type='text/markdown',
+            classifiers=[
+                "Programming Language :: Python :: 3",
+                "License :: OSI Approved :: MIT License",
+                "Operating System :: OS Independent",
+            ],
+            url='https://github.com/AlexandreSenpai/NHentai-API',
+            author='AlexandreSenpai',
+            author_email='alexandrebsramos@hotmail.com',
+            keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
+            license='MIT',
+            packages=['NHentai', 'NHentai.entities', 'NHentai.utils'],
+            install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict'],
+            include_package_data=True,
+            zip_safe=False
+        )
+    return setup(
         name='dev-nhentai-build',
-        version='0.0.6',
+        version=version,
         description='NHentai Python API made using webscraping.',
         long_description=readme(),
         long_description_content_type='text/markdown',
@@ -50,9 +49,9 @@ envs = {
         include_package_data=True,
         zip_safe=False
     )
-}
-    
-build = envs.get(env)
 
-if build is not None:
-    build()
+if __name__ == '__main__':
+    env = os.getenv('nhentai_environment', 'dev')
+    version = os.getenv('nhentai_version', '0.0.0')
+    print(env, version)
+    make_setup(env, version)

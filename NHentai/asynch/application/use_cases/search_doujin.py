@@ -12,7 +12,7 @@ class SearchDoujinUseCase:
         self.message_broker = message_broker
         self.loop = asyncio.get_running_loop()
     
-    async def execute(self, query: str, sort: str='recent', page: int=1):
-        result = await self.nhentai_repo.search_doujin(search_term=query, sort=sort, page=page)
+    async def execute(self, query: str, sort: str='recent', page: int=1, parallel_jobs: int=1):
+        result = await self.nhentai_repo.search_doujin(search_term=query, sort=sort, page=page, parallel_jobs=parallel_jobs)
         self.loop.create_task(PropagateMessage.async_publish(adapter=self.message_broker, data=result.doujins))
         return result

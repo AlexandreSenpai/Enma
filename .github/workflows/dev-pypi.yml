@@ -10,16 +10,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
+      - name: Setting Pipeline Variables
+        id: vars
+        run: echo ::set-output name=commit::$(git rev-parse --short "$GITHUB_SHA")
+      - name: Setting Environments
+        env:
+          NHENTAI_VERSION: ${{ steps.vars.outputs.commit }}
+          NHENTAI_ENVIRONMENT: dev
       - name: Set up Python
         uses: actions/setup-python@master
         with:
           python-version: 3.9
-      - name: Setting environment name
-        run: |
-          export environment_name=dev
       - name: Changing package name
         run: |
-          mv NHentai ./dev_nhentai
+          mv ./NHentai ./dev_nhentai
+      - name: Checking folder
+        run: |
+          ls -la
       - name: Create dist folder
         run: |
           python setup.py sdist --dist-dir=./dev_dist
