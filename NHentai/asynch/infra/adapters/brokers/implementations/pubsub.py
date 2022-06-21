@@ -5,6 +5,7 @@ import os
 from typing import Optional, List
 
 from google.cloud import pubsub_v1
+from google.oauth2 import service_account
 
 from NHentai.asynch.infra.adapters.brokers.broker_interface import BrokerInterface
 
@@ -61,12 +62,12 @@ class PubSubMessage:
 
 class PubSubBroker(BrokerInterface[PubSubMessage]):
     def __init__(self, topic: str, project_id: str):
-        self.set_auth_environment_variable()
-        self.client = pubsub_v1.PublisherClient()
+        self.client = self.create_client()
         self.topic = self.client.topic_path(project=project_id, topic=topic)  
     
-    def set_auth_environment_variable(self):
-        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../core/auth/google/pubsub.json'))
+    def create_client(self) -> pubsub_v1.PublisherClient:
+        creds = service_account.Credentials.from_service_account_file(filename=os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../core/auth/google/pubsub.json')))
+        return pubsub_v1.PublisherClient(credentials=creds)
     
     def publish(self, message: PubSubMessage):
         future: Future = self.client.publish(self.topic, 
