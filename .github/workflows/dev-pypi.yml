@@ -10,9 +10,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Declare some variables
-        run: |
-          echo "::set-output name=commit::$(git rev-parse --short HEAD)"
+        name: Setting Pipeline Variables
+        id: vars
+        run: echo ::set-output name=commit::$(git rev-parse --short "$GITHUB_SHA")
       - name: Setting Environments
         env:
           NHENTAI_VERSION: ${{ steps.vars.outputs.commit }}
