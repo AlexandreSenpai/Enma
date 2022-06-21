@@ -23,8 +23,8 @@ def make_setup(env_name: str, version: str):
             author_email='alexandrebsramos@hotmail.com',
             keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
             license='MIT',
-            packages=['NHentai', 'NHentai.entities', 'NHentai.utils'],
-            install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict'],
+            packages=['NHentai'],
+            install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict', 'google-cloud-pubsub', 'google-auth'],
             include_package_data=True,
             zip_safe=False
         )
@@ -44,8 +44,8 @@ def make_setup(env_name: str, version: str):
         author_email='alexandrebsramos@hotmail.com',
         keywords='Tagshentai, nhentai, nhentai.net, API, NSFW',
         license='MIT',
-        packages=['dev_nhentai', 'dev_nhentai.entities', 'dev_nhentai.utils'],
-        install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict'],
+        packages=['dev_nhentai'],
+        install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict', 'google-cloud-pubsub', 'google-auth'],
         include_package_data=True,
         zip_safe=False
     )
