@@ -11,8 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - name: Declare some variables
-        id: vars
-        shell: bash
         run: |
           echo "::set-output name=commit::$(git rev-parse --short HEAD)"
       - name: Setting Environments
