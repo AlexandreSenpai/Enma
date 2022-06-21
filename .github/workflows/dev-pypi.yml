@@ -25,7 +25,7 @@ jobs:
           ls -la
       - name: Create dist folder
         run: |
-          export NHENTAI_VERSION=0.0.8
+          export NHENTAI_VERSION=0.0.9
           export NHENTAI_ENVIRONMENT=dev
           python setup.py sdist --dist-dir=./dev_dist
       - name: Checking folder
