@@ -42,12 +42,9 @@ class RequestsAdapter(RequestInterface):
 
     async def get(self, url: str, params: Union[Dict[str, Any], None]=None, headers: Union[Dict[str, Any], None]=None) -> RequestResponse:
         cookies = self.request_settings.as_dict() if self.request_settings is not None else None
-        print(cookies)
         async with aiohttp.ClientSession(cookies=cookies) as session:
             async with session.get(f'{url}?{self.parse_params_to_url_safe(params=params) if params else ""}',  
                                     headers=headers or {}) as response:
-                filtered = session.cookie_jar.filter_cookies(response.host)
-                print(filtered)
                 await self.handle_error(request=response)
 
                 try:
