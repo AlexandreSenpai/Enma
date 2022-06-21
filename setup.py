@@ -85,12 +85,11 @@ def make_setup(env_name: str, version: str):
         install_requires=['requests', 'beautifulsoup4', 'aiohttp', 'expiringdict', 'google-cloud-pubsub', 'google-auth'],
         include_dirs=True,
         include_package_data=True,
-        data_files=[('google', ['*.json'])],
         zip_safe=False
     )
 
 if __name__ == '__main__':
     env = os.getenv('NHENTAI_ENVIRONMENT', 'dev')
-    version = os.getenv('NHENTAI_VERSION', '0.0.13')
+    version = os.getenv('NHENTAI_VERSION', '0.0.14')
     print(f'TARGET_ENVIRONMENT: {env}\nTARGET_VERSION: {version}')
     make_setup(env, version)
