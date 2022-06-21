@@ -4,11 +4,16 @@ from urllib import parse
 import requests
 
 from NHentai.core.handler import ApiError
+from NHentai.core.helpers.cloudflare import CloudFlareSettings
 from NHentai.sync.infra.adapters.request.http.interfaces.request import RequestInterface
 from NHentai.sync.infra.adapters.request.http.interfaces.response import RequestResponse
 
 
 class RequestsAdapter(RequestInterface):
+    
+    def __init__(self, request_settings: CloudFlareSettings=None):
+        self.request_settings = request_settings
+        
     def parse_params_to_url_safe(self, params: Dict[str, Any]) -> Dict[str, str]:
         return parse.urlencode(params, quote_via=parse.quote)
     
@@ -33,16 +38,19 @@ class RequestsAdapter(RequestInterface):
         
 
     def get(self, url: str, params: Union[Dict[str, Any], None]=None, headers: Union[Dict[str, Any], None]=None) -> RequestResponse:
-        response = requests.get(f'{url}?{self.parse_params_to_url_safe(params=params) if params else ""}',  
-                                headers=headers or {})
-        
-        self.handle_error(response)
-        
-        return RequestResponse(status_code=response.status_code, 
-                               host=response.url,
-                               headers=response.headers, 
-                               text=response.text, 
-                               json=response.json,
-                               history=[redirect.url for redirect in response.history])
-        
+        cookies = self.request_settings.as_dict() if self.request_settings is not None else None
+        with requests.Session() as session:
+            response = session.get(f'{url}?{self.parse_params_to_url_safe(params=params) if params else ""}',  
+                                    headers=headers or {},
+                                    cookies=cookies)
+            
+            self.handle_error(response)
+            
+            return RequestResponse(status_code=response.status_code, 
+                                host=response.url,
+                                headers=response.headers, 
+                                text=response.text, 
+                                json=response.json,
+                                history=[redirect.url for redirect in response.history])
+            
         

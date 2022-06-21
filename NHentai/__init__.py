@@ -3,7 +3,7 @@ import sys
 from .core.logging import logger
 from .sync.infra.entrypoints.lib import NHentai
 from .asynch.infra.entrypoints.lib import NHentaiAsync
-import NHentai.core.interfaces
+from .core.interfaces import Sort
 
 
 __all__ = ['sync', 'asynch']

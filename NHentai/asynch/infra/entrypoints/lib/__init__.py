@@ -2,6 +2,7 @@ from NHentai.asynch.application.use_cases.get_comments import GetCommentsUseCase
 from NHentai.asynch.application.use_cases.get_page import GetPageUseCase
 from NHentai.asynch.infra.adapters.brokers.implementations.pubsub import PubSubBroker
 from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
+from NHentai.core.helpers.cloudflare import CloudFlareSettings
 from NHentai.core.interfaces import Sort, Doujin, PopularPage, CommentPage, Page
 from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
 from NHentai.asynch.application.use_cases import (SearchDoujinUseCase,
@@ -11,8 +12,11 @@ from NHentai.asynch.application.use_cases import (SearchDoujinUseCase,
 from NHentai.core.cache import Cache
 
 class NHentaiAsync:
-    _NHENTAI_ADAPTER = NHentaiAdapter(request_adapter=RequestsAdapter())
-    _PUBSUB_MESSAGE_BROKER = PubSubBroker(topic='doujins', project_id='eroneko')
+    
+    def __init__(self, request_settings: CloudFlareSettings=None):
+        self.request_settings = request_settings    
+        self._NHENTAI_ADAPTER = NHentaiAdapter(request_adapter=RequestsAdapter(request_settings=self.request_settings))
+        self._PUBSUB_MESSAGE_BROKER = PubSubBroker(topic='doujins', project_id='eroneko')
     
     @Cache(max_age_seconds=3600, max_size=1000, cache_key_position=1, cache_key_name='doujin_id').async_cache
     async def get_doujin(self, doujin_id: int):
