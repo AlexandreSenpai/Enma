@@ -1,12 +1,12 @@
 import pytest
 import sys
 import os
-from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from NHentai.core.handler import ApiError
 from NHentai.asynch.infra.entrypoints.lib import NHentaiAsync 
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Doujin, Sort, SearchResult, PopularPage
+from NHentai.core.interfaces import Doujin, Sort, SearchResult, PopularPage, Page, CommentPage
 
 class TestGetDoujin:
     @pytest.mark.asyncio

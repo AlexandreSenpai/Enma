@@ -29,10 +29,13 @@ class Logger:
         self.logger.info(msg)
         
     def warn(self, msg: str):
-        self.logger.warn(msg)
+        self.logger.warning(msg)
         
     def error(self, msg: str):
         self.logger.error(msg)
+        
+    def debug(self, msg: str):
+        self.logger.debug(msg)
 
 logger = Logger(default_level=logging.INFO, 
                 handler=Handler(),

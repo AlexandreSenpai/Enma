@@ -1,15 +1,13 @@
 import asyncio
 from urllib.parse import urljoin
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import Comment, CommentPage
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.page import Page
-from NHentai.core.handler import ApiError
+from NHentai.core.interfaces.doujin import Comment, CommentPage
+from NHentai.core.interfaces.page import Page
 
 from NHentai.core.logging import logger
 from NHentai.asynch.infra.adapters.repositories.hentai.hentai_interface import NhentaiInterface
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Doujin, SearchResult, Sort, PopularPage
+from NHentai.core.interfaces import Doujin, SearchResult, Sort, PopularPage
 
 from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
-
 
 from bs4 import BeautifulSoup
 
@@ -28,11 +26,9 @@ class NHentaiAdapter(NhentaiInterface):
     async def get_doujin(self, doujin_id: int) -> Doujin:
         """This method fetches a doujin information based on id.
         Args:
-            id: 
-                Id of the target doujin.
+            @id: id of the target doujin.
         Returns:
-            Doujin: 
-                dataclass with the doujin information within.
+            @Doujin
         """
 
         logger.info(f'Retrieving doujin with id {doujin_id}')
@@ -46,7 +42,17 @@ class NHentaiAdapter(NhentaiInterface):
                                 image_base_url_prefix=self._IMAGE_BASE_URL,
                                 tiny_image_base_url_prefix=self._TINY_IMAGE_BASE_URL)
     
-    async def search_doujin(self, search_term: str, page: int=1, sort: Sort=Sort.RECENT) -> SearchResult:
+    async def search_doujin(self, search_term: str, page: int=1, sort: Sort=Sort.RECENT, parallel_jobs: int=1) -> SearchResult:
+        '''This method make you able to search for doujins that exists on NHentai.
+        Args:
+            @search_term: Your desired search query. e.g: maid
+            @page: Searching results returns many pages, you can paginate changing this argument.
+            @sort: Searching results can be sorted. Use Sort dataclass to pass the correct arguments
+            @parallel_jobs: To return all doujin informations, to each result an get_doujin request is made. You can control how many parallel requests it will do.
+            A big number can make NHentai Api throw an 426 HTTP Error (Too Many Requests).
+        Returns:
+            @SearchResult
+        '''
         request_response = await self.request_adapter.get(urljoin(self._BASE_URL, 'search'), 
                                                           params={'q': search_term, 
                                                                 'sort': sort if isinstance(sort, str) else sort.value, 
@@ -85,7 +91,7 @@ class NHentaiAdapter(NhentaiInterface):
 
         doujin_ids = [[]]
         doujins = []
-        doujin_per_async_request = 2
+        doujin_per_async_request = parallel_jobs
         for a_tag in a_tags_with_doujin_id:
             if a_tag is None:
                 continue
@@ -107,6 +113,10 @@ class NHentaiAdapter(NhentaiInterface):
                             doujins=doujins)
         
     async def get_random(self) -> Doujin:
+        '''This method make you able to receive an random doujin from NHentai.
+        Returns:
+            @Doujin
+        '''
         request_response = await self.request_adapter.get(urljoin(self._BASE_URL, 'random'))
         
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
@@ -119,12 +129,8 @@ class NHentaiAdapter(NhentaiInterface):
     
     async def get_popular_now(self) -> PopularPage:
         """This method retrieves a list of the current most popular doujins.
-        Args:
         Returns:
-            PopularPage: 
-                dataclass with the current popular doujin list within.
-            
-            You can access the dataclasses informations at `entities` package.
+            @PopularPage
         """
 
         request_response = await self.request_adapter.get(self._BASE_URL)
@@ -148,10 +154,9 @@ class NHentaiAdapter(NhentaiInterface):
     async def get_comments(self, doujin_id: int) -> CommentPage:
         """This method returns all comments of a doujin.
         Args:
-            doujin_id:
-                Id of the doujin.
+            @doujin_id: id of the doujin.
         Returns:
-
+            @CommentPage
         """
         
         request_response = await self.request_adapter.get(urljoin(self._API_URL, f'gallery/{doujin_id}/comments'))
@@ -164,10 +169,9 @@ class NHentaiAdapter(NhentaiInterface):
     async def get_page(self, page: int=1) -> Page:
         """This method paginates through the homepage of NHentai and returns the doujins.
         Args:
-            page: number of the pagination page.
+            @page: number of the pagination page.
         Returns:
-            HomePage: dataclass with a list of Doujin.
-                You can access the dataclass information in the `entities` folder.
+            @Page
         """
 
         logger.info(f'Fetching page {page} of homepage')

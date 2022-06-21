@@ -1,10 +1,10 @@
 import pytest
 import sys
 import os
-from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from NHentai.core.handler import ApiError
 from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter, RequestResponse
 
 class TestRequest:

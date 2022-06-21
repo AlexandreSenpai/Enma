@@ -1,5 +1,5 @@
 from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NhentaiInterface
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import CommentPage
+from NHentai.core.interfaces.doujin import CommentPage
 
 class GetCommentsUseCase:
     def __init__(self, nhentai_repo: NhentaiInterface):

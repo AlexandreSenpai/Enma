@@ -40,10 +40,12 @@ class Title:
 
 @dataclass
 class PubSubMessage:
+    message_id: str
     title: Title
     created_at: str
     updated_at: str
-    language: List[str]
+    languages: List[str]
+    parodies: List[str]
     source: Source
     tags: List[str]
     groups: List[str]

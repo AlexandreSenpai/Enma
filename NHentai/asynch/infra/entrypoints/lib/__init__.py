@@ -2,9 +2,7 @@ from NHentai.asynch.application.use_cases.get_comments import GetCommentsUseCase
 from NHentai.asynch.application.use_cases.get_page import GetPageUseCase
 from NHentai.asynch.infra.adapters.brokers.implementations.pubsub import PubSubBroker
 from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces import Sort, Doujin, PopularPage
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.doujin import CommentPage
-from NHentai.asynch.infra.adapters.repositories.hentai.interfaces.page import Page 
+from NHentai.core.interfaces import Sort, Doujin, PopularPage, CommentPage, Page
 from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
 from NHentai.asynch.application.use_cases import (SearchDoujinUseCase,
                                                    GetDoujinUseCase,
@@ -25,9 +23,9 @@ class NHentaiAsync:
         return await GetRandomDoujinUseCase(nhentai_repo=self._NHENTAI_ADAPTER,
                                             message_broker=self._PUBSUB_MESSAGE_BROKER).execute()
     
-    async def search(self, query: str, page: int = 1, sort: Sort = Sort.RECENT):
+    async def search(self, query: str, page: int = 1, sort: Sort = Sort.RECENT, parallel_jobs:int=1):
         return await SearchDoujinUseCase(nhentai_repo=self._NHENTAI_ADAPTER,
-                                         message_broker=self._PUBSUB_MESSAGE_BROKER).execute(query=query, page=page, sort=sort)
+                                         message_broker=self._PUBSUB_MESSAGE_BROKER).execute(query=query, page=page, sort=sort, parallel_jobs=parallel_jobs)
     
     async def get_popular_now(self) -> PopularPage:
         return await GetPopularNowUseCase(nhentai_repo=self._NHENTAI_ADAPTER,

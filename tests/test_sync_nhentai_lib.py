@@ -1,12 +1,12 @@
 import pytest
 import sys
 import os
-from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from NHentai.core.handler import ApiError
 from NHentai.sync.infra.entrypoints.lib import NHentai
-from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Doujin, Sort, SearchResult, DoujinThumbnail, PopularPage
+from NHentai.core.interfaces import Doujin, Sort, SearchResult, PopularPage, Page, CommentPage
 
 class TestGetDoujin:
     def test_success_doujin_retrieve(self):

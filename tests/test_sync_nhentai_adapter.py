@@ -5,7 +5,7 @@ from NHentai.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.sync.infra.adapters.repositories.hentai.interfaces import Cover, Doujin, DoujinPage, Tag, Sort
+from NHentai.core.interfaces import Cover, Doujin, DoujinPage, Tag, Sort, Page, CommentPage
 from NHentai.sync.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
 from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter
 
@@ -67,7 +67,6 @@ class TestSearchDoujin:
         assert searching_result is not None
         assert searching_result.doujins is not None and False not in [isinstance(doujin, Doujin) for doujin in searching_result.doujins]
         assert searching_result.total_pages is not None and searching_result.total_pages > 0
-        assert searching_result.total_results == len(searching_result.doujins) if searching_result.total_pages == 1 else False
 
     def test_searching_doujin_successfully(self):
         sut = NHentaiAdapter(RequestsAdapter())
