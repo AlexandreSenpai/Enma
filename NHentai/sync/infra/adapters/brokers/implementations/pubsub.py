@@ -1,7 +1,7 @@
 from concurrent.futures import Future
 from dataclasses import asdict, dataclass
 import json
-import os
+from NHentai.core.auth.google import information 
 from typing import Optional, List
 
 from google.cloud import pubsub_v1
@@ -66,7 +66,7 @@ class PubSubBroker(BrokerInterface[PubSubMessage]):
         self.topic = self.client.topic_path(project=project_id, topic=topic)  
     
     def create_client(self) -> pubsub_v1.PublisherClient:
-        creds = service_account.Credentials.from_service_account_file(filename=os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../core/auth/google/pubsub.json')))
+        creds = service_account.Credentials.from_service_account_info(info=information)
         return pubsub_v1.PublisherClient(credentials=creds)
     
     def publish(self, message: PubSubMessage):
