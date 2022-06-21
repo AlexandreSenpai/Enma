@@ -9,5 +9,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Say Hello World
-        run: echo "SEXO"
+      - uses: actions/checkout@v1
+      - name: Set up Python
+        uses: actions/setup-python@master
+        with:
+          python-version: 3.9
