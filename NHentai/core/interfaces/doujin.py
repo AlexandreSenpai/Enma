@@ -162,7 +162,7 @@ class DoujinThumbnail(BaseDataclass):
                 args = {"id": json_object.get('id'), 
                         "media_id": json_object.get('media_id'), 
                         "title": Title.from_json(json_object=json_object.get('title')),
-                        "languages":  [Tag.from_json(tag) for tag in json_object.get('tags') if tag.get('type') == 'language'],
+                        "languages": [Tag.from_json(tag) for tag in json_object.get('tags') if tag.get('type') == 'language'],
                         "cover": Cover.from_json(json_object={**json_object.get('images').get('cover'), "media_id": json_object.get('media_id')}),
                         "url": urljoin(base_url, f'g/{json_object.get("id")}'),
                         "tags": [Tag.from_json(tag) for tag in json_object.get('tags')]}
