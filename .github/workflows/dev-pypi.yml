@@ -18,9 +18,9 @@ jobs:
         id: vars
         run: echo ::set-output name=commit::$(git rev-parse --short "$GITHUB_SHA")
       - name: Setting Environment Variables
-        env: |
-          NHENTAI_VERSION: ${{ steps.vars.outputs.commit }}
-          NHENTAI_ENVIRONMENT: dev
+        env:
+          aaa: aaaa
+          bbb: dev
       - name: Set up Python
         uses: actions/setup-python@master
         with:
