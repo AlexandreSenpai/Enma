@@ -4,10 +4,11 @@ from .core.logging import logger
 from .sync.infra.entrypoints.lib import NHentai
 from .asynch.infra.entrypoints.lib import NHentaiAsync
 from .core.interfaces import Sort
+from .core.helpers.cloudflare import CloudFlareSettings
 
 
 __all__ = ['sync', 'asynch']
-__version__ = '2.0.0'
+__version__ = '1.0.2'
 
 package_name = "nhentai-api"
 python_major = "3"
