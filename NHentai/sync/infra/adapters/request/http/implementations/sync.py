@@ -34,7 +34,7 @@ class RequestsAdapter(RequestInterface):
         if handler is not None:
             raise handler()
         
-        raise Exception(f'An unexpected error occoured while making the request to the website! status code: {request.status}')
+        raise Exception(f'An unexpected error occoured while making the request to the website! status code: {request.status_code}')
         
 
     def get(self, url: str, params: Union[Dict[str, Any], None]=None, headers: Union[Dict[str, Any], None]=None) -> RequestResponse:
