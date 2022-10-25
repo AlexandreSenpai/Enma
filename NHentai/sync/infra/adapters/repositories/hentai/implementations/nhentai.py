@@ -10,7 +10,7 @@ from NHentai.sync.infra.adapters.request.http.implementations.sync import Reques
 
 class NHentaiAdapter(NhentaiInterface):
 
-    _BASE_URL = 'https://nhentai.net/'
+    _BASE_URL = 'https://translate.google.com/translate?sl=fil&tl=en&hl=fil&u=https://nhentai.net/&client=webapp'
     _API_URL = 'https://nhentai.net/api/'
     _IMAGE_BASE_URL = 'https://i.nhentai.net/galleries/'
     _AVATAR_URL = 'https://i5.nhentai.net/'
@@ -32,11 +32,14 @@ class NHentaiAdapter(NhentaiInterface):
 
         logger.info(f'Retrieving doujin with id {doujin_id}')
 
-        request_response = self.request_adapter.get(urljoin(self._API_URL, f'gallery/{doujin_id}'))
-         
+        import requests
+        import json
+
+        r = requests.get(f"https://translate.google.com/translate?sl=fil&tl=en&hl=fil&u=https://nhentai.net/api/gallery/{doujin_id}&client=webapp")
+        json_response = json.loads(r.content.decode("utf-8"))
         logger.info(f'Sucessfully retrieved doujin {doujin_id}')
 
-        return Doujin.from_json(json_object=request_response.json(), 
+        return Doujin.from_json(json_object=json_response, 
                                 base_url=self._BASE_URL,
                                 image_base_url_prefix=self._IMAGE_BASE_URL,
                                 tiny_image_base_url_prefix=self._TINY_IMAGE_BASE_URL)
@@ -102,7 +105,7 @@ class NHentaiAdapter(NhentaiInterface):
                             doujins=doujins)
         
     def get_random(self) -> Doujin:
-        request_response = self.request_adapter.get(urljoin(self._BASE_URL, 'random'))
+        request_response = self.request_adapter.get("https://translate.google.com/translate?sl=fil&tl=en&hl=fil&u=https://nhentai.net/random&client=webapp")
         
         soup = self.scrapper_adapter(request_response.text, 'html.parser')
 
