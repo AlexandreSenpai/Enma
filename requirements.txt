@@ -1,4 +1,4 @@
-requests==2.27.1
+requests==2.31.0
 pytest==7.0.1
 pytest-watch==4.2.0
 beautifulsoup4==4.10.0
