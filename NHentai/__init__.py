@@ -5,6 +5,7 @@ from .sync.infra.entrypoints.lib import NHentai
 from .asynch.infra.entrypoints.lib import NHentaiAsync
 from .core.interfaces import Sort
 from .core.helpers.cloudflare import CloudFlareSettings
+from .core.helpers.headers import HeadersSettings
 
 
 __all__ = ['sync', 'asynch']

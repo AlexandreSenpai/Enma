@@ -1,3 +1,4 @@
+aiohttp-socks==0.8.0
 requests==2.27.1
 pytest==7.0.1
 pytest-watch==4.2.0
@@ -7,3 +8,4 @@ aiohttp==3.8.1
 google-auth==2.8.0
 expiringdict==1.2.2
 pytest-asyncio==0.18.3
+python-socks==2.3.0

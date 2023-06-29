@@ -3,18 +3,23 @@ from urllib import parse
 
 import aiohttp
 from aiohttp.client_exceptions import ContentTypeError
+from aiohttp_socks import ProxyConnector
 
 from NHentai.asynch.infra.adapters.request.http.interfaces.request import RequestInterface
 from NHentai.asynch.infra.adapters.request.http.interfaces.response import RequestResponse
 from NHentai.core.handler import ApiError
 from NHentai.core.helpers.cloudflare import CloudFlareSettings
+from NHentai.core.helpers.headers import HeadersSettings
 
 
 class RequestsAdapter(RequestInterface):
-    
-    def __init__(self, request_settings: CloudFlareSettings=None):
+
+    def __init__(self, request_settings: CloudFlareSettings=None, headers_settings: HeadersSettings=None,
+                 proxy_config: str=None):
         self.request_settings = request_settings
-    
+        self.headers_settings = headers_settings
+        self.proxy_config = proxy_config
+
     async def handle_error(self, request: aiohttp.ClientResponse):
         if request.status == 200: return
         
@@ -42,9 +47,11 @@ class RequestsAdapter(RequestInterface):
 
     async def get(self, url: str, params: Union[Dict[str, Any], None]=None, headers: Union[Dict[str, Any], None]=None) -> RequestResponse:
         cookies = self.request_settings.as_dict() if self.request_settings is not None else None
-        async with aiohttp.ClientSession(cookies=cookies) as session:
-            async with session.get(f'{url}?{self.parse_params_to_url_safe(params=params) if params else ""}',  
-                                    headers=headers or {}) as response:
+        headers_settings = self.headers_settings.as_dict() if self.headers_settings is not None else None
+        connector = ProxyConnector.from_url(self.proxy_config) if self.proxy_config is not None else None
+        async with aiohttp.ClientSession(cookies=cookies, connector=connector) as session:
+            async with session.get(f'{url}?{self.parse_params_to_url_safe(params=params) if params else ""}',
+                                    headers=headers or {} | headers_settings or {}) as response:
                 await self.handle_error(request=response)
 
                 try:
