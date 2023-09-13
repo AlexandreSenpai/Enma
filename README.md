@@ -4,7 +4,7 @@
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
 
-# NHentai API
+# Manga Scrapper API
 
 A NHentai API made using python webscrapping. \
 For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1) or join on NHentai-API [discord server](https://discord.gg/576uSRDD)
