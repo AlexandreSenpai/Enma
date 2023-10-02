@@ -1,8 +1,8 @@
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TypedDict
+from typing import Optional, TypedDict
 from enma.domain.entities.base import Entity
 
 @dataclass
@@ -18,9 +18,9 @@ class MIME(Enum):
 
 @dataclass
 class Title:
-    english: str
-    japanese: str
-    other: str
+    english: str = field(default='')
+    japanese: str = field(default='')
+    other: str = field(default='')
 
 class IMangaProps(TypedDict):
     id: int | str
@@ -31,19 +31,31 @@ class IMangaProps(TypedDict):
     pages: list[Image]
 
 @dataclass
+class Chapter:
+    id: str | int
+    pages: list[Image] = field(default_factory=list)
+
+    def add_page(self, page: Image) -> None:
+        self.pages.append(page)
+
+@dataclass
 class Manga(Entity[IMangaProps]):
 
     title: Title
-    pages: list[Image]
-    pages_count: int
-    cover: Image
-    thumbnail: Image
+    author: str | None
+    genres: list[str]
+    chapters: list[Chapter]
+    chapters_count: int
+    cover: Image | None
+    thumbnail: Image | None
 
     def __init__(self,
                  title: Title,
-                 pages: list[Image],
-                 thumbnail: Image,
-                 cover: Image,
+                 chapters: list[Chapter],
+                 genres: list[str] | None = None,
+                 author: str | None = None,
+                 thumbnail: Image | None = None,
+                 cover: Image | None = None,
                  id: int | str | None = None, 
                  created_at: datetime | None = None, 
                  updated_at: datetime | None = None):
@@ -53,8 +65,10 @@ class Manga(Entity[IMangaProps]):
                          updated_at=updated_at)
         
         self.title = title
-        self.pages = pages
+        self.chapters = chapters
         self.thumbnail = thumbnail
         self.cover = cover
-        self.pages_count = len(self.pages if self.pages else [])
+        self.chapters_count = len(self.chapters if self.chapters else [])
+        self.author = author
+        self.genres = genres or []
         

@@ -1,6 +1,7 @@
 import sys
-from enma.infra.entrypoints.lib import Enma, DefaultAvailableSources
-from enma.infra.adapters.repositories.nhentai import CloudFlareConfig
+from enma.infra.entrypoints.lib import Enma, SourcesEnum
+from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
+from enma.infra.adapters.repositories.manganato import Manganato
 
 __version__ = '2.0.0'
 

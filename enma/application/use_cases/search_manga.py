@@ -6,6 +6,7 @@ from enma.domain.entities.search_result import SearchResult
 @dataclass
 class SearchMangaRequestDTO:
     query: str
+    page: int = field(default=1)
     extra: dict[str, str | int] = field(default_factory=dict)
 
 @dataclass
@@ -19,6 +20,7 @@ class SearchMangaUseCase(IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]
 
     def execute(self, dto: DTO[SearchMangaRequestDTO]) -> SearchMangaResponseDTO:
         result = self.__manga_repository.search(query=dto.data.query,
+                                                page=dto.data.page,
                                                 **dto.data.extra)
         
         return SearchMangaResponseDTO(result=result)

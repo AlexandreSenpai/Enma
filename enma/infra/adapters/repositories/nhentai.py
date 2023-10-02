@@ -1,15 +1,20 @@
+"""
+This module provides an adapter for the nhentai repository.
+It contains functions and classes to interact with the nhentai API and retrieve manga data.
+"""
+
 from dataclasses import dataclass
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, cast
 from urllib.parse import urlparse, urljoin
 from enum import Enum
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 import requests
 
-from enma.application.core.handlers.error import NhentaiSourceWithoutConfig
+from enma.application.core.handlers.error import ExceedRetryCount, NhentaiSourceWithoutConfig
 from enma.application.core.interfaces.manga_repository import IMangaRepository
-from enma.domain.entities.manga import Image, Manga, MIME, Title
-from enma.domain.entities.search_result import SearchResult, Thumb
+from enma.domain.entities.manga import Image, Manga, MIME, Title, Chapter
+from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 
 @dataclass
 class CloudFlareConfig:
@@ -25,7 +30,10 @@ class Sort(__StrEnum):
     RECENT = None
 
 class NHentai(IMangaRepository):
-    
+    """
+    Repository class for interacting with the nhentai API.
+    Provides methods to fetch manga details, search for manga, etc.
+    """
     def __init__(self,
                  config: Optional[CloudFlareConfig] = None) -> None:
         self.__config = config
@@ -51,6 +59,9 @@ class NHentai(IMangaRepository):
                             params={**params},
                             cookies={'cf_clearance': self.__config.cf_clearance})
     
+    def set_config(self, config: CloudFlareConfig) -> None:
+        self.__config = config
+    
     def __make_page_uri(self, 
                         type: Literal['cover'] | Literal['page'] | Literal['thumbnail'],
                         media_id: str,
@@ -68,31 +79,40 @@ class NHentai(IMangaRepository):
         
         doujin = response.json()
 
-        return Manga(title=Title(english=doujin.get('title').get('english'),
-                                 japanese=doujin.get('title').get('japanese'),
-                                 other=doujin.get('title').get('pretty')),
-                     id=doujin.get('id'),
-                     thumbnail=Image(uri=self.__make_page_uri(type='thumbnail',
-                                                              mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
-                                                              media_id=doujin.get('media_id')),
-                                     width=doujin.get("images").get("thumbnail").get("w"),
-                                     height=doujin.get("images").get("thumbnail").get("h")),
-                     cover=Image(uri=self.__make_page_uri(type='cover',
-                                                          media_id=doujin.get('media_id'),
-                                                          mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()]),
-                                 width=doujin.get("images").get("cover").get("w"),
-                                 height=doujin.get("images").get("cover").get("h")),
-                     pages=[Image(uri=self.__make_page_uri(type='page',
-                                                           mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
-                                                           media_id=doujin.get('media_id'),
-                                                           page_number=index+1),
-                                  width=page.get('w'),
-                                  height=page.get('h')) for index, page in enumerate(doujin.get('images').get('pages'))])
+        chapter = Chapter(id=0)
+        
+        for index, page in enumerate(doujin.get('images').get('pages')):
+            page = Image(uri=self.__make_page_uri(type='page',
+                                                  mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
+                                                  media_id=doujin.get('media_id'),
+                                                  page_number=index+1),
+                         width=page.get('w'),
+                         height=page.get('h'))
+            
+            chapter.add_page(page=page)
+        
+        manga = Manga(title=Title(english=doujin.get('title').get('english'),
+                                  japanese=doujin.get('title').get('japanese'),
+                                  other=doujin.get('title').get('pretty')),
+                      id=doujin.get('id'),
+                      thumbnail=Image(uri=self.__make_page_uri(type='thumbnail',
+                                                               mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
+                                                               media_id=doujin.get('media_id')),
+                                      width=doujin.get("images").get("thumbnail").get("w"),
+                                      height=doujin.get("images").get("thumbnail").get("h")),
+                      cover=Image(uri=self.__make_page_uri(type='cover',
+                                                            media_id=doujin.get('media_id'),
+                                                            mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()]),
+                                  width=doujin.get("images").get("cover").get("w"),
+                                  height=doujin.get("images").get("cover").get("h")),
+                      chapters=[chapter])
 
-    def search(self, 
+        return manga
+    
+    def search(self,
                query: str, 
                page: int, 
-               sort: Sort) -> SearchResult:
+               sort: Sort = Sort.RECENT) -> SearchResult:
         
         request_response = self.__make_request(url=urljoin(self.__BASE_URL, 'search'),
                                                params={'q': query,
@@ -161,3 +181,43 @@ class NHentai(IMangaRepository):
                             page=page,
                             total_results=25*total_pages if pagination_container else len(thumbs),
                             results=thumbs)
+    
+    def paginate(self, page: int) -> Pagination:
+        response = self.__make_request(url=urljoin(self.__API_URL, f'galleries/all'),
+                                       params={'page': page})
+        
+        if response.status_code != 200:
+            return Pagination(page=page)
+        
+        data = response.json()
+
+        PAGES = data.get('num_pages', 0)
+        PER_PAGE = data.get('per_page', 0)
+        TOTAL_RESULTS = int(PAGES) * int(PER_PAGE)
+
+        return Pagination(page=int(page),
+                          total_results=TOTAL_RESULTS,
+                          total_pages=PAGES,
+                          results=[Thumb(id=result.get('id'),
+                                         title=result.get('title').get('english'),
+                                         cover=Image(uri=self.__make_page_uri(type='cover', 
+                                                                              media_id=result.get('media_id'), 
+                                                                              mime=MIME[result.get('images').get('cover').get('t').upper()]),
+                                                     width=result.get('images').get('cover').get('w'),
+                                                     height=result.get('images').get('cover').get('h'))) for result in data.get('result')])
+    
+    def random(self, retry=0) -> Manga:
+        response = self.__make_request(url=urljoin(self.__BASE_URL, 'random'))
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        id = cast(Tag, soup.find('h3', id='gallery_id')).text.replace('#', '')
+
+        doujin = self.get(identifier=id)
+
+        if doujin is None:
+            if retry == 4:
+                raise ExceedRetryCount('Could not fetch a random doujin.')
+            return self.random(retry=retry+1)
+
+        return doujin

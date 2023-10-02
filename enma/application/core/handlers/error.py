@@ -33,3 +33,12 @@ class SourceWasNotDefined(Exception):
         self.code: str = 'SOURCE_WAS_NOT_DEFINED'
         self.desc: str = 'This error occurs when the client tries to perform Enma operations before of setting a source.'
         self.critical: bool = True
+
+class ExceedRetryCount(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.message: str = message
+        self.code: str = 'EXCEED_RETRY_COUNT'
+        self.desc: str = 'This error occurs when enma tries perform some action but something went wrong.'
+        self.critical: bool = True

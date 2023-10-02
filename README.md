@@ -1,256 +1,173 @@
-[![CodeFactor](https://www.codefactor.io/repository/github/alexandresenpai/nhentai-api/badge)](https://www.codefactor.io/repository/github/alexandresenpai/nhentai-api)
 [![PyPI download month](https://img.shields.io/pypi/dm/NHentai-API.svg)](https://pypi.python.org/pypi/NHentai-API/)
-[![codecov](https://codecov.io/gh/AlexandreSenpai/NHentai-API/branch/dev/graph/badge.svg?token=F3LP15DYMR)](https://codecov.io/gh/AlexandreSenpai/NHentai-API)
+[![codecov](https://codecov.io/gh/AlexandreSenpai/Enma/branch/master/graph/badge.svg?token=F3LP15DYMR)](https://codecov.io/gh/AlexandreSenpai/Enma)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
 [![PyPI license](https://img.shields.io/pypi/l/ansicolortags.svg)](https://pypi.python.org/pypi/ansicolortags/)
+[![GitHub forks](https://img.shields.io/github/forks/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma)
+[![GitHub stars](https://img.shields.io/github/stars/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma)
+[![GitHub issues](https://img.shields.io/github/issues/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma/issues)
+
 
 # Enma
 
-A generic manga scrapper made with python. \
-For update notes follow me on [Twitter](https://twitter.com/AlexandreSenpa1) or join on Enma [discord server](https://discord.gg/576uSRDD)
+Enma is a Python library designed to fetch manga and doujinshi data from various sources. It provides a unified interface to interact with different manga repositories, making it easier to retrieve manga details, search for manga, paginate through results, and fetch random manga.
+
+## Requirements
+
+- Python 3.9+
 
 ## Installation
-```bash
-pip install --upgrade NHentai-API
-```
-or
-```
-pip3 install --upgrade NHentai-API
-```
-
-## Library Features
-- Home page pagination;
-- Doujin information;
-- Random doujin;
-- Search;
-- Comment Listing;
-- Today's Popular Doujins.
-
-### Home
-
-```python
-from NHentai import NHentai
-
-nhentai = NHentai()
-random_doujin: HomePage = nhentai.get_pages(page=1)
-```
-The expected output is a HomePage instance:
-```python
-Page(
-    doujins: List[
-        Doujin(
-            id: int
-            media_id: str
-            upload_at: datetime
-            url: str
-            title: List[Title]
-            tags: List[Tag]
-            artists: List[Tag]
-            languages: List[Tag]
-            categories: List[Tag]
-            characters: List[Tag]
-            parodies: List[Tag]
-            groups: List[Tag]
-            cover: Cover
-            images: List[DoujinPage]
-            total_favorites: int = 0
-            total_pages: int = 0
-        )
-    ],
-    total_pages: int,
-    total_results: int,
-    per_page: int)
-```
-
-### Random
-```python
-from NHentai import NHentai
-
-nhentai = NHentai()
-random_doujin: Doujin = nhentai.get_random()
-```
-The expected output is a Doujin instance:
-```python
-Doujin(
-    id: int
-    media_id: str
-    upload_at: datetime
-    url: str
-    title: List[Title]
-    tags: List[Tag]
-    artists: List[Tag]
-    languages: List[Tag]
-    categories: List[Tag]
-    characters: List[Tag]
-    parodies: List[Tag]
-    groups: List[Tag]
-    cover: Cover
-    images: List[DoujinPage]
-    total_favorites: int = 0
-    total_pages: int = 0
-)
-```
-Note: Not all doujins have certain properties like `tags`, `artists`, etc. They could be an empty list or a NoneType value.
-
-### Search
-```python
-from NHentai import NHentai, Sort
-
-nhentai = NHentai()
-search_obj: SearchPage = nhentai.search(query='naruto', sort=Sort.RECENT, page=1)
-search_obj: SearchPage = nhentai.search(query='30955', page=1)
-```
-The expected output is a SearchPage instance:
-```python
-SearchPage(
-    query: str
-    sort: str
-    total_results: int
-    total_pages: int
-    doujins: List[
-        Doujin(
-            id: int
-            media_id: str
-            upload_at: datetime
-            url: str
-            title: List[Title]
-            tags: List[Tag]
-            artists: List[Tag]
-            languages: List[Tag]
-            categories: List[Tag]
-            characters: List[Tag]
-            parodies: List[Tag]
-            groups: List[Tag]
-            cover: Cover
-            images: List[DoujinPage]
-            total_favorites: int = 0
-            total_pages: int = 0
-        )
-    ]
-)
-```
-
-### Doujin
-```python
-from NHentai import NHentai
-
-nhentai = NHentai()
-doujin: Doujin = nhentai.get_doujin(doujin_id=287167)
-```
-The expected output is a Doujin instance:
-```python
-Doujin(
-    id: int
-    media_id: str
-    upload_at: datetime
-    url: str
-    title: List[Title]
-    tags: List[Tag]
-    artists: List[Tag]
-    languages: List[Tag]
-    categories: List[Tag]
-    characters: List[Tag]
-    parodies: List[Tag]
-    groups: List[Tag]
-    cover: Cover
-    images: List[DoujinPage]
-    total_favorites: int = 0
-    total_pages: int = 0
-)
-```
-
-### Comments
-```python
-from NHentai import NHentai
-
-nhentai = NHentai()
-comments: CommentPage = nhentai.get_comments(doujin_id=1)
-```
-The expected output is a CharacterListPage instance:
-```python
-CommentPage(total_comments: int
-            comments: List[Comment(id: int, 
-                                   gallery_id: int, 
-                                   poster=User(id: int, 
-                                               username: str, slug: str, 
-                                               avatar_url: str, 
-                                               is_superuser: bool, 
-                                               is_staff: bool), 
-                                    post_date: str, 
-                                    body: str)])
-```
-
-### Most Popular
-```python
-from NHentai import NHentai
-
-nhentai = NHentai()
-doujins: PopularPage = nhentai.get_popular_now()
-```
-The expected output is a PopularPage instance:
-```python
-PopularPage(
-    total_doujins: int
-    doujins: List[
-        Doujin(
-            id: int
-            media_id: str
-            upload_at: datetime
-            url: str
-            title: List[Title]
-            tags: List[Tag]
-            artists: List[Tag]
-            languages: List[Tag]
-            categories: List[Tag]
-            characters: List[Tag]
-            parodies: List[Tag]
-            groups: List[Tag]
-            cover: Cover
-            images: List[DoujinPage]
-            total_favorites: int = 0
-            total_pages: int = 0
-        )
-    ],
-)
-```
-
-# NHentai API Async
-
-This is the first version of the asynchronous nhentai scrapper. The methods work in the very same way as the base nhentai scrapper, but to make it work you'll have to work with asyncio module using an event loop that you can import from it or get from NHentaiAsync class property: `event_loop`.
-
-Since we're working with async functions, you can only call the NHentaiAsync methods from inside an async funcion or context.
-If you are already working in an async event loop, such as a python Discord API like `discord.py`, you can simply await calls that you would otherwise have to call `run_until_complete` on top of.
-
-Async example 1:
 ```py
-from NHentai import NHentaiAsync
-
-nhentai_async = NHentaiAsync()
-event_loop = nhentai_async.event_loop
-popular = event_loop.run_until_complete(nhentai_async.get_popular_now())
-print(popular)
-```
-Async example 2:
-```python
-from NHentai import NHentaiAsync
-
-nhentai_async = NHentaiAsync()
-
-async def get_popular():
-    popular = await nhentai_async.get_popular_now()
-    print(popular)
-
-event_loop = nhentai_async.event_loop
-event_loop.run_until_complete(get_popular())
+pip install enma
 ```
 
-Await example:
-```python
-from NHentai import NHentaiAsync
-nhentai_async = NHentaiAsync()
+Ensure you have the required Python version:
+```py
+import sys
 
-# Run in an async function or you will get an error: `'await' outside async function`.
-popular = await nhentai_async.get_popular_now()
-print(popular)
+package_name = "enma"
+python_major = "3"
+python_minor = "9"
+
+try:
+    assert sys.version_info >= (int(python_major), int(python_minor))
+except AssertionError:
+    raise RuntimeError(f"{package_name!r} requires Python {python_major}.{python_minor}+ (You have Python {sys.version})")
 ```
 
+## Features Comparison
+
+Feature   | NHentai | Manganato
+----------|---------|-----------
+search    |    ✅   |     ✅    
+random    |    ✅   |     🚫    
+get       |    ✅   |     ✅    
+paginate  |    ✅   |     🚫    
+set_config|    ✅   |     🚫
+
+## Usage
+
+### Example 1: Using Default Available Sources
+
+```py
+from typing import cast
+from enma import Enma, DefaultAvailableSources, CloudFlareConfig, NHentai, Sort
+
+enma = Enma[DefaultAvailableSources]()
+
+config = CloudFlareConfig(
+    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+    cf_clearance=''
+)
+
+enma.source_manager.set_source(source_name='nhentai')
+nh_source = cast(NHentai, enma.source_manager.source)
+nh_source.set_config(config=config)
+
+doujin = enma.random()
+print(doujin)
+```
+
+### Example 2: Extending with Custom Sources
+```py
+from enum import Enum
+from typing import cast
+from enma import Enma, SourcesEnum, Manganato, IMangaRepository
+
+class AvailableSources(SourcesEnum):
+    NHENTAI = 'nhentai'
+    MANGANATO = 'manganato'
+    NEW_SOURCE = 'new-source'
+
+enma = Enma[AvailableSources]()
+
+enma.source_manager.add_source(source_name='new-source', source=Manganato()) # Source MUST be an instance of IMangaRepository
+enma.source_manager.set_source(source_name=AvailableSources.MANGANATO)
+
+manga = enma.random()
+print(manga)
+```
+
+## Retrieving `user-agent` and `cf_clearance` for NHentai
+
+To retrieve the `user-agent` and `cf_clearance` for NHentai:
+
+1. **Open NHentai in your browser**: Navigate to the NHentai website.
+2. **Open Developer Tools**:
+    - **For Google Chrome**: Right-click on the webpage and select Inspect or simply press Ctrl + Shift + I (or Cmd + Option + I on Mac).
+    - **For Firefox**: Right-click on the webpage and select Inspect Element or press Ctrl + Shift + I (or Cmd + Option + I on Mac).
+3. **Navigate to the Network Tab**: In the Developer Tools panel, click on the Network tab. This tab captures all network requests made by the webpage.
+4. **Reload the Page**: With the Network tab open, reload the NHentai website by pressing Ctrl + R (or Cmd + R on Mac). This ensures that all network requests are captured.
+5. **Select the nhentai.net Request**: After reloading, you'll see a list of files on the left side of the Network tab. Click on the first file named nhentai.net. This represents the main request to the NHentai website.
+6. **Find the Request Headers**: On the right side, you'll see several tabs like Headers, Preview, Response, etc. Make sure you're on the Headers tab. Scroll down until you find a section named Request Headers.
+7. **Copy the user-agent and cf_clearance**:
+    - **user-agent**: This is a string that tells the server which web browser is being used. Look for an entry named User-Agent and copy its value.
+    - **cf_clearance**: This is a specific cookie set by CloudFlare for security purposes. Look for an entry named cf_clearance and copy its value.
+
+## Example:
+
+```py
+config = CloudFlareConfig(
+    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+    cf_clearance=''
+)
+```
+> **Note**: The user-agent and cf_clearance values can change over time. If you encounter issues accessing NHentai through the Enma library, you might need to repeat the above steps to get updated values.
+
+## Errors
+
+While using the library, you might encounter some specific errors. Here's a description of each:
+
+1. **InstanceError**: 
+   - **Description**: Raised when an instance of an object is not of the expected type.
+   - **Common Cause**: Trying to add a source that isn't an instance of `IMangaRepository`.
+
+2. **SourceNotAvailable**: 
+   - **Description**: Raised when attempting to access a source that isn't available in the defined source list.
+   - **Common Cause**: Trying to set a source that hasn't been previously added.
+
+3. **SourceWasNotDefined**: 
+   - **Description**: Raised when trying to perform an action (like fetching a manga) without first defining a source.
+   - **Common Cause**: Forgetting to set the source before performing an operation.
+
+4. **ExceedRetryCount**: 
+   - **Description**: Specific to the `NHentai` adapter. Raised when the `random` method fails to fetch a random doujin after several attempts.
+   - **Common Cause**: Consecutive failures when trying to fetch a random doujin from NHentai.
+
+5. **NhentaiSourceWithoutConfig**: 
+   - **Description**: Raised when trying to make a request to NHentai without providing the necessary configurations.
+   - **Common Cause**: Forgetting to provide the `user-agent` and `cf_clearance` when configuring the NHentai adapter.
+
+When encountering one of these errors, refer to the description and common cause to assist in troubleshooting.
+
+## Future Plans
+
+We are actively working on introducing an asynchronous version of the Enma library to better cater to applications that require non-blocking operations. This version will be maintained in a separate repository to keep the core library lightweight. However, for ease of access and installation, you'll be able to install the asynchronous version directly using:
+
+```bash
+pip install enma[async]
+```
+Stay tuned for updates and ensure to check our repository for the latest advancements!
+## Frequently Asked Questions (FAQ)
+
+**Q: Can I add more sources to Enma?**</br>
+A: Yes! Enma is designed to be extensible. You can add more sources by extending the `SourcesEnum` and implementing `IMangaRepository` that contains the required methods for the new source.
+
+**Q: I'm facing issues with a specific source. What should I do?**</br>
+A: Ensure you have the latest version of Enma. If the issue persists, please raise an issue on our GitHub repository detailing the problem.
+
+**Q: How often is Enma updated?**</br>
+A: Enma is updated regularly as new sources are added or when there are significant changes to existing sources.
+
+## Contributing
+
+We welcome contributions! If you'd like to contribute:
+
+1. Fork the repository.
+2. Make your changes.
+3. Submit a pull request.
+
+Ensure you follow the coding standards and write tests for new features.
+
+## License
+
+MIT
