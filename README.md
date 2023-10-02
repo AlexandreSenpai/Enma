@@ -103,6 +103,7 @@ To retrieve the `user-agent` and `cf_clearance` for NHentai:
     - **user-agent**: This is a string that tells the server which web browser is being used. Look for an entry named User-Agent and copy its value.
     - **cf_clearance**: This is a specific cookie set by CloudFlare for security purposes. Look for an entry named cf_clearance and copy its value.
 
+![example](./images/user-agent.png)
 ## Example:
 
 ```py
