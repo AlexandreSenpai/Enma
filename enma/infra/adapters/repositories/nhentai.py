@@ -1,26 +1,33 @@
 from dataclasses import dataclass
 from typing import Any, Literal, Optional
 from urllib.parse import urlparse, urljoin
+from enum import Enum
+from bs4 import BeautifulSoup
 
 import requests
 
 from enma.application.core.handlers.error import NhentaiSourceWithoutConfig
 from enma.application.core.interfaces.manga_repository import IMangaRepository
-from enma.domain.entities.Manga import Image, Manga, MIME, Title
+from enma.domain.entities.manga import Image, Manga, MIME, Title
+from enma.domain.entities.search_result import SearchResult, Thumb
 
 @dataclass
 class CloudFlareConfig:
     user_agent: str
     cf_clearance: str
 
+class __StrEnum(str, Enum):...
+
+class Sort(__StrEnum):
+    TODAY = 'popular-today'
+    WEEK = 'popular-week'
+    ALL_TIME = 'popular'
+    RECENT = None
+
 class NHentai(IMangaRepository):
     
-    def __init__(self, 
-                 config: CloudFlareConfig | None = None) -> None:
-
-        if config is None:
-            raise NhentaiSourceWithoutConfig('Please provide a valid cloudflare cookie and user-agent.')
-
+    def __init__(self,
+                 config: Optional[CloudFlareConfig] = None) -> None:
         self.__config = config
         self.__BASE_URL = 'https://nhentai.net/'
         self.__API_URL = 'https://nhentai.net/api/'
@@ -30,10 +37,18 @@ class NHentai(IMangaRepository):
 
     def __make_request(self, 
                        url: str,
-                       headers: dict[str, Any] | None = None):
+                       headers: dict[str, Any] | None = None,
+                       params: Optional[dict[str, str | int]] = None):
+
+        if self.__config is None:
+            raise NhentaiSourceWithoutConfig('Please provide a valid cloudflare cookie and user-agent.')
+
         headers = headers if headers is not None else {}
+        params = params if params is not None else {}
+
         return requests.get(url=urlparse(url).geturl(), 
                             headers={**headers, 'User-Agent': self.__config.user_agent},
+                            params={**params},
                             cookies={'cf_clearance': self.__config.cf_clearance})
     
     def __make_page_uri(self, 
@@ -74,5 +89,75 @@ class NHentai(IMangaRepository):
                                   width=page.get('w'),
                                   height=page.get('h')) for index, page in enumerate(doujin.get('images').get('pages'))])
 
-    def search(self, query: str) -> Manga | None:
-        raise NotImplementedError('Search Method Was Not Implemented.')
+    def search(self, 
+               query: str, 
+               page: int, 
+               sort: Sort) -> SearchResult:
+        
+        request_response = self.__make_request(url=urljoin(self.__BASE_URL, 'search'),
+                                               params={'q': query,
+                                                       'sort': sort if isinstance(sort, str) else sort.value,
+                                                       'page': page})
+        
+        soup = BeautifulSoup(request_response.text, 'html.parser')
+
+        search_results_container = soup.find('div', {'class': 'container'})
+        pagination_container = soup.find('section', {'class': 'pagination'})
+    
+        last_page_a_tag = pagination_container.find('a', {'class': 'last'}) if pagination_container else None # type: ignore
+        total_pages = int(last_page_a_tag['href'].split('=')[-1]) if last_page_a_tag else 1 # type: ignore
+        
+        if not search_results_container:
+            return SearchResult(query=query,
+                                total_pages=total_pages,
+                                page=page,
+                                total_results=0,
+                                results=[])
+        
+        search_results = search_results_container.find_all('div', {'class': 'gallery'}) # type: ignore
+
+        if not search_results:
+            return SearchResult(query=query,
+                                total_pages=total_pages,
+                                page=page,
+                                total_results=0,
+                                results=[])
+        
+        a_tags_with_doujin_id = [gallery.find('a', {'class': 'cover'}) for gallery in search_results]
+
+        thumbs = []
+
+        for a_tag in a_tags_with_doujin_id:
+            if a_tag is None: continue
+
+            doujin_id = a_tag['href'].split('/')[-2]
+            
+            if doujin_id == '': continue
+            
+            result_cover = a_tag.find('img', {'class': 'lazyload'})
+            cover_uri = None
+            width = None
+            height = None
+
+            if result_cover is not None:
+                cover_uri = result_cover['data-src']
+                width = result_cover['width']
+                height = result_cover['height']
+
+            result_caption = a_tag.find('div', {'class': 'caption'})
+
+            caption = None
+            if result_caption is not None:
+                caption = result_caption.text
+            
+            thumbs.append(Thumb(id=doujin_id,
+                                cover=Image(uri=cover_uri or '',
+                                            width=width or 0,
+                                            height=height or 0),
+                                title=caption or ''))
+        
+        return SearchResult(query=query,
+                            total_pages=total_pages,
+                            page=page,
+                            total_results=25*total_pages if pagination_container else len(thumbs),
+                            results=thumbs)

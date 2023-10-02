@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Union
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.use_case import DTO, IUseCase
-from enma.domain.entities.Manga import Manga
+from enma.domain.entities.manga import Manga
 
 @dataclass
 class GetMangaRequestDTO:

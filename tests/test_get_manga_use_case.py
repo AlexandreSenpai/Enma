@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../'
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaUseCase
 from enma.application.core.interfaces.use_case import DTO
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai
-from enma.domain.entities.Manga import Manga
+from enma.domain.entities.manga import Manga
 
 class TestGetDoujin:
 

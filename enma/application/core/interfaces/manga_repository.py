@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 
-from enma.domain.entities.Manga import Manga
+from enma.domain.entities.manga import Manga
+from enma.domain.entities.search_result import SearchResult
 
 class IMangaRepository(ABC):
     @abstractmethod
@@ -10,5 +11,6 @@ class IMangaRepository(ABC):
     
     @abstractmethod
     def search(self,
-               query: str) -> Manga | None:
+               query: str,
+               **kwargs) -> SearchResult:
         ...

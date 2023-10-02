@@ -1,5 +1,5 @@
 import sys
-from enma.infra.entrypoints.lib import Enma, AvailableSources
+from enma.infra.entrypoints.lib import Enma, DefaultAvailableSources
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig
 
 __version__ = '2.0.0'
