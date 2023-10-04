@@ -11,7 +11,7 @@ from bs4 import BeautifulSoup, Tag
 import requests
 
 from enma.application.core.interfaces.manga_repository import IMangaRepository
-from enma.domain.entities.manga import Chapter, Image, Manga, Title
+from enma.domain.entities.manga import Chapter, Genre, Image, Manga, Title
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 
 class Manganato(IMangaRepository):
@@ -105,11 +105,11 @@ class Manganato(IMangaRepository):
             chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
         
         return Manga(title=title,
-                     author=author,
-                     genres=genres,
+                     authors=[author] if author is not None else None,
+                     genres=[Genre(name=genre_name) for genre_name in genres],
                      id=identifier,
                      thumbnail=None,
-                     cover=cover, # type: ignore
+                     cover=Image(uri=cover), # type: ignore
                      chapters=cast(list[Chapter], chapters))
     
     def search(self, 

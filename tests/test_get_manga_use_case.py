@@ -16,7 +16,6 @@ class TestGetDoujin:
         sut = GetMangaUseCase(manga_repository=NHentai(config=CloudFlareConfig(user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
                                                                                cf_clearance='YTDzbfkco5yQhbHBaf3oRANTbsTKSZoBAHg1N.2rpbY-1696098112-0-1-9ea630b1.71296b1b.c9a76f51-160.0.0')))
         obj = sut.execute(dto=DTO[GetMangaRequestDTO](data=GetMangaRequestDTO(identifier='1')))
-        print(obj)
         assert obj.found == True
         assert isinstance(obj.manga, Manga)
     

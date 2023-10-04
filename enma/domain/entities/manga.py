@@ -2,14 +2,14 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional, TypedDict
+from typing import Literal, Optional, TypedDict
 from enma.domain.entities.base import Entity
 
 @dataclass
 class Image:
     uri: str
-    width: int
-    height: int
+    width: int = field(default=0)
+    height: int = field(default=0)
 
 class MIME(Enum):
     J = 'jpg'
@@ -39,11 +39,16 @@ class Chapter:
         self.pages.append(page)
 
 @dataclass
+class Genre:
+    name: str
+    id: str | int = field(default=0)
+
+@dataclass
 class Manga(Entity[IMangaProps]):
 
     title: Title
-    author: str | None
-    genres: list[str]
+    authors: list[str]
+    genres: list[Genre]
     chapters: list[Chapter]
     chapters_count: int
     cover: Image | None
@@ -52,8 +57,8 @@ class Manga(Entity[IMangaProps]):
     def __init__(self,
                  title: Title,
                  chapters: list[Chapter],
-                 genres: list[str] | None = None,
-                 author: str | None = None,
+                 genres: list[Genre] | None = None,
+                 authors: list[str] | None = None,
                  thumbnail: Image | None = None,
                  cover: Image | None = None,
                  id: int | str | None = None, 
@@ -69,6 +74,6 @@ class Manga(Entity[IMangaProps]):
         self.thumbnail = thumbnail
         self.cover = cover
         self.chapters_count = len(self.chapters if self.chapters else [])
-        self.author = author
+        self.authors = authors or []
         self.genres = genres or []
         
