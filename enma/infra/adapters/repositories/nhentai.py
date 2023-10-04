@@ -13,7 +13,7 @@ import requests
 
 from enma.application.core.handlers.error import ExceedRetryCount, NhentaiSourceWithoutConfig
 from enma.application.core.interfaces.manga_repository import IMangaRepository
-from enma.domain.entities.manga import Image, Manga, MIME, Title, Chapter
+from enma.domain.entities.manga import Genre, Image, Manga, MIME, Title, Chapter
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 
 @dataclass
@@ -95,6 +95,9 @@ class NHentai(IMangaRepository):
                                   japanese=doujin.get('title').get('japanese'),
                                   other=doujin.get('title').get('pretty')),
                       id=doujin.get('id'),
+                      authors=[tag.get('name') for tag in doujin.get('tags') if tag.get('type') == 'artist'],
+                      genres=[Genre(id=genre.get('id'),
+                                    name=genre.get('name')) for genre in doujin.get('tags') if genre.get('type') == 'tag'],
                       thumbnail=Image(uri=self.__make_page_uri(type='thumbnail',
                                                                mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                                                media_id=doujin.get('media_id')),
