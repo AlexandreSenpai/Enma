@@ -4,8 +4,8 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.core.handler import ApiError
-from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter, RequestResponse
+from enma.core.handler import ApiError
+from enma.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter, RequestResponse
 
 class TestRequest:
     def test_success_get_request(self):

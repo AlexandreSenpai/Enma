@@ -6,10 +6,10 @@ import requests
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.core.handler import ApiError
-from NHentai.core.interfaces import Cover, Doujin, DoujinPage, Tag, Sort, Page, CommentPage, Comment
-from NHentai.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
-from NHentai.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
+from enma.core.handler import ApiError
+from enma.core.interfaces import Cover, Doujin, DoujinPage, Tag, Sort, Page, CommentPage, Comment
+from enma.asynch.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
+from enma.asynch.infra.adapters.request.http.implementations.asynk import RequestsAdapter
 
 class TestGetDoujin:
     @pytest.mark.asyncio

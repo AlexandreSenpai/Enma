@@ -1,13 +1,13 @@
 import pytest
 import sys
 import os
-from NHentai.core.handler import ApiError
+from enma.core.handler import ApiError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from NHentai.core.interfaces import Cover, Doujin, DoujinPage, Tag, Sort, Page, CommentPage
-from NHentai.sync.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
-from NHentai.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter
+from enma.core.interfaces import Cover, Doujin, DoujinPage, Tag, Sort, Page, CommentPage
+from enma.sync.infra.adapters.repositories.hentai.implementations.nhentai import NHentaiAdapter
+from enma.sync.infra.adapters.request.http.implementations.sync import RequestsAdapter
 
 class TestGetDoujin:
     def test_get_doujin_successfully(self):
