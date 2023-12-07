@@ -2,7 +2,7 @@
 This module provides an adapter for the nhentai repository.
 It contains functions and classes to interact with the nhentai API and retrieve manga data.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Literal, Optional, cast
@@ -98,8 +98,8 @@ class NHentai(IMangaRepository):
                                   japanese=doujin.get('title').get('japanese'),
                                   other=doujin.get('title').get('pretty')),
                       id=doujin.get('id'),
-                      created_at=datetime.utcfromtimestamp(doujin.get('upload_date')),
-                      updated_at=datetime.utcfromtimestamp(doujin.get('upload_date')),
+                      created_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
+                      updated_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
                       authors=[tag.get('name') for tag in doujin.get('tags') if tag.get('type') == 'artist'],
                       genres=[Genre(id=genre.get('id'),
                                     name=genre.get('name')) for genre in doujin.get('tags') if genre.get('type') == 'tag'],
