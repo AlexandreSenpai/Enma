@@ -73,7 +73,7 @@ class NHentai(IMangaRepository):
 
     def get(self, identifier: str) -> Manga | None:
         response = self.__make_request(url=f'{self.__API_URL}/gallery/{identifier}')
-        
+
         if response.status_code != 200:
             return
         

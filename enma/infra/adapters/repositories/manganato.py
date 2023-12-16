@@ -145,7 +145,10 @@ class Manganato(IMangaRepository):
                             results=thumbs)
 
     def paginate(self, page: int) -> Pagination:
-        return super().paginate(page)
+        raise NotImplementedError('Paginate is not yet implemented.')
     
     def random(self) -> Manga:
-        return super().random()
+        raise NotImplementedError('Random is not yet implemented.')
+    
+    def set_config(self, **kwargs) -> None:
+        raise NotImplementedError('Manganato does not support set_config')

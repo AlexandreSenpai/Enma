@@ -1,5 +1,5 @@
 import sys
-from enma.infra.entrypoints.lib import Enma, SourcesEnum
+from enma.infra.entrypoints.lib import Enma, SourcesEnum, DefaultAvailableSources
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
 from enma.infra.adapters.repositories.manganato import Manganato
 
