@@ -7,6 +7,15 @@ class SourceNotAvailable(Exception):
         self.desc: str = 'This error occurs when the client chooses nonexistent source.'
         self.critical: bool = False
 
+class InvalidResource(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.message: str = message
+        self.code: str = 'INVALID_RESOURCE'
+        self.desc: str = 'This error occurs when the client tries to perform an action with an invalid resource.'
+        self.critical: bool = True
+
 class NhentaiSourceWithoutConfig(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)

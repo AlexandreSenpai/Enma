@@ -89,6 +89,7 @@ class NHentai(IMangaRepository):
                                                   mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                                   media_id=doujin.get('media_id'),
                                                   page_number=index+1),
+                         mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                          width=page.get('w'),
                          height=page.get('h'))
 
@@ -106,11 +107,13 @@ class NHentai(IMangaRepository):
                       thumbnail=Image(uri=self.__make_page_uri(type='thumbnail',
                                                                mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                                                media_id=doujin.get('media_id')),
+                                      mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                       width=doujin.get("images").get("thumbnail").get("w"),
                                       height=doujin.get("images").get("thumbnail").get("h")),
                       cover=Image(uri=self.__make_page_uri(type='cover',
                                                             media_id=doujin.get('media_id'),
                                                             mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()]),
+                                  mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                   width=doujin.get("images").get("cover").get("w"),
                                   height=doujin.get("images").get("cover").get("h")),
                       chapters=[chapter])
@@ -180,6 +183,7 @@ class NHentai(IMangaRepository):
 
             thumbs.append(Thumb(id=doujin_id,
                                 cover=Image(uri=cover_uri or '',
+                                            mime=MIME.J,
                                             width=width or 0,
                                             height=height or 0),
                                 title=caption or ''))
@@ -211,6 +215,7 @@ class NHentai(IMangaRepository):
                                          cover=Image(uri=self.__make_page_uri(type='cover',
                                                                               media_id=result.get('media_id'),
                                                                               mime=MIME[result.get('images').get('cover').get('t').upper()]),
+                                                     mime=MIME[result.get("images").get("thumbnail").get("t").upper()],
                                                      width=result.get('images').get('cover').get('w'),
                                                      height=result.get('images').get('cover').get('h'))) for result in data.get('result')])
 
