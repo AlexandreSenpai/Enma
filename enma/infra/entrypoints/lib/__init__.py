@@ -35,7 +35,7 @@ class SourceManager(Generic[AvailableSources]):
     def __init__(self, **kwargs) -> None:
         self.__SOURCES: dict[str, IMangaRepository] = {'nhentai': NHentai(config=kwargs.get('cloudflare_config')),
                                                        'manganato': Manganato()}
-        self.source = None
+        self.source: IMangaRepository | None = None
         self.source_name = ''
     
     def get_source(self,
