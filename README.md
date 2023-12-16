@@ -41,7 +41,8 @@ Feature   | NHentai | Manganato
 search    |    ✅   |     ✅    
 random    |    ✅   |     🚫    
 get       |    ✅   |     ✅    
-paginate  |    ✅   |     🚫    
+paginate  |    ✅   |     🚫
+download  |    ✅   |     ✅       
 set_config|    ✅   |     🚫
 
 ## Usage
@@ -85,6 +86,29 @@ enma.source_manager.set_source(source_name=AvailableSources.MANGANATO)
 
 manga = enma.random()
 print(manga)
+```
+
+### Example 3: Downloading Chapters
+```py
+from enum import Enum
+from enma import Enma, SourcesEnum, Manganato, IMangaRepository, default_downloader
+
+enma = Enma()
+
+enma.source_manager.set_source('nhentai')
+
+if enma.source_manager.source:
+    config = CloudFlareConfig(
+        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
+        cf_clearance=''
+    )
+
+    enma.source_manager.source.set_config(config=config)
+
+manga = enma.random()
+manga.chapters[0].download(downloader=default_downloader)
+# or manga.chapters[0].download(downloader=default_downloader, output_path='./naruto/chapters/01')
+
 ```
 
 ## Retrieving `user-agent` and `cf_clearance` for NHentai
@@ -137,6 +161,10 @@ While using the library, you might encounter some specific errors. Here's a desc
 5. **NhentaiSourceWithoutConfig**: 
    - **Description**: Raised when trying to make a request to NHentai without providing the necessary configurations.
    - **Common Cause**: Forgetting to provide the `user-agent` and `cf_clearance` when configuring the NHentai adapter.
+
+6. **InvalidResource**: 
+   - **Description**: Raised when trying to perform an action with an invalid or inexistent resource.
+   - **Common Cause**: Providing an inexistent folder path to downloader.
 
 When encountering one of these errors, refer to the description and common cause to assist in troubleshooting.
 
