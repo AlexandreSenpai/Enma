@@ -4,12 +4,15 @@ from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, 
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.downloaders.default import default_downloader
 from enma.infra.adapters.downloaders.manganato import manganato_downloader
+from enma.application.core.utils.logger import LogMode, logger
 
 __version__ = '2.0.0'
 
 package_name = "enma"
 python_major = "3"
 python_minor = "9"
+
+logger.mode = LogMode.DEBUG
 
 try:
     assert sys.version_info >= (int(python_major), int(python_minor))

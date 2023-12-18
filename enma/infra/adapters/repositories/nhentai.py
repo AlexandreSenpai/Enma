@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup, Tag
 from enma.application.core.handlers.error import (ExceedRetryCount,
                                                   NhentaiSourceWithoutConfig)
 from enma.application.core.interfaces.manga_repository import IMangaRepository
+from enma.application.core.utils.logger import logger
 from enma.domain.entities.manga import (MIME, Chapter, Genre, Image, Manga,
                                         Title)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
@@ -78,6 +79,7 @@ class NHentai(IMangaRepository):
         response = self.__make_request(url=f'{self.__API_URL}/gallery/{identifier}')
 
         if response.status_code != 200:
+            logger.error(f'Could not fetch {identifier} because nhentai\'s request ends up with {response.status_code} status code.')
             return
 
         doujin = response.json()
@@ -125,18 +127,26 @@ class NHentai(IMangaRepository):
                page: int,
                sort: Sort = Sort.RECENT) -> SearchResult:
 
+        logger.debug(f'Searching into Nhentai with args query={query};page={page};sort={sort}')
         request_response = self.__make_request(url=urljoin(self.__BASE_URL, 'search'),
                                                params={'q': query,
                                                        'sort': sort if isinstance(sort, str) else sort.value,
                                                        'page': page})
+        
+        if request_response.status_code != 200:
+            logger.error(f'Could not search by {query} because nhentai\'s request ends up with {request_response.status_code} status code.')
 
         soup = BeautifulSoup(request_response.text, 'html.parser')
 
         search_results_container = soup.find('div', {'class': 'container'})
+        logger.debug(f'Found successfully search result container using .class.container.')
         pagination_container = soup.find('section', {'class': 'pagination'})
+        logger.debug(f'Found successfully pagination container using .class.pagination.')
 
         last_page_a_tag = pagination_container.find('a', {'class': 'last'}) if pagination_container else None # type: ignore
+        logger.debug(f'Found last pagination container using .calss.last.')
         total_pages = int(last_page_a_tag['href'].split('=')[-1]) if last_page_a_tag else 1 # type: ignore
+        logger.debug(f'Found last page number successfully splitting last pagination number href.')
 
         if not search_results_container:
             return SearchResult(query=query,
@@ -146,7 +156,8 @@ class NHentai(IMangaRepository):
                                 results=[])
 
         search_results = search_results_container.find_all('div', {'class': 'gallery'}) # type: ignore
-
+        logger.debug(f'Found search results container using .class.gallery')
+        
         if not search_results:
             return SearchResult(query=query,
                                 total_pages=total_pages,
@@ -199,6 +210,7 @@ class NHentai(IMangaRepository):
                                        params={'page': page})
 
         if response.status_code != 200:
+            logger.error(f'Could not paginate to page {page} because nhentai\'s request ends up with {response.status_code} status code.')
             return Pagination(page=page)
 
         data = response.json()
@@ -222,15 +234,22 @@ class NHentai(IMangaRepository):
     def random(self, retry=0) -> Manga:
         response = self.__make_request(url=urljoin(self.__BASE_URL, 'random'))
 
+        if response.status_code != 200:
+            logger.error(f'Could not fetch a random manga because nhentai\'s request ends up with {response.status_code} status code.')
+
         soup = BeautifulSoup(response.text, 'html.parser')
 
         id = cast(Tag, soup.find('h3', id='gallery_id')).text.replace('#', '')
-
+        logger.debug(f'Got successfully random manga id {id} from "gallery_id.h3" tag.')
+        logger.debug(f'Using get method to Fetch manga with identifier: {id}')
         doujin = self.get(identifier=id)
+        logger.debug(f'Got successfully random manga with id {id}.')
 
         if doujin is None:
             if retry == 4:
                 raise ExceedRetryCount('Could not fetch a random doujin.')
+            
+            logger.warning('Could not fetch random manga. Retrying.')
             return self.random(retry=retry+1)
 
         return doujin

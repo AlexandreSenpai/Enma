@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import Union
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.use_case import DTO, IUseCase
+from enma.application.core.utils.logger import logger
 from enma.domain.entities.manga import Manga
 
 @dataclass
@@ -19,6 +20,7 @@ class GetMangaUseCase(IUseCase[GetMangaRequestDTO, GetMangaResponseDTO]):
         self.__manga_repository = manga_repository
 
     def execute(self, dto: DTO[GetMangaRequestDTO]) -> GetMangaResponseDTO:
+        logger.info(f'Fetching manga with identifier: {dto.data.identifier}.')
         manga = self.__manga_repository.get(identifier=dto.data.identifier)
         
         if manga is None: return GetMangaResponseDTO(found=False, manga=None)

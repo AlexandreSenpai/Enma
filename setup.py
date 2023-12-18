@@ -7,7 +7,7 @@ def readme():
 def make_setup():
     return setup(
         name='Enma',
-        version="2.1.2",
+        version="2.3.0",
         description='Enma is a Python library designed to fetch manga and doujinshi data from various sources.',
         long_description=readme(),
         long_description_content_type='text/markdown',
