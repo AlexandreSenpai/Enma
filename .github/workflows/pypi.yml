@@ -1,25 +1,25 @@
 name: Production Pypi
 on:
   push:
-    branches:
-      - "master"
+    tags:
+      - "*"
 jobs:
   pypi:
     name: Pypi
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@master
         with:
           python-version: 3.9
-      - name: Setting environment name
+      - name: Installing building dependencies
         run: |
-          export environment_name=prd
-      - name: Create dist folder
+          python -m pip install build twine wheel setuptools_scm setuptools
+      - name: Build the project
         run: |
-          python setup.py sdist --dist-dir=./dist
+          python -m build
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:

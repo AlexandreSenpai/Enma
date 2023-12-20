@@ -1,1 +1,2 @@
-recursive-include google *
+include enma/*.md enma/*.txt
+recursive-include enma *.py

@@ -1,18 +1,17 @@
 import sys
+from enma.application.core.utils.logger import LogMode, logger
 from enma.infra.entrypoints.lib import Enma, SourcesEnum, DefaultAvailableSources
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.downloaders.default import default_downloader
 from enma.infra.adapters.downloaders.manganato import manganato_downloader
-from enma.application.core.utils.logger import LogMode, logger
-
-__version__ = '2.0.0'
+from enma.domain.core.interfaces.downloader import IDownloader
 
 package_name = "enma"
 python_major = "3"
 python_minor = "9"
 
-logger.mode = LogMode.DEBUG
+logger.mode = LogMode.NORMAL
 
 try:
     assert sys.version_info >= (int(python_major), int(python_minor))
