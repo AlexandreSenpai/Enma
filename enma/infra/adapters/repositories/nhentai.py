@@ -41,7 +41,7 @@ class NHentai(IMangaRepository):
     def __init__(self,
                  config: Optional[CloudFlareConfig] = None) -> None:
         self.__config = config
-        self.__BASE_URL = 'https://nhentai.net/'
+        self.__BASE_URL = 'https://nhentai.net'
         self.__API_URL = 'https://nhentai.net/api/'
         self.__IMAGE_BASE_URL = 'https://i.nhentai.net/galleries/'
         self.__AVATAR_URL = 'https://i5.nhentai.net/'
@@ -58,6 +58,8 @@ class NHentai(IMangaRepository):
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
 
+        logger.debug(f'Fetching {url} with headers {headers} and params {params} the current config cf_clearance: {self.__config.cf_clearance}')
+
         return requests.get(url=urlparse(url).geturl(),
                             headers={**headers, 'User-Agent': self.__config.user_agent},
                             params={**params},
@@ -71,9 +73,19 @@ class NHentai(IMangaRepository):
                         media_id: str,
                         mime: MIME,
                         page_number: Optional[int] = None) -> str:
-        if type == 'cover': return urljoin(self.__TINY_IMAGE_BASE_URL, f'{media_id}/cover.{mime.value}')
-        if type == 'thumbnail': return urljoin(self.__TINY_IMAGE_BASE_URL, f'{media_id}/thumb.{mime.value}')
-        return urljoin(self.__IMAGE_BASE_URL, f'{media_id}/{page_number}.{mime.value}')
+        
+        url = ''
+
+        if type == 'cover': 
+            url = urljoin(self.__TINY_IMAGE_BASE_URL, f'{media_id}/cover.{mime.value}')
+        elif type == 'thumbnail': 
+            url = urljoin(self.__TINY_IMAGE_BASE_URL, f'{media_id}/thumb.{mime.value}')
+        else:
+            url = urljoin(self.__IMAGE_BASE_URL, f'{media_id}/{page_number}.{mime.value}')
+        
+        logger.debug(f'Built page uri for type {type} as {url}')
+
+        return url
 
     def get(self, identifier: str) -> Manga | None:
         response = self.__make_request(url=f'{self.__API_URL}/gallery/{identifier}')
@@ -87,6 +99,7 @@ class NHentai(IMangaRepository):
         chapter = Chapter(id=0)
 
         for index, page in enumerate(doujin.get('images').get('pages')):
+            logger.info(f'Building page {index} from chapter 0 from doujin {identifier}.')
             page = Image(uri=self.__make_page_uri(type='page',
                                                   mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                                   media_id=doujin.get('media_id'),

@@ -11,7 +11,7 @@ package_name = "enma"
 python_major = "3"
 python_minor = "9"
 
-logger.mode = LogMode.NORMAL
+logger.mode = LogMode.SILENT
 
 try:
     assert sys.version_info >= (int(python_major), int(python_minor))
