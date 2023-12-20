@@ -1,4 +1,4 @@
-name: Production Pypi
+name: Development Pypi
 on:
   push:
     branches:
