@@ -70,7 +70,6 @@ print(doujin)
 
 ### Example 2: Extending with Custom Sources
 ```py
-from enum import Enum
 from typing import cast
 from enma import Enma, SourcesEnum, Manganato, IMangaRepository
 
@@ -90,7 +89,6 @@ print(manga)
 
 ### Example 3: Downloading Chapters
 ```py
-from enum import Enum
 from enma import Enma, SourcesEnum, Manganato, IMangaRepository, default_downloader
 
 enma = Enma()
@@ -109,6 +107,15 @@ manga = enma.random()
 manga.chapters[0].download(downloader=default_downloader)
 # or manga.chapters[0].download(downloader=default_downloader, output_path='./naruto/chapters/01')
 
+```
+
+## Logger Control
+By default Enma sets logs as SILENT. But if you're needing to see what Enma outputs you can set log mode as NORMAL or DEBUG to deep logs.
+
+```py
+from enma import logger, LogMode
+
+logger.mode = LogMode.NORMAL
 ```
 
 ## Retrieving `user-agent` and `cf_clearance` for NHentai

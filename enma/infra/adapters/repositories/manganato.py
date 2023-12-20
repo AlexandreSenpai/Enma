@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup, Tag
 import requests
 
 from enma.application.core.interfaces.manga_repository import IMangaRepository
+from enma.application.core.utils.logger import logger
 from enma.domain.entities.manga import Chapter, Genre, Image, Manga, Title
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 
@@ -31,6 +32,8 @@ class Manganato(IMangaRepository):
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
 
+        logger.debug(f'Fetching {url} with headers {headers} and params {params}')
+
         return requests.get(url=urlparse(url).geturl(), 
                             headers={**headers, 'Referer': 'https://chapmanganato.com/'},
                             params={**params})
@@ -38,6 +41,7 @@ class Manganato(IMangaRepository):
     def __create_title(self, 
                        main_title: str, 
                        alternative: str) -> Title:
+        logger.debug(f'Building manga title main: {main_title} and alternative: {alternative}')
         jp, cn, *_ = alternative.split(';') if alternative.find(';') != -1 else alternative.split(',')
         return Title(english=main_title.strip(),
                      japanese=jp.strip(),
@@ -50,8 +54,10 @@ class Manganato(IMangaRepository):
     
     def __create_chapter(self, url: str) -> Chapter | None:
         response = self.__make_request(url=url)
+        logger.debug(f'Fetching chapter {url}')
         
         if response.status_code != 200:
+            logger.error(f'Could not fetch the chapter with url: {url}. status code: {response.status_code}')
             return
         
         chapter = Chapter(id=response.url.split('/')[-1])
@@ -66,6 +72,7 @@ class Manganato(IMangaRepository):
         response = self.__make_request(url=urljoin(self.__CHAPTER_BASE_URL, identifier))
         
         if response.status_code != 200:
+            logger.error(f'Could not fetch the manga with identifier: {identifier}. status code: {response.status_code}')
             return
         
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -100,6 +107,8 @@ class Manganato(IMangaRepository):
             author = author_cel.text.strip()
             genres = genres_cel.text.replace('\n', '').split(' - ')
 
+        workers = 10
+        logger.debug(f'Initializing {workers} workers to fetch chapters of {identifier}.')
         with ThreadPoolExecutor(max_workers=10) as executor:
             chapters = executor.map(self.__create_chapter, self.__find_chapets_list(html=soup))
             chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
