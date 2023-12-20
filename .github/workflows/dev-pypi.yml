@@ -1,7 +1,7 @@
-name: Development Pypi
+name: Production Pypi
 on:
   push:
-    branches:
+    tags:
       - "dev"
 jobs:
   pypi:
@@ -9,27 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Set up Python
         uses: actions/setup-python@master
         with:
           python-version: 3.9
-      - name: Creating Variable Outputs
-        id: vars
-        run: echo ::set-output name=commit::$(git rev-parse --short "$GITHUB_SHA")
-      - name: Checking folder
+      - name: Installing building dependencies
         run: |
-          ls -la
-      - name: Create dist folder
+          python -m pip install build twine wheel setuptools_scm setuptools
+      - name: Build the project
         run: |
-          export NHENTAI_ENVIRONMENT=dev
-          python setup.py sdist --dist-dir=./dev_dist
-      - name: Checking folder
-        run: |
-          ls
+          python -m build
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          repository-url: https://test.pypi.org/legacy/
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
-          packages_dir: dev_dist/
+          password: ${{ secrets.DEV_PYPI_API_TOKEN }}
+          packages_dir: dist/
