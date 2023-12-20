@@ -4,8 +4,7 @@ from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, 
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.downloaders.default import default_downloader
 from enma.infra.adapters.downloaders.manganato import manganato_downloader
-
-__version__ = '2.0.0'
+from enma.domain.core.interfaces.downloader import IDownloader
 
 package_name = "enma"
 python_major = "3"
