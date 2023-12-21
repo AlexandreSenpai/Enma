@@ -7,7 +7,7 @@ jobs:
   pypi:
     name: Pypi
     runs-on: ubuntu-latest
-    if: !contains(github.ref, '-')
+    if: "!contains(github.ref, '-')"
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
