@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.use_case import DTO, IUseCase
+from enma.application.core.utils.logger import logger
 from enma.domain.entities.search_result import SearchResult
 
 @dataclass
@@ -19,6 +20,7 @@ class SearchMangaUseCase(IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]
         self.__manga_repository = manga_repository
 
     def execute(self, dto: DTO[SearchMangaRequestDTO]) -> SearchMangaResponseDTO:
+        logger.info(f'Searching for {dto.data.query}.')
         result = self.__manga_repository.search(query=dto.data.query,
                                                 page=dto.data.page,
                                                 **dto.data.extra)
