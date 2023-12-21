@@ -6,6 +6,9 @@ from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.downloaders.default import default_downloader
 from enma.infra.adapters.downloaders.manganato import manganato_downloader
 from enma.domain.core.interfaces.downloader import IDownloader
+from . import _version
+
+__version__ = _version.__version__
 
 package_name = "enma"
 python_major = "3"
