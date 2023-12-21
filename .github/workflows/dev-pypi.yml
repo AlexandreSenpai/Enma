@@ -2,7 +2,7 @@ name: Development Pypi
 on:
   push:
     tags:
-      - "*-*"
+      - "*"
 jobs:
   pypi:
     name: Pypi
