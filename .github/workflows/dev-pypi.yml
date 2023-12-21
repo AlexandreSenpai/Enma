@@ -1,8 +1,8 @@
 name: Development Pypi
 on:
   push:
-    branches:
-      - "dev"
+    tags:
+      - "*-dev*"
 jobs:
   pypi:
     name: Pypi
