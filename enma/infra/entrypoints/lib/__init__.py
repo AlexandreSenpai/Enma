@@ -11,10 +11,12 @@ from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.saver_adapter import ISaverAdapter
 from enma.application.core.interfaces.use_case import DTO, IUseCase
 from enma.application.use_cases.download_chapter import DownloadChapterRequestDTO, DownloadChapterResponseDTO, DownloadChapterUseCase, Threaded
+from enma.application.use_cases.get_author_page import GetAuthorPageRequestDTO, GetAuthorPageResponseDTO, GetAuthorPageUseCase
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaResponseDTO, GetMangaUseCase
 from enma.application.use_cases.get_random import RandomResponseDTO, RandomUseCase
 from enma.application.use_cases.paginate import PaginateRequestDTO, PaginateResponseDTO, PaginateUseCase
 from enma.application.use_cases.search_manga import SearchMangaRequestDTO, SearchMangaResponseDTO, SearchMangaUseCase
+from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import Chapter, Manga
 from enma.domain.entities.pagination import Pagination
 from enma.domain.entities.search_result import SearchResult
@@ -102,6 +104,7 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__paginate_use_case: Optional[IUseCase[PaginateRequestDTO, PaginateResponseDTO]] = None
         self.__random_use_case: Optional[IUseCase[Any, RandomResponseDTO]] = None
         self.__downloader_use_case: Optional[IUseCase[DownloadChapterRequestDTO, DownloadChapterResponseDTO]] = None
+        self.__get_author_page_use_case: Optional[IUseCase[GetAuthorPageRequestDTO, GetAuthorPageResponseDTO]] = None
         self.__current_source_name = None
 
         self.source_manager = SourceManager[AvailableSources](**kwargs)
@@ -113,6 +116,7 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__paginate_use_case = PaginateUseCase(manga_repository=source)     
         self.__random_use_case = RandomUseCase(manga_repository=source)
         self.__downloader_use_case = DownloadChapterUseCase()  
+        self.__get_author_page_use_case = GetAuthorPageUseCase(manga_repository=source)  
         
     @instantiate_source
     def get(self, identifier: str) -> Manga | None:
@@ -150,7 +154,6 @@ class Enma(IEnma, Generic[AvailableSources]):
     
     
     @instantiate_source
-    @timer
     def download_chapter(self, 
                          path: str, 
                          chapter: Chapter,
@@ -165,4 +168,11 @@ class Enma(IEnma, Generic[AvailableSources]):
                                                                                                saver_adapter=saver,
                                                                                                downloader=downloader,
                                                                                                threaded=threaded)))
+    
+    @instantiate_source
+    def author_page(self, author: str, page: int) -> AuthorPage:
+        if self.__get_author_page_use_case is None:
+            raise SourceWasNotDefined('You must define a source before of performing actions.')
         
+        return self.__get_author_page_use_case.execute(dto=DTO(data=GetAuthorPageRequestDTO(author=author,
+                                                                                            page=page))).result

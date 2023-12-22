@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
+from enma.domain.entities.author_page import AuthorPage
 
 from enma.domain.entities.manga import Manga
 from enma.domain.entities.pagination import Pagination
@@ -30,4 +31,10 @@ class IMangaRepository(ABC):
     
     @abstractmethod
     def random(self) -> Manga:
+        ...
+
+    @abstractmethod
+    def author_page(self,
+                    author: str,
+                    page: int) -> AuthorPage:
         ...

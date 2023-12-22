@@ -18,14 +18,14 @@ class ISearchResultProps(TypedDict):
     results: list[Manga]
 
 @dataclass
-class SearchResult(Pagination):
+class AuthorPage(Pagination):
     """
     Entity class representing a search result in the Enma application.
     """
-    query: str
+    author: str
 
     def __init__(self,
-                 query: str,
+                 author: str,
                  page: int,
                  total_pages: int = 0,
                  total_results: int = 0,
@@ -42,4 +42,4 @@ class SearchResult(Pagination):
                          created_at=created_at,
                          updated_at=updated_at)
         
-        self.query = query
+        self.author = author

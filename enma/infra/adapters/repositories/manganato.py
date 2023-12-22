@@ -13,6 +13,7 @@ import requests
 
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
+from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import Chapter, Genre, Image, Manga, Title
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 
@@ -163,4 +164,7 @@ class Manganato(IMangaRepository):
         raise NotImplementedError('Random is not yet implemented.')
     
     def set_config(self, **kwargs) -> None:
+        raise NotImplementedError('Manganato does not support set_config')
+    
+    def author_page(self, author: str, page: int) -> AuthorPage:
         raise NotImplementedError('Manganato does not support set_config')

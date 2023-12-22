@@ -15,6 +15,7 @@ from enma.application.core.handlers.error import (ExceedRetryCount,
                                                   NhentaiSourceWithoutConfig)
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
+from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import (MIME, Chapter, Genre, Image, Manga,
                                         Title)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
@@ -267,3 +268,74 @@ class NHentai(IMangaRepository):
             return self.random(retry=retry+1)
 
         return doujin
+    
+    def author_page(self,
+                    author: str,
+                    page: int) -> AuthorPage:
+        request_response = self.__make_request(url=urljoin(self.__BASE_URL, f'artist/{author}'),
+                                               params={'page': page})
+        
+        result = AuthorPage(author=author,
+                            total_pages=0,
+                            page=page,
+                            total_results=0,
+                            results=[])
+   
+        soup = BeautifulSoup(request_response.text, 'html.parser')
+
+        search_results_container = soup.find('div', {'class': 'container'})
+        pagination_container = soup.find('section', {'class': 'pagination'})
+
+        last_page_a_tag = pagination_container.find('a',
+                                                    {'class': 'last'}) if pagination_container else None  # type: ignore
+        total_pages = int(last_page_a_tag['href'].split('=')[-1]) if last_page_a_tag else 1  # type: ignore
+
+        if not search_results_container:
+            return result
+
+        search_results = search_results_container.find_all('div', {'class': 'gallery'})  # type: ignore
+
+        if not search_results:
+            return result
+
+        a_tags_with_doujin_id = [gallery.find('a', {'class': 'cover'}) for gallery in search_results]
+
+        thumbs = []
+
+        for a_tag in a_tags_with_doujin_id:
+            if a_tag is None: continue
+
+            doujin_id = a_tag['href'].split('/')[-2]
+
+            if doujin_id == '': continue
+
+            result_cover = a_tag.find('img', {'class': 'lazyload'})
+            cover_uri = None
+            width = None
+            height = None
+
+            if result_cover is not None:
+                cover_uri = result_cover['data-src']
+                width = result_cover['width']
+                height = result_cover['height']
+
+            result_caption = a_tag.find('div', {'class': 'caption'})
+
+            caption = None
+            if result_caption is not None:
+                caption = result_caption.text
+
+            thumbs.append(Thumb(id=doujin_id,
+                                cover=Image(uri=cover_uri or '',
+                                            mime=MIME.J,
+                                            width=width or 0,
+                                            height=height or 0),
+                                title=caption or ''))
+        
+        result.author = author
+        result.total_pages = total_pages
+        result.page = page
+        result.total_results = 25 * total_pages if pagination_container else len(thumbs)
+        result.results = thumbs
+        
+        return result
