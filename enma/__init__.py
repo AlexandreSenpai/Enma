@@ -3,9 +3,10 @@ from enma.application.core.utils.logger import LogMode, logger
 from enma.infra.entrypoints.lib import Enma, SourcesEnum, DefaultAvailableSources
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
 from enma.infra.adapters.repositories.manganato import Manganato
-from enma.infra.adapters.downloaders.default import default_downloader
-from enma.infra.adapters.downloaders.manganato import manganato_downloader
-from enma.domain.core.interfaces.downloader import IDownloader
+from enma.infra.adapters.downloaders.default import DefaultDownloader
+from enma.infra.adapters.downloaders.manganato import ManganatoDownloader
+from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
+from enma.application.core.interfaces.saver_adapter import ISaverAdapter
 from . import _version
 
 __version__ = _version.__version__

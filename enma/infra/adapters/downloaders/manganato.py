@@ -1,9 +1,11 @@
+from io import BytesIO
 import requests
 
-def manganato_downloader(uri: str, output_path: str) -> None:
-    with open(output_path, 'wb') as f:
-        for chunk in requests.get(url=uri, 
-                                  stream=True, 
-                                  headers={'Referer': 'https://chapmanganato.com/'}).iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
+from enma.domain.entities.manga import Image
+
+class ManganatoDownloader(IDownloaderAdapter):
+    def download(self, page: Image) -> BytesIO:
+        response = requests.get(url=page.uri,
+                                headers={'Referer': 'https://chapmanganato.com/'})
+        return BytesIO(response.content)

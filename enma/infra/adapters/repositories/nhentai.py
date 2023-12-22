@@ -104,6 +104,7 @@ class NHentai(IMangaRepository):
                                                   mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                                   media_id=doujin.get('media_id'),
                                                   page_number=index+1),
+                         name=f'{index}.{MIME[doujin.get("images").get("thumbnail").get("t").upper()].value}',
                          mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                          width=page.get('w'),
                          height=page.get('h'))

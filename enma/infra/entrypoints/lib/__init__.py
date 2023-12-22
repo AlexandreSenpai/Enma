@@ -6,19 +6,37 @@ from enum import Enum
 from typing import Any, Generic, Optional, TypeVar, TypedDict
 
 from enma.application.core.handlers.error import InstanceError, SourceNotAvailable, SourceWasNotDefined
+from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
 from enma.application.core.interfaces.manga_repository import IMangaRepository
+from enma.application.core.interfaces.saver_adapter import ISaverAdapter
 from enma.application.core.interfaces.use_case import DTO, IUseCase
+from enma.application.use_cases.download_chapter import DownloadChapterRequestDTO, DownloadChapterResponseDTO, DownloadChapterUseCase, Threaded
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaResponseDTO, GetMangaUseCase
 from enma.application.use_cases.get_random import RandomResponseDTO, RandomUseCase
 from enma.application.use_cases.paginate import PaginateRequestDTO, PaginateResponseDTO, PaginateUseCase
 from enma.application.use_cases.search_manga import SearchMangaRequestDTO, SearchMangaResponseDTO, SearchMangaUseCase
-from enma.domain.entities.manga import Manga
+from enma.domain.entities.manga import Chapter, Manga
 from enma.domain.entities.pagination import Pagination
 from enma.domain.entities.search_result import SearchResult
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.repositories.nhentai import NHentai, CloudFlareConfig
 from enma.infra.core.interfaces.lib import IEnma
+import functools
+import time
 
+
+def timer(func):
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        value = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        run_time = end_time - start_time
+        print("Finished {} in {} secs".format(repr(func.__name__), round(run_time, 3)))
+        return value
+
+    return wrapper
 class SourcesEnum(str, Enum):
     ...
 
@@ -83,6 +101,7 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__search_manga_use_case: Optional[IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]] = None
         self.__paginate_use_case: Optional[IUseCase[PaginateRequestDTO, PaginateResponseDTO]] = None
         self.__random_use_case: Optional[IUseCase[Any, RandomResponseDTO]] = None
+        self.__downloader_use_case: Optional[IUseCase[DownloadChapterRequestDTO, DownloadChapterResponseDTO]] = None
         self.__current_source_name = None
 
         self.source_manager = SourceManager[AvailableSources](**kwargs)
@@ -92,7 +111,8 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__get_manga_use_case = GetMangaUseCase(manga_repository=source)
         self.__search_manga_use_case = SearchMangaUseCase(manga_repository=source)     
         self.__paginate_use_case = PaginateUseCase(manga_repository=source)     
-        self.__random_use_case = RandomUseCase(manga_repository=source)     
+        self.__random_use_case = RandomUseCase(manga_repository=source)
+        self.__downloader_use_case = DownloadChapterUseCase()  
         
     @instantiate_source
     def get(self, identifier: str) -> Manga | None:
@@ -127,3 +147,22 @@ class Enma(IEnma, Generic[AvailableSources]):
     def random(self) -> Manga:
         response = self.__random_use_case.execute() # type: ignore
         return response.result
+    
+    
+    @instantiate_source
+    @timer
+    def download_chapter(self, 
+                         path: str, 
+                         chapter: Chapter,
+                         downloader: IDownloaderAdapter,
+                         saver: ISaverAdapter,
+                         threaded: Threaded) -> None:
+        if self.__downloader_use_case is None:
+            raise SourceWasNotDefined('You must define a source before of performing actions.')
+        
+        downloaded = self.__downloader_use_case.execute(dto=DTO(data=DownloadChapterRequestDTO(chapter=chapter,
+                                                                                               path=path,
+                                                                                               saver_adapter=saver,
+                                                                                               downloader=downloader,
+                                                                                               threaded=threaded)))
+        

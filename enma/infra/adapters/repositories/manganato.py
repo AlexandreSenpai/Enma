@@ -4,6 +4,7 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 """
 
 from concurrent.futures import ThreadPoolExecutor
+from multiprocessing import cpu_count
 from typing import Any, Optional, cast
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup, Tag
@@ -64,6 +65,7 @@ class Manganato(IMangaRepository):
         html = BeautifulSoup(response.text, 'html.parser')
         images_container = cast(Tag, html.find('div'))
         chapter.pages = [Image(uri=img['src'],
+                               name=img['src'].split('/')[-1],
                                width=0,
                                height=0) for img in images_container.find_all('img')]
         return chapter
@@ -107,11 +109,12 @@ class Manganato(IMangaRepository):
             author = author_cel.text.strip()
             genres = genres_cel.text.replace('\n', '').split(' - ')
 
-        workers = 10
+        workers = cpu_count()
         logger.debug(f'Initializing {workers} workers to fetch chapters of {identifier}.')
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with ThreadPoolExecutor(max_workers=workers) as executor:
             chapters = executor.map(self.__create_chapter, self.__find_chapets_list(html=soup))
             chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
+            executor.shutdown()
         
         return Manga(title=title,
                      authors=[author] if author is not None else None,

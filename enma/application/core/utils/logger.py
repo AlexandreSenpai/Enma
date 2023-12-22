@@ -70,7 +70,8 @@ class Logger(logging.Logger):
         else:
             for handler in self.handlers:
                 handler.setFormatter(self._info_formatter)
-            
+        
+        self.disabled = False
         self.setLevel(mode.value)
         self._mode = mode
 

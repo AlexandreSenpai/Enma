@@ -1,11 +1,8 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-import os
-from typing import Optional, TypedDict
+from typing import TypedDict
 
-from enma.application.core.handlers.error import InvalidResource
-from enma.domain.core.interfaces.downloader import IDownloader
 from enma.domain.entities.base import Entity
 
 class MIME(Enum):
@@ -16,6 +13,7 @@ class MIME(Enum):
 @dataclass
 class Image:
     uri: str
+    name: str = field(default='image.jpg')
     width: int = field(default=0)
     height: int = field(default=0)
     mime: MIME = field(default=MIME.J)
@@ -41,18 +39,6 @@ class Chapter:
 
     def add_page(self, page: Image) -> None:
         self.pages.append(page)
-
-    def download(self, downloader: IDownloader, output_path: Optional[str] = None) -> None:
-        if output_path is None: 
-            output_path = './downloads'
-            os.makedirs(output_path, exist_ok=True)
-
-        if output_path and not os.path.isdir(output_path):
-            raise InvalidResource('This directory does not exists.')
-        
-        for i, page in enumerate(self.pages):
-            image_path = os.path.join(output_path, f'{i}.{page.mime.value}')
-            downloader(page.uri, image_path)
 
 @dataclass
 class Genre:
