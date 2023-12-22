@@ -1,5 +1,6 @@
 import sys
 from enma.application.core.utils.logger import LogMode, logger
+from enma.application.use_cases.download_chapter import Threaded
 from enma.infra.entrypoints.lib import Enma, SourcesEnum, DefaultAvailableSources
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
 from enma.infra.adapters.repositories.manganato import Manganato
@@ -7,9 +8,7 @@ from enma.infra.adapters.downloaders.default import DefaultDownloader
 from enma.infra.adapters.downloaders.manganato import ManganatoDownloader
 from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
 from enma.application.core.interfaces.saver_adapter import ISaverAdapter
-from . import _version
-
-__version__ = _version.__version__
+from enma.infra.adapters.storage.local import LocalStorage
 
 package_name = "enma"
 python_major = "3"

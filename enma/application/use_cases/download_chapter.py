@@ -64,31 +64,35 @@ class DownloadChapterUseCase(IUseCase[DownloadChapterRequestDTO, DownloadChapter
         return queue.Queue[File]()
 
     def execute(self, dto: DTO[DownloadChapterRequestDTO]) -> DownloadChapterResponseDTO:
-        logger.info(f'Downloading chapter with {len(dto.data.chapter.pages)} pages.')
-        
-        logger.debug(f'Using threads to perform download: {dto.data.threaded.use_threads}.')
+        try:
+            logger.info(f'Downloading chapter with {len(dto.data.chapter.pages)} pages.')
+            
+            logger.debug(f'Using threads to perform download: {dto.data.threaded.use_threads}.')
 
-        self.queue = self.__create_queue()
-        self.downloader = dto.data.downloader
+            self.queue = self.__create_queue()
+            self.downloader = dto.data.downloader
 
-        threads: list[threading.Thread] = []
-        threads_num = 5
-        logger.debug(f'Spawning {threads_num} threads to handle download queue.')
-        for _ in range(threads_num):
-            t = threading.Thread(target=self.__handle_saving, args=(self.queue,
-                                                                    dto.data.path,
-                                                                    dto.data.saver_adapter))
-            t.start()
-            threads.append(t)
+            threads: list[threading.Thread] = []
+            threads_num = 5
+            logger.debug(f'Spawning {threads_num} threads to handle download queue.')
+            for _ in range(threads_num):
+                t = threading.Thread(target=self.__handle_saving, args=(self.queue,
+                                                                        dto.data.path,
+                                                                        dto.data.saver_adapter))
+                t.start()
+                threads.append(t)
 
-        if dto.data.threaded.use_threads:
-            self.__spawn_workers(chapter=dto.data.chapter, workers=dto.data.threaded.number_of_threads)
-        else:
-            self.__make_sync_download(chapter=dto.data.chapter, downloader=dto.data.downloader)
+            if dto.data.threaded.use_threads:
+                self.__spawn_workers(chapter=dto.data.chapter, workers=dto.data.threaded.number_of_threads)
+            else:
+                self.__make_sync_download(chapter=dto.data.chapter, downloader=dto.data.downloader)
 
-        self.queue.join()
+            self.queue.join()
 
-        for thread in threads:
-            thread.join()
+            for thread in threads:
+                thread.join()
 
-        return DownloadChapterResponseDTO(done=True)
+            return DownloadChapterResponseDTO(done=True)
+        except Exception as err:
+            logger.error(err)
+            return DownloadChapterResponseDTO(done=False)

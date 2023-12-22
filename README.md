@@ -87,30 +87,36 @@ manga = enma.random()
 print(manga)
 ```
 
-### Example 3: Downloading Chapters
+## Downloading Chapters
+Using Enma you're able to download chapter pages to your local storage or any other storage that implements `ISaverAdapter`.
+
+You can check it out how to do it right below:
+
 ```py
-from enma import Enma, SourcesEnum, Manganato, IMangaRepository, default_downloader
+from enma import (Enma,
+                  CloudFlareConfig, 
+                  ManganatoDownloader, 
+                  Threaded, 
+                  LocalStorage)
 
 enma = Enma()
+enma.source_manager.set_source('manganato')
+manga = enma.get(identifier='manga-wb999684')
 
-enma.source_manager.set_source('nhentai')
+downloader = ManganatoDownloader()
+local = LocalStorage()
 
-if enma.source_manager.source:
-    config = CloudFlareConfig(
-        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-        cf_clearance=''
-    )
-
-    enma.source_manager.source.set_config(config=config)
-
-manga = enma.random()
-manga.chapters[0].download(downloader=default_downloader)
-# or manga.chapters[0].download(downloader=default_downloader, output_path='./naruto/chapters/01')
-
+if manga:
+    enma.download_chapter(path=f'./download/{manga.title.english}',
+                          chapter=manga.chapters[0],
+                          downloader=downloader,
+                          saver=local,
+                          threaded=Threaded(use_threads=True,
+                                            number_of_threads=5))
 ```
 
 ## Logger Control
-By default Enma sets logs as SILENT. But if you're needing to see what Enma outputs you can set log mode as NORMAL or DEBUG to deep logs.
+By default Enma sets logs as `SILENT`. But if you're needing to see what Enma outputs you can set log mode as `NORMAL` or `DEBUG` to deep logs.
 
 ```py
 from enma import logger, LogMode
