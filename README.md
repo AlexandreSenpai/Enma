@@ -36,14 +36,15 @@ except AssertionError:
 
 ## Features Comparison
 
-Feature   | NHentai | Manganato
-----------|---------|-----------
-search    |    ✅   |     ✅    
-random    |    ✅   |     🚫    
-get       |    ✅   |     ✅    
-paginate  |    ✅   |     🚫
-download  |    ✅   |     ✅       
-set_config|    ✅   |     🚫
+Feature    | NHentai | Manganato
+-----------|---------|-----------
+search     |    ✅   |     ✅    
+random     |    ✅   |     🚫    
+get        |    ✅   |     ✅    
+paginate   |    ✅   |     🚫
+download   |    ✅   |     ✅       
+author page|    ✅   |     🚫       
+set_config |    ✅   |     🚫
 
 ## Usage
 
