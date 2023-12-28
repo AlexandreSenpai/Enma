@@ -66,6 +66,11 @@ class Manga(Entity[IMangaProps]):
     title: Title
     authors: list[Genre]
     genres: list[Genre]
+    groups: list[Genre]
+    parodies: list[Genre]
+    characters: list[Genre]
+    languages: list[Genre]
+    categories: list[Genre]
     chapters: list[Chapter]
     chapters_count: int
     cover: Image | None
@@ -75,6 +80,11 @@ class Manga(Entity[IMangaProps]):
                  title: Title,
                  chapters: list[Chapter],
                  genres: list[Genre] | None = None,
+                 groups: list[Genre] | None = None,
+                 parodies: list[Genre] | None = None,
+                 characters: list[Genre] | None = None,
+                 languages: list[Genre] | None = None,
+                 categories: list[Genre] | None = None,
                  authors: list[Genre] | None = None,
                  thumbnail: Image | None = None,
                  cover: Image | None = None,
@@ -93,3 +103,8 @@ class Manga(Entity[IMangaProps]):
         self.chapters_count = len(self.chapters if self.chapters else [])
         self.authors = authors or []
         self.genres = genres or []
+        self.groups = groups or []
+        self.parodies = parodies or []
+        self.characters = characters or []
+        self.languages = languages or []
+        self.categories = categories or []
