@@ -43,13 +43,13 @@ class Chapter:
         self.pages.append(page)
 
     def download(self, downloader: IDownloader, output_path: Optional[str] = None) -> None:
-        if output_path is None: 
+        if output_path is None:
             output_path = './downloads'
             os.makedirs(output_path, exist_ok=True)
 
         if output_path and not os.path.isdir(output_path):
             raise InvalidResource('This directory does not exists.')
-        
+
         for i, page in enumerate(self.pages):
             image_path = os.path.join(output_path, f'{i}.{page.mime.value}')
             downloader(page.uri, image_path)
@@ -57,13 +57,14 @@ class Chapter:
 @dataclass
 class Genre:
     name: str
+    url: str = ""
     id: str | int = field(default=0)
 
 @dataclass
 class Manga(Entity[IMangaProps]):
 
     title: Title
-    authors: list[str]
+    authors: list[Genre]
     genres: list[Genre]
     chapters: list[Chapter]
     chapters_count: int
@@ -74,17 +75,17 @@ class Manga(Entity[IMangaProps]):
                  title: Title,
                  chapters: list[Chapter],
                  genres: list[Genre] | None = None,
-                 authors: list[str] | None = None,
+                 authors: list[Genre] | None = None,
                  thumbnail: Image | None = None,
                  cover: Image | None = None,
-                 id: int | str | None = None, 
-                 created_at: datetime | None = None, 
+                 id: int | str | None = None,
+                 created_at: datetime | None = None,
                  updated_at: datetime | None = None):
-        
+
         super().__init__(id=id,
                          created_at=created_at,
                          updated_at=updated_at)
-        
+
         self.title = title
         self.chapters = chapters
         self.thumbnail = thumbnail
