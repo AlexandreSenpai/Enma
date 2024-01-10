@@ -6,7 +6,9 @@
 [![GitHub stars](https://img.shields.io/github/stars/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma)
 [![GitHub issues](https://img.shields.io/github/issues/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma/issues)
 
-
+<p align="center">
+    <img src="./images/enma.png" align="center" width="500" height="500">
+</p>
 # Enma
 
 Enma is a Python library designed to fetch manga and doujinshi data from various sources. It provides a unified interface to interact with different manga repositories, making it easier to retrieve manga details, search for manga, paginate through results, and fetch random manga.
