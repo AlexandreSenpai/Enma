@@ -61,10 +61,14 @@ class NHentai(IMangaRepository):
 
         logger.debug(f'Fetching {url} with headers {headers} and params {params} the current config cf_clearance: {self.__config.cf_clearance}')
 
-        return requests.get(url=urlparse(url).geturl(),
-                            headers={**headers, 'User-Agent': self.__config.user_agent},
-                            params={**params},
-                            cookies={'cf_clearance': self.__config.cf_clearance})
+        response = requests.get(url=urlparse(url).geturl(),
+                                headers={**headers, 'User-Agent': self.__config.user_agent},
+                                params={**params},
+                                cookies={'cf_clearance': self.__config.cf_clearance})
+        
+        logger.debug(f'Fetched {url} with response status code {response.status_code} and text {response.text}')
+
+        return response
 
     def set_config(self, config: CloudFlareConfig) -> None:
         self.__config = config
@@ -100,7 +104,7 @@ class NHentai(IMangaRepository):
         chapter = Chapter(id=0)
 
         for index, page in enumerate(doujin.get('images').get('pages')):
-            logger.info(f'Building page {index} from chapter 0 from doujin {identifier}.')
+            logger.info(f'Building page {index} from chapter {index} from doujin {identifier}.')
             page = Image(uri=self.__make_page_uri(type='page',
                                                   mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
                                                   media_id=doujin.get('media_id'),
@@ -128,9 +132,9 @@ class NHentai(IMangaRepository):
                                       width=doujin.get("images").get("thumbnail").get("w"),
                                       height=doujin.get("images").get("thumbnail").get("h")),
                       cover=Image(uri=self.__make_page_uri(type='cover',
-                                                            media_id=doujin.get('media_id'),
-                                                            mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()]),
-                                  mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
+                                                           media_id=doujin.get('media_id'),
+                                                           mime=MIME[doujin.get("images").get("cover").get("t").upper()]),
+                                  mime=MIME[doujin.get("images").get("cover").get("t").upper()],
                                   width=doujin.get("images").get("cover").get("w"),
                                   height=doujin.get("images").get("cover").get("h")),
                       chapters=[chapter])
@@ -141,12 +145,18 @@ class NHentai(IMangaRepository):
                query: str,
                page: int,
                sort: Sort = Sort.RECENT) -> SearchResult:
-
+        
         logger.debug(f'Searching into Nhentai with args query={query};page={page};sort={sort}')
         request_response = self.__make_request(url=urljoin(self.__BASE_URL, 'search'),
                                                params={'q': query,
                                                        'sort': sort if isinstance(sort, str) else sort.value,
                                                        'page': page})
+        
+        search_result = SearchResult(query=query,
+                                     total_pages=0,
+                                     page=page,
+                                     total_results=0,
+                                     results=[])
         
         if request_response.status_code != 200:
             logger.error(f'Could not search by {query} because nhentai\'s request ends up with {request_response.status_code} status code.')
@@ -164,22 +174,14 @@ class NHentai(IMangaRepository):
         logger.debug(f'Found last page number successfully splitting last pagination number href.')
 
         if not search_results_container:
-            return SearchResult(query=query,
-                                total_pages=total_pages,
-                                page=page,
-                                total_results=0,
-                                results=[])
+            return search_result
 
         search_results = search_results_container.find_all('div', {'class': 'gallery'}) # type: ignore
         logger.debug(f'Found search results container using .class.gallery')
         
         if not search_results:
-            return SearchResult(query=query,
-                                total_pages=total_pages,
-                                page=page,
-                                total_results=0,
-                                results=[])
-
+            return search_result
+        
         a_tags_with_doujin_id = [gallery.find('a', {'class': 'cover'}) for gallery in search_results]
 
         thumbs = []
@@ -214,11 +216,11 @@ class NHentai(IMangaRepository):
                                             height=height or 0),
                                 title=caption or ''))
 
-        return SearchResult(query=query,
-                            total_pages=total_pages,
-                            page=page,
-                            total_results=25*total_pages if pagination_container else len(thumbs),
-                            results=thumbs)
+        search_result.total_pages = total_pages
+        search_result.total_results = 25 * total_pages if pagination_container else len(thumbs)
+        search_result.results = thumbs
+
+        return search_result
 
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=urljoin(self.__API_URL, f'galleries/all'),
@@ -280,6 +282,10 @@ class NHentai(IMangaRepository):
                             page=page,
                             total_results=0,
                             results=[])
+        
+        if request_response.status_code != 200:
+            logger.error('Could not fetch author page properly')
+            return result    
    
         soup = BeautifulSoup(request_response.text, 'html.parser')
 

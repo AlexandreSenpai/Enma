@@ -43,7 +43,7 @@ random     |    ✅   |     🚫
 get        |    ✅   |     ✅    
 paginate   |    ✅   |     🚫
 download   |    ✅   |     ✅       
-author page|    ✅   |     🚫       
+author_page|    ✅   |     🚫       
 set_config |    ✅   |     🚫
 
 ## Usage

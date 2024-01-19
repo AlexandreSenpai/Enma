@@ -134,6 +134,7 @@ class Enma(IEnma, Generic[AvailableSources]):
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
         response = self.__search_manga_use_case.execute(dto=DTO(data=SearchMangaRequestDTO(query=query,
+                                                                                           page=page,
                                                                                            extra=kwargs)))
         
         return response.result
