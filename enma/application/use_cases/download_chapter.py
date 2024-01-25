@@ -36,7 +36,7 @@ class DownloadChapterUseCase(IUseCase[DownloadChapterRequestDTO, DownloadChapter
     def __handle_saving(self, save_queue: queue.Queue[File], path: str, saver: ISaverAdapter) -> None:
         while True:
             try:
-                content = save_queue.get(timeout=30)
+                content = save_queue.get(timeout=5)
                 logger.debug(f'Saving file to path: {path} with name: {content.name}')
                 saved = saver.save(path=path, file=content)
                 if saved:
@@ -73,9 +73,10 @@ class DownloadChapterUseCase(IUseCase[DownloadChapterRequestDTO, DownloadChapter
             self.downloader = dto.data.downloader
 
             threads: list[threading.Thread] = []
-            threads_num = 5
-            logger.debug(f'Spawning {threads_num} threads to handle download queue.')
-            for _ in range(threads_num):
+            queue_threads_num = 1
+
+            logger.debug(f'Spawning {queue_threads_num} threads to handle download queue.')
+            for _ in range(queue_threads_num):
                 t = threading.Thread(target=self.__handle_saving, args=(self.queue,
                                                                         dto.data.path,
                                                                         dto.data.saver_adapter))
@@ -90,7 +91,7 @@ class DownloadChapterUseCase(IUseCase[DownloadChapterRequestDTO, DownloadChapter
             self.queue.join()
 
             for thread in threads:
-                thread.join()
+                thread.join(timeout=5)
 
             return DownloadChapterResponseDTO(done=True)
         except Exception as err:

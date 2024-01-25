@@ -33,12 +33,22 @@ class IMangaProps(TypedDict):
     pages: list[Image]
 
 @dataclass
+class SymbolicLink:
+    link: str
+
+@dataclass
 class Chapter:
     id: str | int
     pages: list[Image] = field(default_factory=list)
+    pages_count: int = field(default=0)
+    link: SymbolicLink | None = field(default=None) 
+
+    def __post_init__(self) -> None:
+        self.pages_count = len(self.pages)
 
     def add_page(self, page: Image) -> None:
         self.pages.append(page)
+        self.pages_count += 1
 
 @dataclass
 class Genre:
@@ -46,21 +56,16 @@ class Genre:
     id: str | int = field(default=0)
 
 @dataclass
+class Author(Genre):
+    ...
+
 class Manga(Entity[IMangaProps]):
-
-    title: Title
-    authors: list[str]
-    genres: list[Genre]
-    chapters: list[Chapter]
-    chapters_count: int
-    cover: Image | None
-    thumbnail: Image | None
-
     def __init__(self,
                  title: Title,
-                 chapters: list[Chapter],
+                 chapters: list[Chapter] | None = None,
+                 language: str | None = None,
                  genres: list[Genre] | None = None,
-                 authors: list[str] | None = None,
+                 authors: list[Author] | None = None,
                  thumbnail: Image | None = None,
                  cover: Image | None = None,
                  id: int | str | None = None, 
@@ -72,9 +77,11 @@ class Manga(Entity[IMangaProps]):
                          updated_at=updated_at)
         
         self.title = title
-        self.chapters = chapters
-        self.thumbnail = thumbnail
+        self.language = language
         self.cover = cover
-        self.chapters_count = len(self.chapters if self.chapters else [])
+        self.thumbnail = thumbnail
         self.authors = authors or []
         self.genres = genres or []
+        self.chapters = chapters or []
+
+        self.chapters_count = len(self.chapters if self.chapters else [])

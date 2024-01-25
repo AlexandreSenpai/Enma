@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../'
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaUseCase
 from enma.application.core.interfaces.use_case import DTO
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai
-from enma.domain.entities.manga import MIME, Chapter, Genre, Image, Manga, Title
+from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, Manga, SymbolicLink, Title
 
 class TestNHentaiGetDoujin:
 
@@ -24,7 +24,7 @@ class TestNHentaiGetDoujin:
                          id=489504,
                          created_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
                          updated_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
-                         authors=['cowbow'],
+                         authors=[Author(name='cowbow')],
                          genres=[Genre(name='sweating', id=1590)],
                          thumbnail=Image(uri='https://i.nhentai.net/galleries/2786266/22.jpg', name='21.jpg', width=1280, height=1808, mime=MIME.J),
                          cover=Image(uri='https://i.nhentai.net/galleries/2786266/22.jpg', name='21.jpg', width=1280, height=1808, mime=MIME.J),
@@ -47,7 +47,7 @@ class TestNHentaiGetDoujin:
                 assert isinstance(genre, Genre)
             
             for author in res.manga.authors:
-                assert isinstance(author, str)
+                assert isinstance(author, Author)
 
             assert isinstance(res.manga.thumbnail, Image)
             assert isinstance(res.manga.cover, Image)
@@ -55,7 +55,7 @@ class TestNHentaiGetDoujin:
             for chapter in res.manga.chapters:
                 assert isinstance(chapter, Chapter)
             
-            mock_method.assert_called_with(identifier='489504')
+            mock_method.assert_called_with(identifier='489504', with_symbolic_links=False)
         
     def test_response_when_it_could_not_get_doujin(self):
         with patch('enma.infra.adapters.repositories.nhentai.NHentai.get') as mock_method:
@@ -96,6 +96,7 @@ class TestNHentaiGetDoujin:
 
             assert doujin.found == True
             assert doujin.manga is not None
+            assert isinstance(doujin.manga.chapters[0], Chapter)
             assert len(doujin.manga.chapters[0].pages) == 0
             assert doujin.manga.id == 1
     
@@ -114,8 +115,29 @@ class TestNHentaiGetDoujin:
 
             assert doujin.found == True
             assert doujin.manga is not None
+            assert isinstance(doujin.manga.chapters[0], Chapter)
             assert doujin.manga.chapters[0].pages[0].mime.value == 'jpg'
             assert data['images']['pages'][0]['t'] == 'j'
             assert doujin.manga.cover is not None
             assert doujin.manga.cover.mime.value == 'png'
             assert data['images']['cover']['t'] == 'p'
+            assert doujin.manga.chapters[0].link is None
+
+    def test_get_with_symbolic_link(self):
+        with patch('requests.get') as mock_method:
+            mock = Mock()
+            mock.status_code = 200
+            
+            with open('./tests/data/get.json', 'r') as get:
+                data = json.loads(get.read())
+                mock.json.return_value = data
+
+            mock_method.return_value = mock
+
+            doujin = self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='420719', with_symbolic_links=True)))
+
+            assert doujin.found == True
+            assert doujin.manga is not None
+            assert isinstance(doujin.manga.chapters[0], Chapter)
+            assert doujin.manga.chapters[0].link is not None
+            assert doujin.manga.chapters[0].link != ""

@@ -3,11 +3,11 @@ from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.use_case import DTO, IUseCase
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
+from pydantic import BaseModel, Field
 
-@dataclass
-class GetAuthorPageRequestDTO:
+class GetAuthorPageRequestDTO(BaseModel):
     author: str
-    page: int = field(default=1)
+    page: int = Field(default=1)
 
 @dataclass
 class GetAuthorPageResponseDTO:

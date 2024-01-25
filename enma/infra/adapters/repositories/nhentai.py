@@ -16,9 +16,10 @@ from enma.application.core.handlers.error import (ExceedRetryCount,
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
-from enma.domain.entities.manga import (MIME, Chapter, Genre, Image, Manga,
+from enma.domain.entities.manga import (MIME, Chapter, Genre, Author, Image, Manga, SymbolicLink,
                                         Title)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
+from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse
 
 
 @dataclass
@@ -73,6 +74,10 @@ class NHentai(IMangaRepository):
     def set_config(self, config: CloudFlareConfig) -> None:
         self.__config = config
 
+    def __handle_request_error(self, msg: str) -> None:
+        logger.error(msg)
+        return None
+    
     def __make_page_uri(self,
                         type: Literal['cover'] | Literal['page'] | Literal['thumbnail'],
                         media_id: str,
@@ -91,30 +96,73 @@ class NHentai(IMangaRepository):
         logger.debug(f'Built page uri for type {type} as {url}')
 
         return url
-
-    def get(self, identifier: str) -> Manga | None:
-        response = self.__make_request(url=f'{self.__API_URL}/gallery/{identifier}')
+    
+    def fetch_chapter_by_symbolic_link(self, 
+                                       link: SymbolicLink) -> Chapter:
+        response = self.__make_request(url=link.link)
 
         if response.status_code != 200:
-            logger.error(f'Could not fetch {identifier} because nhentai\'s request ends up with {response.status_code} status code.')
-            return
+            self.__handle_request_error(msg=f'Could not fetch {link.link} because nhentai\'s request ends up with {response.status_code} status code.')
+        
+        doujin: NHentaiResponse = response.json()
 
-        doujin = response.json()
+        return self.__create_chapter(media_id=doujin.get('media_id'), pages=doujin.get('images').get('pages'))
 
+    def __create_chapter(self, 
+                         media_id: str, 
+                         pages: list[NHentaiImage]) -> Chapter:
+        
         chapter = Chapter(id=0)
+        for index, page in enumerate(pages):
+            mime = MIME[page.get('t').upper()]
+            chapter.add_page(Image(uri=self.__make_page_uri(type='page',
+                                                            mime=mime,
+                                                            media_id=media_id,
+                                                            page_number=index+1),
+                            name=f'{index}.{mime.value}',
+                            mime=mime,
+                            width=page.get('w'),
+                            height=page.get('h')))
+        return chapter
+    
+    def get(self, 
+            identifier: str,
+            with_symbolic_links: bool = False) -> Manga | None:
+        url = f'{self.__API_URL}/gallery/{identifier}'
+        response = self.__make_request(url=url)
 
-        for index, page in enumerate(doujin.get('images').get('pages')):
-            logger.info(f'Building page {index} from chapter {index} from doujin {identifier}.')
-            page = Image(uri=self.__make_page_uri(type='page',
-                                                  mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
-                                                  media_id=doujin.get('media_id'),
-                                                  page_number=index+1),
-                         name=f'{index}.{MIME[doujin.get("images").get("thumbnail").get("t").upper()].value}',
-                         mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
-                         width=page.get('w'),
-                         height=page.get('h'))
+        if response.status_code != 200:
+            return self.__handle_request_error(msg=f'Could not fetch {identifier} because nhentai\'s request ends up with {response.status_code} status code.')
 
-            chapter.add_page(page=page)
+        doujin: NHentaiResponse = response.json()
+        media_id = doujin.get('media_id')
+
+        if with_symbolic_links:
+            chapter = Chapter(id=0, link=SymbolicLink(link=url))
+        else:
+            chapter = self.__create_chapter(media_id=media_id, pages=doujin.get('images').get('pages'))
+
+        language = [tag.get('name') for tag in doujin.get('tags') if tag.get('type') == 'language']
+        authors = [Author(id=tag.get('id'),
+                          name=tag.get('name')) for tag in doujin.get('tags') if tag.get('type') == 'artist']
+        genres = [Genre(id=genre.get('id'),
+                        name=genre.get('name')) for genre in doujin.get('tags') if genre.get('type') == 'tag']
+        
+        thumbnail_mime = MIME[doujin.get("images").get("thumbnail").get("t").upper()]
+        thumbnail = Image(uri=self.__make_page_uri(type='thumbnail',
+                                                   mime=thumbnail_mime,
+                                                   media_id=media_id),
+                          mime=thumbnail_mime,
+                          width=doujin.get("images").get("thumbnail").get("w"),
+                          height=doujin.get("images").get("thumbnail").get("h"))
+        
+        cover_mime = MIME[doujin.get("images").get("cover").get("t").upper()]
+        cover = Image(uri=self.__make_page_uri(type='cover',
+                                               media_id=media_id,
+                                               mime=cover_mime),
+                      mime=cover_mime,
+                      width=doujin.get("images").get("cover").get("w"),
+                      height=doujin.get("images").get("cover").get("h"))
 
         manga = Manga(title=Title(english=doujin.get('title').get('english'),
                                   japanese=doujin.get('title').get('japanese'),
@@ -122,21 +170,11 @@ class NHentai(IMangaRepository):
                       id=doujin.get('id'),
                       created_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
                       updated_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
-                      authors=[tag.get('name') for tag in doujin.get('tags') if tag.get('type') == 'artist'],
-                      genres=[Genre(id=genre.get('id'),
-                                    name=genre.get('name')) for genre in doujin.get('tags') if genre.get('type') == 'tag'],
-                      thumbnail=Image(uri=self.__make_page_uri(type='thumbnail',
-                                                               mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
-                                                               media_id=doujin.get('media_id')),
-                                      mime=MIME[doujin.get("images").get("thumbnail").get("t").upper()],
-                                      width=doujin.get("images").get("thumbnail").get("w"),
-                                      height=doujin.get("images").get("thumbnail").get("h")),
-                      cover=Image(uri=self.__make_page_uri(type='cover',
-                                                           media_id=doujin.get('media_id'),
-                                                           mime=MIME[doujin.get("images").get("cover").get("t").upper()]),
-                                  mime=MIME[doujin.get("images").get("cover").get("t").upper()],
-                                  width=doujin.get("images").get("cover").get("w"),
-                                  height=doujin.get("images").get("cover").get("h")),
+                      language=language[0] if len(language) > 0 else None,
+                      authors=authors,
+                      genres=genres,
+                      thumbnail=thumbnail,
+                      cover=cover,
                       chapters=[chapter])
 
         return manga
@@ -159,7 +197,8 @@ class NHentai(IMangaRepository):
                                      results=[])
         
         if request_response.status_code != 200:
-            logger.error(f'Could not search by {query} because nhentai\'s request ends up with {request_response.status_code} status code.')
+            self.__handle_request_error(f'Could not search by {query} because nhentai\'s request ends up with {request_response.status_code} status code.')
+            return search_result
 
         soup = BeautifulSoup(request_response.text, 'html.parser')
 
@@ -227,7 +266,7 @@ class NHentai(IMangaRepository):
                                        params={'page': page})
 
         if response.status_code != 200:
-            logger.error(f'Could not paginate to page {page} because nhentai\'s request ends up with {response.status_code} status code.')
+            self.__handle_request_error(f'Could not paginate to page {page} because nhentai\'s request ends up with {response.status_code} status code.')
             return Pagination(page=page)
 
         data = response.json()
@@ -252,7 +291,7 @@ class NHentai(IMangaRepository):
         response = self.__make_request(url=urljoin(self.__BASE_URL, 'random'))
 
         if response.status_code != 200:
-            logger.error(f'Could not fetch a random manga because nhentai\'s request ends up with {response.status_code} status code.')
+            self.__handle_request_error(f'Could not fetch a random manga because nhentai\'s request ends up with {response.status_code} status code.')
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -263,8 +302,8 @@ class NHentai(IMangaRepository):
         logger.debug(f'Got successfully random manga with id {id}.')
 
         if doujin is None:
-            if retry == 4:
-                raise ExceedRetryCount('Could not fetch a random doujin.')
+            if retry >= 4:
+                raise ExceedRetryCount('Could not fetch a random doujin after 4 retries.')
             
             logger.warning('Could not fetch random manga. Retrying.')
             return self.random(retry=retry+1)

@@ -1,11 +1,10 @@
-from dataclasses import asdict, dataclass
 from datetime import datetime
 import json
 from typing import Generic, TypeVar, Union
 
 T = TypeVar('T')
 
-@dataclass
+
 class Entity(Generic[T]):
     """Base class for entities in the domain model.
 
@@ -16,10 +15,6 @@ class Entity(Generic[T]):
         created_at: A datetime object representings when the entity was created.
         updated_at: A datetime object representing when the entity was last updated.
     """
-
-    id: Union[int, str]
-    created_at: datetime
-    updated_at: datetime
 
     def __init__(self, 
                  id: Union[int, str, None] = None,
@@ -37,20 +32,14 @@ class Entity(Generic[T]):
         self.created_at = created_at if created_at is not None else datetime.utcnow()
         self.updated_at = updated_at if updated_at is not None else datetime.utcnow()
 
+    def __repr__(self) -> str:
+        attrs = ', '.join([f"{chave}={valor!r}" for chave, valor in self.__dict__.items()])
+        return f"{self.__class__.__name__}({attrs})"
+
     def to_dict(self) -> T:
         """Converts the entity to a dictionary.
 
         Returns:
             A dictionary representation of the entity.
         """
-        return asdict(self) # type: ignore
-    
-    def to_json(self) -> T:
-        """Converts the entity to a json.
-
-        Returns:
-            A json representation of the entity.
-        """
-        return json.dumps(self.to_dict(),
-                          ensure_ascii=False,
-                          default=lambda x: x.isoformat()) # type: ignore
+        return self.__dict__ # type: ignore

@@ -1,14 +1,22 @@
 from dataclasses import dataclass, field
+
+from pydantic import BaseModel, Field, validator
+from enma.application.core.handlers.error import InvalidRequest
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.use_case import DTO, IUseCase
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.search_result import SearchResult
 
-@dataclass
-class SearchMangaRequestDTO:
+class SearchMangaRequestDTO(BaseModel):
     query: str
-    page: int = field(default=1)
-    extra: dict[str, str | int] = field(default_factory=dict)
+    page: int = Field(default=1)
+    extra: dict[str, str | int] = Field(default_factory=dict)
+
+    @validator("page")
+    def validate_page(cls, page: int) -> int:
+        if page <= 0:
+            raise InvalidRequest(message='Page value must be greater than 0.')
+        return int(page)
 
 @dataclass
 class SearchMangaResponseDTO:
@@ -20,6 +28,7 @@ class SearchMangaUseCase(IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]
         self.__manga_repository = manga_repository
 
     def execute(self, dto: DTO[SearchMangaRequestDTO]) -> SearchMangaResponseDTO:
+        print(dto)
         logger.info(f'Searching for {dto.data.query}.')
         result = self.__manga_repository.search(query=dto.data.query,
                                                 page=dto.data.page,

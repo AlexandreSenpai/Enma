@@ -11,13 +11,14 @@ from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.saver_adapter import ISaverAdapter
 from enma.application.core.interfaces.use_case import DTO, IUseCase
 from enma.application.use_cases.download_chapter import DownloadChapterRequestDTO, DownloadChapterResponseDTO, DownloadChapterUseCase, Threaded
+from enma.application.use_cases.fetch_chapter_by_symbolic_link import FetchChapterBySymbolicLinkRequestDTO, FetchChapterBySymbolicLinkResponseDTO, FetchChapterBySymbolicLinkUseCase
 from enma.application.use_cases.get_author_page import GetAuthorPageRequestDTO, GetAuthorPageResponseDTO, GetAuthorPageUseCase
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaResponseDTO, GetMangaUseCase
 from enma.application.use_cases.get_random import RandomResponseDTO, RandomUseCase
 from enma.application.use_cases.paginate import PaginateRequestDTO, PaginateResponseDTO, PaginateUseCase
 from enma.application.use_cases.search_manga import SearchMangaRequestDTO, SearchMangaResponseDTO, SearchMangaUseCase
 from enma.domain.entities.author_page import AuthorPage
-from enma.domain.entities.manga import Chapter, Manga
+from enma.domain.entities.manga import Chapter, Manga, SymbolicLink
 from enma.domain.entities.pagination import Pagination
 from enma.domain.entities.search_result import SearchResult
 from enma.infra.adapters.repositories.manganato import Manganato
@@ -105,6 +106,7 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__random_use_case: Optional[IUseCase[Any, RandomResponseDTO]] = None
         self.__downloader_use_case: Optional[IUseCase[DownloadChapterRequestDTO, DownloadChapterResponseDTO]] = None
         self.__get_author_page_use_case: Optional[IUseCase[GetAuthorPageRequestDTO, GetAuthorPageResponseDTO]] = None
+        self.__fetch_chapter_by_symbolic_link_use_case: Optional[IUseCase[FetchChapterBySymbolicLinkRequestDTO, FetchChapterBySymbolicLinkResponseDTO]] = None
         self.__current_source_name = None
 
         self.source_manager = SourceManager[AvailableSources](**kwargs)
@@ -116,20 +118,25 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__paginate_use_case = PaginateUseCase(manga_repository=source)     
         self.__random_use_case = RandomUseCase(manga_repository=source)
         self.__downloader_use_case = DownloadChapterUseCase()  
-        self.__get_author_page_use_case = GetAuthorPageUseCase(manga_repository=source)  
-        
+        self.__get_author_page_use_case = GetAuthorPageUseCase(manga_repository=source)
+        self.__fetch_chapter_by_symbolic_link_use_case = FetchChapterBySymbolicLinkUseCase(manga_repository=source)
+    
+
     @instantiate_source
-    def get(self, identifier: str) -> Manga | None:
+    def get(self, 
+            identifier: str,
+            with_symbolic_links: bool = False) -> Manga | None:
         if self.__get_manga_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
 
-        response = self.__get_manga_use_case.execute(dto=DTO(data=GetMangaRequestDTO(identifier=identifier)))
+        response = self.__get_manga_use_case.execute(dto=DTO(data=GetMangaRequestDTO(identifier=identifier,
+                                                                                     with_symbolic_links=with_symbolic_links)))
         
         if not response.found: return
         return response.manga
     
     @instantiate_source
-    def search(self, query: str, page: int, **kwargs) -> SearchResult:
+    def search(self, query: str, page: int=1, **kwargs) -> SearchResult:
         if self.__search_manga_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -164,11 +171,11 @@ class Enma(IEnma, Generic[AvailableSources]):
         if self.__downloader_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
-        downloaded = self.__downloader_use_case.execute(dto=DTO(data=DownloadChapterRequestDTO(chapter=chapter,
-                                                                                               path=path,
-                                                                                               saver_adapter=saver,
-                                                                                               downloader=downloader,
-                                                                                               threaded=threaded)))
+        self.__downloader_use_case.execute(dto=DTO(data=DownloadChapterRequestDTO(chapter=chapter,
+                                                                                  path=path,
+                                                                                  saver_adapter=saver,
+                                                                                  downloader=downloader,
+                                                                                  threaded=threaded)))
     
     @instantiate_source
     def author_page(self, author: str, page: int) -> AuthorPage:
@@ -177,3 +184,12 @@ class Enma(IEnma, Generic[AvailableSources]):
         
         return self.__get_author_page_use_case.execute(dto=DTO(data=GetAuthorPageRequestDTO(author=author,
                                                                                             page=page))).result
+
+    @instantiate_source
+    def fetch_chapter_by_symbolic_link(self, link: SymbolicLink) -> Chapter:
+        if self.__fetch_chapter_by_symbolic_link_use_case is None:
+            raise SourceWasNotDefined('You must define a source before of performing actions.')
+        
+        response = self.__fetch_chapter_by_symbolic_link_use_case.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
+        
+        return response.chapter
