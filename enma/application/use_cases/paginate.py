@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator
 from enma.application.core.handlers.error import InvalidRequest
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.use_case import DTO, IUseCase
@@ -10,7 +10,7 @@ from enma.domain.entities.pagination import Pagination
 class PaginateRequestDTO(BaseModel):
     page: int
 
-    @validator("page")
+    @field_validator("page")
     def validate_page(cls, page: int) -> int:
         if page <= 0:
             raise InvalidRequest(message='Page value must be greater than 0.')
