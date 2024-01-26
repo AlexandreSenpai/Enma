@@ -1,4 +1,4 @@
-name: Development Pypi
+name: Unit and E2E Testing
 on:
   push:
     branches:

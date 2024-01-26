@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Union
 from enma.domain.entities.author_page import AuthorPage
 
 from enma.domain.entities.manga import Chapter, Manga, SymbolicLink
@@ -16,7 +16,7 @@ class IMangaRepository(ABC):
     @abstractmethod
     def get(self,
             identifier: str,
-            with_symbolic_links: bool) -> Manga | None:
+            with_symbolic_links: bool) -> Union[Manga, None]:
         ...
     
     @abstractmethod

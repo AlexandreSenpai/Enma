@@ -6,7 +6,7 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from multiprocessing import cpu_count
-from typing import Any, Optional, cast
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup, Tag
 
@@ -29,8 +29,8 @@ class Manganato(IMangaRepository):
 
     def __make_request(self, 
                        url: str,
-                       headers: dict[str, Any] | None = None,
-                       params: Optional[dict[str, str | int]] = None):
+                       headers: Union[dict[str, Any], None] = None,
+                       params: Optional[dict[str, Union[str, int]]] = None):
 
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
@@ -55,7 +55,7 @@ class Manganato(IMangaRepository):
         chapters = chapter_list.find_all('li') if chapter_list else []
         return [chapter.find('a')['href'] for chapter in chapters]
     
-    def __create_chapter(self, url: str, symbolic: bool = False) -> Chapter | None:
+    def __create_chapter(self, url: str, symbolic: bool = False) -> Union[Chapter, None]:
 
         if symbolic:
             return Chapter(id=url.split('/')[-1], link=SymbolicLink(link=url))
@@ -81,7 +81,7 @@ class Manganato(IMangaRepository):
 
     def get(self, 
             identifier: str,
-            with_symbolic_links: bool = False) -> Manga | None:
+            with_symbolic_links: bool = False) -> Union[Manga, None]:
         response = self.__make_request(url=urljoin(self.__CHAPTER_BASE_URL, identifier))
         
         if response.status_code != 200:

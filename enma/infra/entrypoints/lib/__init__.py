@@ -3,7 +3,7 @@ This module initializes the entrypoints library for the Enma application.
 It sets up the necessary configurations and imports required for the entrypoints.
 """
 from enum import Enum
-from typing import Any, Generic, Optional, TypeVar, TypedDict
+from typing import Any, Generic, Optional, TypeVar, TypedDict, Union
 
 from enma.application.core.handlers.error import InstanceError, SourceNotAvailable, SourceWasNotDefined
 from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
@@ -41,11 +41,11 @@ class SourceManager(Generic[AvailableSources]):
     def __init__(self, **kwargs) -> None:
         self.__SOURCES: dict[str, IMangaRepository] = {'nhentai': NHentai(config=kwargs.get('cloudflare_config')),
                                                        'manganato': Manganato()}
-        self.source: IMangaRepository | None = None
+        self.source: Union[IMangaRepository, None] = None
         self.source_name = ''
     
     def get_source(self,
-                   source_name: AvailableSources | str) -> IMangaRepository:
+                   source_name: Union[AvailableSources, str]) -> IMangaRepository:
         
         source_name = source_name.value if isinstance(source_name, Enum) else source_name
         source = self.__SOURCES.get(source_name)
@@ -56,7 +56,7 @@ class SourceManager(Generic[AvailableSources]):
         return source
     
     def set_source(self,
-                   source_name: AvailableSources | str) -> None:
+                   source_name: Union[AvailableSources, str]) -> None:
         source = self.get_source(source_name=source_name)
         self.source = source
         self.source_name = source_name
@@ -110,7 +110,7 @@ class Enma(IEnma, Generic[AvailableSources]):
     @instantiate_source
     def get(self, 
             identifier: str,
-            with_symbolic_links: bool = False) -> Manga | None:
+            with_symbolic_links: bool = False) -> Union[Manga, None]:
         if self.__get_manga_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
 

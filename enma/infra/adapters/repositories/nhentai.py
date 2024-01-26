@@ -5,7 +5,7 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 from datetime import datetime, timezone
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Literal, Optional, cast
+from typing import Any, Literal, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -51,8 +51,8 @@ class NHentai(IMangaRepository):
 
     def __make_request(self,
                        url: str,
-                       headers: dict[str, Any] | None = None,
-                       params: Optional[dict[str, str | int]] = None):
+                       headers: Union[dict[str, Any], None] = None,
+                       params: Optional[dict[str, Union[str, int]]] = None):
 
         if self.__config is None:
             raise NhentaiSourceWithoutConfig('Please provide a valid cloudflare cookie and user-agent.')
@@ -79,7 +79,7 @@ class NHentai(IMangaRepository):
         return None
     
     def __make_page_uri(self,
-                        type: Literal['cover'] | Literal['page'] | Literal['thumbnail'],
+                        type: Union[Literal['cover'], Literal['page'], Literal['thumbnail']],
                         media_id: str,
                         mime: MIME,
                         page_number: Optional[int] = None) -> str:
@@ -131,7 +131,7 @@ class NHentai(IMangaRepository):
     
     def get(self, 
             identifier: str,
-            with_symbolic_links: bool = False) -> Manga | None:
+            with_symbolic_links: bool = False) -> Union[Manga, None]:
         print(identifier, with_symbolic_links)
         url = f'{self.__API_URL}/gallery/{identifier}'
         response = self.__make_request(url=url)

@@ -4,7 +4,7 @@ It represents the result of a manga search operation.
 """
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TypedDict
+from typing import TypedDict, Union
 from enma.domain.entities.base import Entity
 from enma.domain.entities.manga import Image, Manga
 
@@ -15,7 +15,7 @@ class Thumb:
     cover: Image
 
 class ISearchResultProps(TypedDict):
-    id: int | str
+    id: Union[int, str]
     created_at: datetime
     updated_at: datetime
     page: int
@@ -37,10 +37,10 @@ class Pagination(Entity[ISearchResultProps]):
                  page: int,
                  total_pages: int = 0,
                  total_results: int = 0,
-                 results: list[Thumb] | None = None,
-                 id: int | str | None = None, 
-                 created_at: datetime | None = None, 
-                 updated_at: datetime | None = None):
+                 results: Union[list[Thumb], None] = None,
+                 id: Union[int, str, None] = None, 
+                 created_at: Union[datetime, None] = None, 
+                 updated_at: Union[datetime, None] = None):
         
         super().__init__(id=id,
                          created_at=created_at,

@@ -4,12 +4,12 @@ It represents the result of a manga search operation.
 """
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TypedDict
+from typing import TypedDict, Union
 from enma.domain.entities.manga import Manga
 from enma.domain.entities.pagination import Pagination, Thumb
 
 class ISearchResultProps(TypedDict):
-    id: int | str
+    id: Union[int, str]
     created_at: datetime
     updated_at: datetime
     page: int
@@ -29,10 +29,10 @@ class AuthorPage(Pagination):
                  page: int,
                  total_pages: int = 0,
                  total_results: int = 0,
-                 results: list[Thumb] | None = None,
-                 id: int | str | None = None, 
-                 created_at: datetime | None = None, 
-                 updated_at: datetime | None = None):
+                 results: Union[list[Thumb], None] = None,
+                 id: Union[int, str, None] = None, 
+                 created_at: Union[datetime, None] = None, 
+                 updated_at: Union[datetime, None] = None):
         
         super().__init__(page=page,
                          total_pages=total_pages,

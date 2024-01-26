@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TypedDict
+from typing import TypedDict, Union
 
 from enma.domain.entities.base import Entity
 
@@ -25,7 +25,7 @@ class Title:
     other: str = field(default='')
 
 class IMangaProps(TypedDict):
-    id: int | str
+    id: Union[int, str]
     created_at: datetime
     updated_at: datetime
     title: Title
@@ -38,10 +38,10 @@ class SymbolicLink:
 
 @dataclass
 class Chapter:
-    id: str | int = field(default=0)
+    id: Union[int, str] = field(default=0)
     pages: list[Image] = field(default_factory=list)
     pages_count: int = field(default=0)
-    link: SymbolicLink | None = field(default=None) 
+    link: Union[SymbolicLink, None] = field(default=None) 
 
     def __post_init__(self) -> None:
         self.pages_count = len(self.pages)
@@ -53,7 +53,7 @@ class Chapter:
 @dataclass
 class Genre:
     name: str
-    id: str | int = field(default=0)
+    id: Union[int, str] = field(default=0)
 
 @dataclass
 class Author(Genre):
@@ -62,15 +62,15 @@ class Author(Genre):
 class Manga(Entity[IMangaProps]):
     def __init__(self,
                  title: Title,
-                 chapters: list[Chapter] | None = None,
-                 language: str | None = None,
-                 genres: list[Genre] | None = None,
-                 authors: list[Author] | None = None,
-                 thumbnail: Image | None = None,
-                 cover: Image | None = None,
-                 id: int | str | None = None, 
-                 created_at: datetime | None = None, 
-                 updated_at: datetime | None = None):
+                 chapters: Union[list[Chapter], None] = None,
+                 language: Union[str, None] = None,
+                 genres: Union[list[Genre], None] = None,
+                 authors: Union[list[Author], None] = None,
+                 thumbnail: Union[Image, None] = None,
+                 cover: Union[Image, None] = None,
+                 id: Union[int, str, None] = None, 
+                 created_at: Union[datetime, None] = None, 
+                 updated_at: Union[datetime, None] = None):
         
         super().__init__(id=id,
                          created_at=created_at,

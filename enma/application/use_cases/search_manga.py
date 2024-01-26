@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Union
 
 from pydantic import BaseModel, Field, validator
 from enma.application.core.handlers.error import InvalidRequest
@@ -10,7 +11,7 @@ from enma.domain.entities.search_result import SearchResult
 class SearchMangaRequestDTO(BaseModel):
     query: str
     page: int = Field(default=1)
-    extra: dict[str, str | int] = Field(default_factory=dict)
+    extra: dict[str, Union[str, int]] = Field(default_factory=dict)
 
     @validator("page")
     def validate_page(cls, page: int) -> int:

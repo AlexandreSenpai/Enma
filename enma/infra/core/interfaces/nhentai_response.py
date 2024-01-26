@@ -1,8 +1,8 @@
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, Union
 
 
 class NHentaiImage(TypedDict):
-    t: Literal["j"] | Literal["p"] | Literal["g"]
+    t: Union[Literal["j"], Literal["p"], Literal["g"]]
     w: int
     h: int
     
