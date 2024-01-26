@@ -4,7 +4,7 @@ on:
     tags:
       - "*"
 jobs:
-  pypi:
+  production-deploy:
     name: Pypi
     runs-on: ubuntu-latest
     if: "!contains(github.ref, '-')"
@@ -15,6 +15,15 @@ jobs:
         uses: actions/setup-python@master
         with:
           python-version: 3.9
+
+      - name: Preparing the Environment
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; else python -m pip install beautifulsoup4 requests pydantic; fi
+  
+      - name: Starting Testing Suites
+        run: |
+          python -m pytest ./tests
 
       - name: Building and Deploying
         run: |
