@@ -4,14 +4,18 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 """
 
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Optional, cast
+from datetime import datetime
+from multiprocessing import cpu_count
+from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup, Tag
 
 import requests
 
 from enma.application.core.interfaces.manga_repository import IMangaRepository
-from enma.domain.entities.manga import Chapter, Genre, Image, Manga, Title
+from enma.application.core.utils.logger import logger
+from enma.domain.entities.author_page import AuthorPage
+from enma.domain.entities.manga import Author, Chapter, Genre, Image, Manga, SymbolicLink, Title
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 
 class Manganato(IMangaRepository):
@@ -25,11 +29,13 @@ class Manganato(IMangaRepository):
 
     def __make_request(self, 
                        url: str,
-                       headers: dict[str, Any] | None = None,
-                       params: Optional[dict[str, str | int]] = None):
+                       headers: Union[dict[str, Any], None] = None,
+                       params: Optional[dict[str, Union[str, int]]] = None):
 
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
+
+        logger.debug(f'Fetching {url} with headers {headers} and params {params}')
 
         return requests.get(url=urlparse(url).geturl(), 
                             headers={**headers, 'Referer': 'https://chapmanganato.com/'},
@@ -38,6 +44,7 @@ class Manganato(IMangaRepository):
     def __create_title(self, 
                        main_title: str, 
                        alternative: str) -> Title:
+        logger.debug(f'Building manga title main: {main_title} and alternative: {alternative}')
         jp, cn, *_ = alternative.split(';') if alternative.find(';') != -1 else alternative.split(',')
         return Title(english=main_title.strip(),
                      japanese=jp.strip(),
@@ -48,24 +55,37 @@ class Manganato(IMangaRepository):
         chapters = chapter_list.find_all('li') if chapter_list else []
         return [chapter.find('a')['href'] for chapter in chapters]
     
-    def __create_chapter(self, url: str) -> Chapter | None:
+    def __create_chapter(self, url: str, symbolic: bool = False) -> Union[Chapter, None]:
+
+        if symbolic:
+            return Chapter(id=url.split('/')[-1], link=SymbolicLink(link=url))
+
         response = self.__make_request(url=url)
+        logger.debug(f'Fetching chapter {url}')
         
         if response.status_code != 200:
+            logger.error(f'Could not fetch the chapter with url: {url}. status code: {response.status_code}')
             return
+        
         
         chapter = Chapter(id=response.url.split('/')[-1])
         html = BeautifulSoup(response.text, 'html.parser')
-        images_container = cast(Tag, html.find('div'))
-        chapter.pages = [Image(uri=img['src'],
-                               width=0,
-                               height=0) for img in images_container.find_all('img')]
+        images_container = cast(Tag, html.find('div', {'class': 'container-chapter-reader'}))
+
+        for img in images_container.find_all('img'):
+            chapter.add_page(Image(uri=img['src'],
+                                   name=img['src'].split('/')[-1],
+                                   width=0,
+                                   height=0))
         return chapter
 
-    def get(self, identifier: str) -> Manga | None:
+    def get(self, 
+            identifier: str,
+            with_symbolic_links: bool = False) -> Union[Manga, None]:
         response = self.__make_request(url=urljoin(self.__CHAPTER_BASE_URL, identifier))
         
         if response.status_code != 200:
+            logger.error(f'Could not fetch the manga with identifier: {identifier}. status code: {response.status_code}')
             return
         
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -84,33 +104,56 @@ class Manganato(IMangaRepository):
                 cover = cover_tag['src']
 
         title_div = soup.find('div', {'class': 'story-info-right'})
-        if title_div is not None:
-            h1_elem = title_div.find('h1')
-            h1_tag = cast(Tag, h1_elem)
-            h1_text = h1_tag.text if h1_elem is not None else ''
-            elem_title = h1_text
-        
+
+        if title_div is None: return
+
+        h1_elem = title_div.find('h1')
+        h1_tag = cast(Tag, h1_elem)
+        h1_text = h1_tag.text if h1_elem is not None else ''
+        elem_title = h1_text
+    
         table = cast(Tag, soup.find('table', {'class': 'variations-tableInfo'}))
+        
+        if table is None: return
+
         table_vals = table.find_all('td', {'class': 'table-value'})
         
-        if table_vals:
-            title_cel, author_cel, _, genres_cel = table_vals
-            title = self.__create_title(main_title=elem_title, 
-                                        alternative=title_cel.text)
-            author = author_cel.text.strip()
-            genres = genres_cel.text.replace('\n', '').split(' - ')
+        if table_vals is None: return
+        
+        title_cel, author_cel, _, genres_cel = table_vals
+        title = self.__create_title(main_title=elem_title, 
+                                    alternative=title_cel.text)
+        author = author_cel.text.strip()
+        genres = genres_cel.text.replace('\n', '').split(' - ')
 
-        with ThreadPoolExecutor(max_workers=10) as executor:
-            chapters = executor.map(self.__create_chapter, self.__find_chapets_list(html=soup))
-            chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
+        extra_infos = cast(Tag, soup.find('div', {'class': 'story-info-right-extent'}))
+
+        updated_at = None
+        if extra_infos:
+            updated_at_field = extra_infos.find_all('p')[0]
+            updated_at = updated_at_field.find('span', {'class': 'stre-value'}).text
+
+        if with_symbolic_links:
+            chapters_links = self.__find_chapets_list(html=soup)
+            chapters = [self.__create_chapter(link, symbolic=True) for link in chapters_links]
+        else:
+            workers = cpu_count()
+            logger.debug(f'Initializing {workers} workers to fetch chapters of {identifier}.')
+
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                chapters = executor.map(self.__create_chapter, self.__find_chapets_list(html=soup))
+                chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
+                executor.shutdown()
         
         return Manga(title=title,
-                     authors=[author] if author is not None else None,
+                     authors=[Author(name=author)] if author is not None else None,
                      genres=[Genre(name=genre_name) for genre_name in genres],
                      id=identifier,
-                     thumbnail=None,
+                     created_at=datetime.strptime(updated_at, "%b %d,%Y - %I:%M %p") if updated_at else None,
+                     updated_at=datetime.strptime(updated_at, "%b %d,%Y - %I:%M %p") if updated_at else None,
+                     thumbnail=Image(uri=cover), # type: ignore
                      cover=Image(uri=cover), # type: ignore
-                     chapters=cast(list[Chapter], chapters))
+                     chapters=chapters) # type: ignore
     
     def search(self, 
                query: str,
@@ -145,10 +188,50 @@ class Manganato(IMangaRepository):
                             results=thumbs)
 
     def paginate(self, page: int) -> Pagination:
-        raise NotImplementedError('Paginate is not yet implemented.')
+        response = self.__make_request(url=f'{self.__BASE_URL}/genre-all/{page}')
+        
+        pagination = Pagination(page=page)
+
+        if response.status_code != 200:
+            return pagination
+        
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        content_panel = soup.find('div', {'class': 'panel-content-genres'})
+        
+        if content_panel is None:
+            return pagination
+        
+        content_panel = cast(Tag, content_panel)
+        content_items = content_panel.find_all('div', {'class': 'content-genres-item'})
+        
+        for item in content_items:
+            item = cast(Tag, item)
+            info = cast(Tag, item.find('a', {'class': 'genres-item-img bookmark_check'}))
+            cover = info.find('img')
+            pagination.results.append(Thumb(id=info['href'].split('/')[-1], # type: ignore
+                                            title=info['title'] if info is not None else "",
+                                            cover=Image(uri=cover['src'], width=0, height=0))) # type: ignore
+            
+        last_pagination = soup.find('a', {'class': 'page-blue page-last'})
+        pagination.total_pages = int(last_pagination['href'].split('/')[-1]) # type: ignore
+        pagination.total_results = 24 * int(pagination.total_pages)
+        
+        return pagination
     
     def random(self) -> Manga:
-        raise NotImplementedError('Random is not yet implemented.')
+        raise NotImplementedError('Manganato does not support random')
     
     def set_config(self, **kwargs) -> None:
         raise NotImplementedError('Manganato does not support set_config')
+    
+    def author_page(self, author: str, page: int) -> AuthorPage:
+        raise NotImplementedError('Manganato does not support author_page')
+    
+    def fetch_chapter_by_symbolic_link(self, link: SymbolicLink) -> Chapter:
+        chapter =  self.__create_chapter(url=link.link)
+        
+        if chapter is not None:
+            return chapter
+        
+        return Chapter(id=0)

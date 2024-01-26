@@ -4,25 +4,35 @@ on:
     tags:
       - "*"
 jobs:
-  pypi:
+  production-deploy:
     name: Pypi
     runs-on: ubuntu-latest
-
+    if: "!contains(github.ref, '-')"
     steps:
       - uses: actions/checkout@v2
+
       - name: Set up Python
         uses: actions/setup-python@master
         with:
           python-version: 3.9
-      - name: Installing building dependencies
+
+      - name: Preparing the Environment
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; else python -m pip install beautifulsoup4 requests pydantic; fi
+  
+      - name: Starting Testing Suites
+        run: |
+          python -m pytest ./tests
+
+      - name: Building and Deploying
         run: |
           python -m pip install build twine wheel setuptools_scm setuptools
-      - name: Build the project
-        run: |
           python -m build
+
       - name: Publish a Python distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.DEV_PYPI_API_TOKEN }}
           packages_dir: dist/

@@ -1,8 +1,12 @@
+from io import BytesIO
+import random
 import requests
 
+from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
+from enma.domain.entities.manga import Image
 
-def default_downloader(uri: str, output_path: str) -> None:
-    with open(output_path, 'wb') as f:
-        for chunk in requests.get(uri, stream=True).iter_content(chunk_size=1024):
-            if chunk:
-                f.write(chunk)
+
+class DefaultDownloader(IDownloaderAdapter):
+    def download(self, page: Image) -> BytesIO:
+        response = requests.get(url=page.uri)
+        return BytesIO(response.content)

@@ -7,6 +7,14 @@ class SourceNotAvailable(Exception):
         self.desc: str = 'This error occurs when the client chooses nonexistent source.'
         self.critical: bool = False
 
+class InvalidRequest(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.code: str = 'INVALID_REQUEST'
+        self.desc: str = 'This error occours when the client tries to perform an request with wrong data input.'
+        self.critical: bool = True
+
 class InvalidResource(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)

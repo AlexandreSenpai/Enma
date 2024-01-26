@@ -1,3 +1,9 @@
+<p align="center">
+    <img src="./docs/images/enma.png" align="center" width="50%">
+</p>
+
+<center>
+
 [![PyPI download month](https://img.shields.io/pypi/dm/Enma.svg)](https://pypi.python.org/pypi/Enma/)
 [![codecov](https://codecov.io/gh/AlexandreSenpai/Enma/branch/master/graph/badge.svg?token=F3LP15DYMR)](https://codecov.io/gh/AlexandreSenpai/Enma)
 [![Python 3.9+](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/release/python-390/)
@@ -6,10 +12,11 @@
 [![GitHub stars](https://img.shields.io/github/stars/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma)
 [![GitHub issues](https://img.shields.io/github/issues/AlexandreSenpai/Enma)](https://github.com/AlexandreSenpai/Enma/issues)
 
+</center>
 
 # Enma
 
-Enma is a Python library designed to fetch manga and doujinshi data from various sources. It provides a unified interface to interact with different manga repositories, making it easier to retrieve manga details, search for manga, paginate through results, and fetch random manga.
+Enma is a Python library designed to fetch manga and doujinshi data from many sources. It provides a unified interface to interact with different manga repositories, making it easier to retrieve manga details, search for manga, paginate through results, and fetch random manga.
 
 ## Requirements
 
@@ -36,14 +43,15 @@ except AssertionError:
 
 ## Features Comparison
 
-Feature   | NHentai | Manganato
-----------|---------|-----------
-search    |    ✅   |     ✅    
-random    |    ✅   |     🚫    
-get       |    ✅   |     ✅    
-paginate  |    ✅   |     🚫
-download  |    ✅   |     ✅       
-set_config|    ✅   |     🚫
+Feature    | NHentai | Manganato
+-----------|---------|-----------
+search     |    ✅   |     ✅    
+random     |    ✅   |     🚫    
+get        |    ✅   |     ✅    
+paginate   |    ✅   |     ✅
+download   |    ✅   |     ✅       
+author_page|    ✅   |     🚫       
+set_config |    ✅   |     🚫
 
 ## Usage
 
@@ -70,7 +78,6 @@ print(doujin)
 
 ### Example 2: Extending with Custom Sources
 ```py
-from enum import Enum
 from typing import cast
 from enma import Enma, SourcesEnum, Manganato, IMangaRepository
 
@@ -88,26 +95,74 @@ manga = enma.random()
 print(manga)
 ```
 
-### Example 3: Downloading Chapters
+## Downloading Chapters
+Using Enma you're able to download chapter pages to your local storage or any other storage that implements `ISaverAdapter`.
+
+You can check it out how to do it right below:
+
 ```py
-from enum import Enum
-from enma import Enma, SourcesEnum, Manganato, IMangaRepository, default_downloader
+from enma import (Enma,
+                  CloudFlareConfig, 
+                  ManganatoDownloader, 
+                  Threaded, 
+                  LocalStorage)
+
+enma = Enma()
+enma.source_manager.set_source('manganato')
+manga = enma.get(identifier='manga-wb999684')
+
+downloader = ManganatoDownloader()
+local = LocalStorage()
+
+if manga:
+    enma.download_chapter(path=f'./download/{manga.title.english}',
+                          chapter=manga.chapters[0],
+                          downloader=downloader,
+                          saver=local,
+                          threaded=Threaded(use_threads=True,
+                                            number_of_threads=5))
+```
+
+## Logger Control
+By default Enma sets logs as `SILENT`. But if you're needing to see what Enma outputs you can set log mode as `NORMAL` or `DEBUG` to deep logs.
+
+```py
+from enma import logger, LogMode
+
+logger.mode = LogMode.NORMAL
+```
+
+## Symbolic Links
+Enma normally retrieves all information about a manga, including the pages of each chapter. This process can be slow if the manga has many chapters. To speed it up, you can use symbolic links when getting a manga. This way, Enma creates a SymbolicLink instead of fetching all data immediately. You can then use this link to quickly access and fetch data for a specific chapter later.
+
+```py
+from enma import Enma
 
 enma = Enma()
 
-enma.source_manager.set_source('nhentai')
+enma.source_manager.set_source('manganato')
+doujin = enma.get(identifier='manga-kb951984', with_symbolic_links=True)
 
-if enma.source_manager.source:
-    config = CloudFlareConfig(
-        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
-        cf_clearance=''
-    )
+# Manga(id='manga-kb951984', 
+#       created_at=datetime.datetime(2024, 1, 22, 10, 5), 
+#       updated_at=datetime.datetime(2024, 1, 22, 10, 5), 
+#       title=Title(english='Monster Musume No Iru Nichijou', 
+#                   japanese='モンスター娘のいる日常', 
+#                   other='魔物娘的同居日常'), 
+#       language=None, 
+#       cover=Image(uri='https://avt.mkklcdnv6temp.com/23/p/1-1583464626.jpg', name='image.jpg', width=0, height=0, mime=<MIME.J: 'jpg'>), 
+#       thumbnail=Image(uri='https://avt.mkklcdnv6temp.com/23/p/1-1583464626.jpg', name='image.jpg', width=0, height=0, mime=<MIME.J: 'jpg'>), 
+#       authors=[Author(name='Okayado', id=0)], 
+#       genres=[Genre(name='Comedy', id=0), 
+#               Genre(name='Fantasy', id=0), 
+#               Genre(name='Harem', id=0)], 
+#       chapters=[Chapter(id='chapter-84', pages=[], pages_count=0, link=SymbolicLink(link='https://chapmanganato.to/manga-kb951984/chapter-84')), 
+#                 Chapter(id='chapter-83', pages=[], pages_count=0, link=SymbolicLink(link='https://chapmanganato.to/manga-kb951984/chapter-83'))], 
+#       chapters_count=95)
 
-    enma.source_manager.source.set_config(config=config)
-
-manga = enma.random()
-manga.chapters[0].download(downloader=default_downloader)
-# or manga.chapters[0].download(downloader=default_downloader, output_path='./naruto/chapters/01')
+if doujin is not None:
+    chapter_ref = doujin.chapters[0]
+    chapter = enma.fetch_chapter_by_symbolic_link(link=chapter_ref.link)
 
 ```
 
@@ -127,7 +182,7 @@ To retrieve the `user-agent` and `cf_clearance` for NHentai:
     - **user-agent**: This is a string that tells the server which web browser is being used. Look for an entry named User-Agent and copy its value.
     - **cf_clearance**: This is a specific cookie set by CloudFlare for security purposes. Look for an entry named cf_clearance and copy its value.
 
-![example](./images/user-agent.png)
+![example](./docs/images/user-agent.png)
 ## Example:
 
 ```py
@@ -143,28 +198,32 @@ config = CloudFlareConfig(
 While using the library, you might encounter some specific errors. Here's a description of each:
 
 1. **InstanceError**: 
-   - **Description**: Raised when an instance of an object is not of the expected type.
-   - **Common Cause**: Trying to add a source that isn't an instance of `IMangaRepository`.
+    - **Description**: Raised when an instance of an object is not of the expected type.
+    - **Common Cause**: Trying to add a source that isn't an instance of `IMangaRepository`.
 
 2. **SourceNotAvailable**: 
-   - **Description**: Raised when attempting to access a source that isn't available in the defined source list.
-   - **Common Cause**: Trying to set a source that hasn't been previously added.
+    - **Description**: Raised when attempting to access a source that isn't available in the defined source list.
+    - **Common Cause**: Trying to set a source that hasn't been previously added.
 
 3. **SourceWasNotDefined**: 
-   - **Description**: Raised when trying to perform an action (like fetching a manga) without first defining a source.
-   - **Common Cause**: Forgetting to set the source before performing an operation.
+    - **Description**: Raised when trying to perform an action (like fetching a manga) without first defining a source.
+    - **Common Cause**: Forgetting to set the source before performing an operation.
 
 4. **ExceedRetryCount**: 
-   - **Description**: Specific to the `NHentai` adapter. Raised when the `random` method fails to fetch a random doujin after several attempts.
-   - **Common Cause**: Consecutive failures when trying to fetch a random doujin from NHentai.
+    - **Description**: Specific to the `NHentai` adapter. Raised when the `random` method fails to fetch a random doujin after several attempts.
+    - **Common Cause**: Consecutive failures when trying to fetch a random doujin from NHentai.
 
 5. **NhentaiSourceWithoutConfig**: 
-   - **Description**: Raised when trying to make a request to NHentai without providing the necessary configurations.
-   - **Common Cause**: Forgetting to provide the `user-agent` and `cf_clearance` when configuring the NHentai adapter.
+    - **Description**: Raised when trying to make a request to NHentai without providing the necessary configurations.
+    - **Common Cause**: Forgetting to provide the `user-agent` and `cf_clearance` when configuring the NHentai adapter.
 
 6. **InvalidResource**: 
-   - **Description**: Raised when trying to perform an action with an invalid or inexistent resource.
-   - **Common Cause**: Providing an inexistent folder path to downloader.
+    - **Description**: Raised when trying to perform an action with an invalid or inexistent resource.
+    - **Common Cause**: Providing an inexistent folder path to downloader.
+
+7. **InvalidRequest**:
+    - **Description**: Raised when trying to perform an action with an invalid data type.
+    - **Common Cause**: Making an action with wrong parameter data type.
 
 When encountering one of these errors, refer to the description and common cause to assist in troubleshooting.
 
