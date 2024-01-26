@@ -110,29 +110,37 @@ class NHentai(IMangaRepository):
         if doujin.get('media_id') is None or doujin.get('images') is None:
             return Chapter()
 
-        return self.__create_chapter(media_id=doujin.get('media_id'), pages=doujin.get('images').get('pages'))
+        return self.__create_chapter(url=link.link, 
+                                     with_symbolic_links=False, 
+                                     media_id=doujin.get('media_id'), 
+                                     pages=doujin.get('images').get('pages'))
 
-    def __create_chapter(self, 
+    def __create_chapter(self,
+                         url: str,
                          media_id: str, 
-                         pages: list[NHentaiImage]) -> Chapter:
+                         pages: list[NHentaiImage],
+                         with_symbolic_links: bool = False) -> Chapter:
         
-        chapter = Chapter()
-        for index, page in enumerate(pages):
-            mime = MIME[page.get('t').upper()]
-            chapter.add_page(Image(uri=self.__make_page_uri(type='page',
-                                                            mime=mime,
-                                                            media_id=media_id,
-                                                            page_number=index+1),
-                            name=f'{index}.{mime.value}',
-                            mime=mime,
-                            width=page.get('w'),
-                            height=page.get('h')))
-        return chapter
+        if with_symbolic_links:
+            return Chapter(link=SymbolicLink(link=url))
+        else:
+            chapter = Chapter()
+            for index, page in enumerate(pages):
+                mime = MIME[page.get('t').upper()]
+                chapter.add_page(Image(uri=self.__make_page_uri(type='page',
+                                                                mime=mime,
+                                                                media_id=media_id,
+                                                                page_number=index+1),
+                                name=f'{index}.{mime.value}',
+                                mime=mime,
+                                width=page.get('w'),
+                                height=page.get('h')))
+            return chapter
     
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Union[Manga, None]:
-        print(identifier, with_symbolic_links)
+
         url = f'{self.__API_URL}/gallery/{identifier}'
         response = self.__make_request(url=url)
 
@@ -142,10 +150,10 @@ class NHentai(IMangaRepository):
         doujin: NHentaiResponse = response.json()
         media_id = doujin.get('media_id')
 
-        if with_symbolic_links:
-            chapter = Chapter(link=SymbolicLink(link=url))
-        else:
-            chapter = self.__create_chapter(media_id=media_id, pages=doujin.get('images').get('pages'))
+        chapter = self.__create_chapter(url=url,
+                                        with_symbolic_links=with_symbolic_links,
+                                        media_id=media_id, 
+                                        pages=doujin.get('images').get('pages'))
 
         language = [tag.get('name') for tag in doujin.get('tags') if tag.get('type') == 'language']
         authors = [Author(id=tag.get('id'),
@@ -190,6 +198,7 @@ class NHentai(IMangaRepository):
                sort: Sort = Sort.RECENT) -> SearchResult:
         
         logger.debug(f'Searching into Nhentai with args query={query};page={page};sort={sort}')
+
         request_response = self.__make_request(url=urljoin(self.__BASE_URL, 'search'),
                                                params={'q': query,
                                                        'sort': sort if isinstance(sort, str) else sort.value,
@@ -256,8 +265,8 @@ class NHentai(IMangaRepository):
             thumbs.append(Thumb(id=doujin_id,
                                 cover=Image(uri=cover_uri or '',
                                             mime=MIME.J,
-                                            width=width or 0,
-                                            height=height or 0),
+                                            width=int(width or 0),
+                                            height=int(height or 0)),
                                 title=caption or ''))
 
         search_result.total_pages = total_pages
@@ -378,8 +387,8 @@ class NHentai(IMangaRepository):
             thumbs.append(Thumb(id=doujin_id,
                                 cover=Image(uri=cover_uri or '',
                                             mime=MIME.J,
-                                            width=width or 0,
-                                            height=height or 0),
+                                            width=int(width or 0),
+                                            height=int(height or 0)),
                                 title=caption or ''))
         
         result.author = author

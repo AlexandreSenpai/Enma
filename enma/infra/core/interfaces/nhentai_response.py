@@ -33,3 +33,8 @@ class NHentaiResponse(TypedDict):
     tags: list[Tag]
     num_pages: int
     num_favorites: int
+
+class NHentaiPaginateResponse(TypedDict):
+    result: NHentaiResponse
+    num_pages: int
+    per_page: int

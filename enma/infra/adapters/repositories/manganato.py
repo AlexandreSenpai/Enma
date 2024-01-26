@@ -104,21 +104,27 @@ class Manganato(IMangaRepository):
                 cover = cover_tag['src']
 
         title_div = soup.find('div', {'class': 'story-info-right'})
-        if title_div is not None:
-            h1_elem = title_div.find('h1')
-            h1_tag = cast(Tag, h1_elem)
-            h1_text = h1_tag.text if h1_elem is not None else ''
-            elem_title = h1_text
-        
+
+        if title_div is None: return
+
+        h1_elem = title_div.find('h1')
+        h1_tag = cast(Tag, h1_elem)
+        h1_text = h1_tag.text if h1_elem is not None else ''
+        elem_title = h1_text
+    
         table = cast(Tag, soup.find('table', {'class': 'variations-tableInfo'}))
+        
+        if table is None: return
+
         table_vals = table.find_all('td', {'class': 'table-value'})
         
-        if table_vals:
-            title_cel, author_cel, _, genres_cel = table_vals
-            title = self.__create_title(main_title=elem_title, 
-                                        alternative=title_cel.text)
-            author = author_cel.text.strip()
-            genres = genres_cel.text.replace('\n', '').split(' - ')
+        if table_vals is None: return
+        
+        title_cel, author_cel, _, genres_cel = table_vals
+        title = self.__create_title(main_title=elem_title, 
+                                    alternative=title_cel.text)
+        author = author_cel.text.strip()
+        genres = genres_cel.text.replace('\n', '').split(' - ')
 
         extra_infos = cast(Tag, soup.find('div', {'class': 'story-info-right-extent'}))
 

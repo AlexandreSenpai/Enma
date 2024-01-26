@@ -12,7 +12,7 @@ from enma.application.core.interfaces.use_case import DTO
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai
 from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, Manga, SymbolicLink, Title
 
-class TestNHentaiGetDoujin:
+class TestFetchChapterWithSymbolicLink:
 
     nhentai = NHentai(config=CloudFlareConfig(user_agent='',
                                               cf_clearance=''))
