@@ -9,6 +9,10 @@ from enma.infra.adapters.downloaders.manganato import ManganatoDownloader
 from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
 from enma.application.core.interfaces.saver_adapter import ISaverAdapter
 from enma.infra.adapters.storage.local import LocalStorage
+from enma.domain.entities.manga import Manga
+from enma.domain.entities.search_result import SearchResult
+from enma.domain.entities.pagination import Pagination
+from enma.domain.entities.author_page import AuthorPage
 
 package_name = "enma"
 python_major = "3"

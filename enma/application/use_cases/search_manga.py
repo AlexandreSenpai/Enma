@@ -28,7 +28,6 @@ class SearchMangaUseCase(IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]
         self.__manga_repository = manga_repository
 
     def execute(self, dto: DTO[SearchMangaRequestDTO]) -> SearchMangaResponseDTO:
-        print(dto)
         logger.info(f'Searching for {dto.data.query}.')
         result = self.__manga_repository.search(query=dto.data.query,
                                                 page=dto.data.page,
