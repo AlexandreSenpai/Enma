@@ -1,3 +1,4 @@
 requests==2.31.0
 pytest==7.0.1
 beautifulsoup4==4.10.0
+pydantic==2.5.3

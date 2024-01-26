@@ -103,8 +103,12 @@ class NHentai(IMangaRepository):
 
         if response.status_code != 200:
             self.__handle_request_error(msg=f'Could not fetch {link.link} because nhentai\'s request ends up with {response.status_code} status code.')
+            return Chapter()
         
         doujin: NHentaiResponse = response.json()
+
+        if doujin.get('media_id') is None or doujin.get('images') is None:
+            return Chapter()
 
         return self.__create_chapter(media_id=doujin.get('media_id'), pages=doujin.get('images').get('pages'))
 
@@ -112,7 +116,7 @@ class NHentai(IMangaRepository):
                          media_id: str, 
                          pages: list[NHentaiImage]) -> Chapter:
         
-        chapter = Chapter(id=0)
+        chapter = Chapter()
         for index, page in enumerate(pages):
             mime = MIME[page.get('t').upper()]
             chapter.add_page(Image(uri=self.__make_page_uri(type='page',
@@ -128,6 +132,7 @@ class NHentai(IMangaRepository):
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Manga | None:
+        print(identifier, with_symbolic_links)
         url = f'{self.__API_URL}/gallery/{identifier}'
         response = self.__make_request(url=url)
 
@@ -138,7 +143,7 @@ class NHentai(IMangaRepository):
         media_id = doujin.get('media_id')
 
         if with_symbolic_links:
-            chapter = Chapter(id=0, link=SymbolicLink(link=url))
+            chapter = Chapter(link=SymbolicLink(link=url))
         else:
             chapter = self.__create_chapter(media_id=media_id, pages=doujin.get('images').get('pages'))
 

@@ -38,7 +38,7 @@ class SymbolicLink:
 
 @dataclass
 class Chapter:
-    id: str | int
+    id: str | int = field(default=0)
     pages: list[Image] = field(default_factory=list)
     pages_count: int = field(default=0)
     link: SymbolicLink | None = field(default=None) 

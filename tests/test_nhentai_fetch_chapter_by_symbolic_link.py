@@ -49,3 +49,35 @@ class TestNHentaiGetDoujin:
             assert response.chapter.pages_count == 14
             assert response.chapter.id == 0
             assert len(response.chapter.pages) == 14
+
+    def test_should_return_empty_chapter_for_broken_link(self):
+        with patch('requests.get') as mock_method:
+            mock = Mock()
+            mock.status_code = 404
+            mock.json.return_value = {}
+            mock_method.return_value = mock
+
+            link = SymbolicLink(link='https://nhentai.net')
+            response = self.sut.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
+            
+            assert isinstance(response.chapter, Chapter)
+            assert response.chapter.link is None
+            assert response.chapter.pages_count == 0
+            assert response.chapter.id == 0
+            assert len(response.chapter.pages) == 0
+
+    def test_should_return_empty_chapter_for_broken_response(self):
+        with patch('requests.get') as mock_method:
+            mock = Mock()
+            mock.status_code = 200
+            mock.json.return_value = {}
+            mock_method.return_value = mock
+
+            link = SymbolicLink(link='https://nhentai.net')
+            response = self.sut.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
+            
+            assert isinstance(response.chapter, Chapter)
+            assert response.chapter.link is None
+            assert response.chapter.pages_count == 0
+            assert response.chapter.id == 0
+            assert len(response.chapter.pages) == 0
