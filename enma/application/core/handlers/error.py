@@ -33,6 +33,15 @@ class NhentaiSourceWithoutConfig(Exception):
         self.desc: str = 'This error occurs when the client tries to use Nhentai source with no cloudflare cookie.'
         self.critical: bool = True
 
+class InvalidConfig(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.message: str = message
+        self.code: str = 'INVALID_CONFIG'
+        self.desc: str = 'This error occurs when client tries to set wrong config object.'
+        self.critical: bool = True
+
 class InstanceError(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)

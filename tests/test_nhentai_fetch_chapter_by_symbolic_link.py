@@ -1,9 +1,10 @@
 import datetime
 import json
 from unittest.mock import Mock, patch
-import pytest
 import sys
 import os
+
+import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -14,8 +15,8 @@ from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, Mang
 
 class TestFetchChapterWithSymbolicLink:
 
-    nhentai = NHentai(config=CloudFlareConfig(user_agent='',
-                                              cf_clearance=''))
+    nhentai = NHentai(config=CloudFlareConfig(user_agent='mocked',
+                                              cf_clearance='mocked'))
     sut = FetchChapterBySymbolicLinkUseCase(manga_repository=nhentai)
 
     mocked_manga = Manga(title=Title(english="[Hikoushiki (CowBow)] Marine Senchou no Yopparai Archive | Marine's Drunken Archives (Houshou Marine) [English] [Watson] [Digital]",

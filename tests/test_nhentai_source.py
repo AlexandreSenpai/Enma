@@ -1,11 +1,15 @@
 import copy
 from unittest.mock import MagicMock, Mock, patch
-import pytest
 import sys
 import os
 
+import pytest
+
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from enma.infra.core.interfaces.nhentai_response import NHentaiImage
+from enma.application.core.handlers.error import InvalidConfig, InvalidRequest, NhentaiSourceWithoutConfig
 from enma.domain.entities.pagination import Thumb
 from tests.data.mocked_doujins import (nhentai_doujin_mocked, 
                                        nhentai_search_mocked, 
@@ -14,7 +18,93 @@ from tests.data.mocked_doujins import (nhentai_doujin_mocked,
                                        nhentai_author_mocked,
                                        nhentai_author_not_found_mocked)
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
-from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image
+from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, Manga, SymbolicLink
+from enma.application.core.utils.logger import logger
+
+class TestNHentaiUtils:
+    sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
+
+    @patch.object(logger, 'error')
+    def test_request_error_handler(self, logger_mock: MagicMock):
+        res = self.sut._NHentai__handle_request_error('teste') # type: ignore
+        assert res is None
+        logger_mock.assert_called_with('teste')
+    
+    def test_raise_error_if_passing_wrong_config(self):
+        with pytest.raises(InvalidConfig) as err:
+            self.sut.set_config(config={}) # type: ignore
+    
+    def test_set_config_successfully(self):
+        res = self.sut.set_config(config=CloudFlareConfig(user_agent='mocked', cf_clearance='mocked'))
+        assert res is None
+
+    def test_set_config_must_raise_in_case_of_empty_values(self):
+        with pytest.raises(InvalidRequest):
+            self.sut.set_config(config=CloudFlareConfig(user_agent='', cf_clearance=''))
+
+    def test_request_maker_must_raise_an_error_if_called_without_config(self):
+        self.sut._NHentai__config = None # type: ignore
+        with pytest.raises(NhentaiSourceWithoutConfig):
+            self.sut._NHentai__make_request(url='https://www.google.com') # type: ignore
+
+    @patch('requests.get')
+    def test_make_a_request_successfully(self, request_mock: MagicMock):
+        mock = Mock()
+        mock.status_code = 200
+        mock.json.return_value = {}
+        request_mock.return_value = mock
+
+        self.sut.set_config(config=CloudFlareConfig(user_agent='mocked', cf_clearance='mocked'))
+        res = self.sut._NHentai__make_request(url='https://www.google.com', headers={'add': 'header'}, params={'new': 'parameter'}) # type: ignore
+
+        assert res.status_code == 200
+        assert res.json() == {}
+
+        request_mock.assert_called_once_with(url='https://www.google.com', 
+                                             headers={'User-Agent': 'mocked', 
+                                                      'add': 'header'},
+                                             params={'new': 'parameter'},
+                                             cookies={'cf_clearance': 'mocked'})
+
+    def test_making_page_uri(self):
+        page = self.sut._NHentai__make_page_uri(type='page', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
+        assert page == 'https://i.nhentai.net/galleries/1234/1.jpg'
+
+    def test_making_cover_uri(self):
+        page = self.sut._NHentai__make_page_uri(type='cover', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
+        assert page == 'https://t.nhentai.net/galleries/1234/cover.jpg'
+
+    def test_making_thumbnail_uri(self):
+        page = self.sut._NHentai__make_page_uri(type='thumbnail', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
+        assert page == 'https://t.nhentai.net/galleries/1234/thumb.jpg'
+
+    def test_chapter_creator(self):
+        images: list[NHentaiImage] = [{
+            'h': 123,
+            'w': 123,
+            't': 'j'
+        }]
+        chapter = self.sut._NHentai__create_chapter(url='https://nhentai.net/g/1234', with_symbolic_links=False, media_id='12', pages=images) # type: ignore
+        assert isinstance(chapter, Chapter)
+        assert len(chapter.pages) == 1
+        assert chapter.pages_count == 1
+        assert isinstance(chapter.pages[0], Image)
+        assert chapter.pages[0].width == 123
+        assert chapter.pages[0].height == 123
+        assert chapter.pages[0].mime.name == 'J'
+        assert chapter.link is None
+
+    def test_chapter_creator_with_symbolic_links(self):
+        images: list[NHentaiImage] = [{
+            'h': 123,
+            'w': 123,
+            't': 'j'
+        }]
+        chapter = self.sut._NHentai__create_chapter(url='https://nhentai.net/g/1234', with_symbolic_links=True, media_id='12', pages=images) # type: ignore
+        assert isinstance(chapter, Chapter)
+        assert len(chapter.pages) == 0
+        assert chapter.pages_count == 0
+        assert chapter.link == SymbolicLink(link='https://nhentai.net/g/1234')
 
 class TestNHentaiSourceGetMethod:
 

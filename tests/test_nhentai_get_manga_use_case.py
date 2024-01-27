@@ -1,14 +1,15 @@
 import datetime
 import json
 from unittest.mock import MagicMock, Mock, patch
-from pydantic import ValidationError
-import pytest
 import sys
 import os
-from enma.application.core.handlers.error import InvalidRequest
+
+import pytest
+from pydantic import ValidationError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from enma.application.core.handlers.error import InvalidRequest
 from enma.infra.core.interfaces.nhentai_response import NHentaiResponse
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaUseCase
 from enma.application.core.interfaces.use_case import DTO
@@ -17,8 +18,8 @@ from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, Mang
 
 class TestNHentaiGetDoujin:
 
-    nhentai = NHentai(config=CloudFlareConfig(user_agent='',
-                                              cf_clearance=''))
+    nhentai = NHentai(config=CloudFlareConfig(user_agent='mocked',
+                                              cf_clearance='mocked'))
     sut = GetMangaUseCase(manga_repository=nhentai)
 
     mocked_manga = Manga(title=Title(english="[Hikoushiki (CowBow)] Marine Senchou no Yopparai Archive | Marine's Drunken Archives (Houshou Marine) [English] [Watson] [Digital]",
@@ -103,9 +104,9 @@ class TestNHentaiGetDoujin:
             assert doujin.found == False
             assert doujin.manga is None
             mock_method.assert_called_with(url=f'https://nhentai.net/api//gallery/1',
-                                           headers={'User-Agent': ''},
+                                           headers={'User-Agent': 'mocked'},
                                            params={},
-                                           cookies={'cf_clearance': ''})
+                                           cookies={'cf_clearance': 'mocked'})
 
     def test_return_empty_chapters(self):
         with patch('requests.get') as mock_method:

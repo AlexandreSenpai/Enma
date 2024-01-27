@@ -3,15 +3,15 @@ This module provides an adapter for the nhentai repository.
 It contains functions and classes to interact with the nhentai API and retrieve manga data.
 """
 from datetime import datetime, timezone
-from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Literal, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
+from pydantic import BaseModel, field_validator
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from enma.application.core.handlers.error import (ExceedRetryCount,
+from enma.application.core.handlers.error import (ExceedRetryCount, InvalidConfig, InvalidRequest,
                                                   NhentaiSourceWithoutConfig)
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
@@ -22,10 +22,19 @@ from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse
 
 
-@dataclass
-class CloudFlareConfig:
+class CloudFlareConfig(BaseModel):
     user_agent: str
     cf_clearance: str
+
+    @field_validator('user_agent')
+    def user_agent_validator(cls, value: str) -> str:
+        if value == '': raise InvalidRequest(message='User Agent cant be empty.')
+        return str(value)
+
+    @field_validator('cf_clearance')
+    def cf_clearance_validator(cls, value: str) -> str:
+        if value == '': raise InvalidRequest(message='CF Clearance cant be empty.')
+        return str(value)
 
 class __StrEnum(str, Enum):...
 
@@ -72,6 +81,7 @@ class NHentai(IMangaRepository):
         return response
 
     def set_config(self, config: CloudFlareConfig) -> None:
+        if not isinstance(config, CloudFlareConfig): raise InvalidConfig(message='You must provide a CloudFlareConfig object.') 
         self.__config = config
 
     def __handle_request_error(self, msg: str) -> None:
@@ -86,6 +96,7 @@ class NHentai(IMangaRepository):
         
         url = ''
 
+        # cannot use switch case because this lib intends to support python 3.9+
         if type == 'cover': 
             url = urljoin(self.__TINY_IMAGE_BASE_URL, f'{media_id}/cover.{mime.value}')
         elif type == 'thumbnail': 
