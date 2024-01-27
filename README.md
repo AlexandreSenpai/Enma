@@ -24,7 +24,7 @@ Enma is a Python library designed to fetch manga and doujinshi data from many so
 
 ## Installation
 ```py
-pip install enma
+pip install --upgrade enma
 ```
 
 Ensure you have the required Python version:
