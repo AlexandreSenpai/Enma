@@ -42,7 +42,7 @@ except AssertionError:
 ```
 
 ## Documentation
-You can consult full Enma documentation at <strong><a href="https://enma.gitbook.io/enma">https://enma.gitbook.io/enma</a></strong>.
+You can consult full Enma documentation at <strong><a href="https://enma.gitbook.io/enma" target="_blank">https://enma.gitbook.io/enma</a></strong>.
 
 ## Features Comparison
 
