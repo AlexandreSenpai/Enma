@@ -41,6 +41,9 @@ except AssertionError:
     raise RuntimeError(f"{package_name!r} requires Python {python_major}.{python_minor}+ (You have Python {sys.version})")
 ```
 
+## Documentation
+You can consult full Enma documentation at <strong><a href="https://enma.gitbook.io/enma">https://enma.gitbook.io/enma</a></strong>.
+
 ## Features Comparison
 
 Feature    | NHentai | Manganato
