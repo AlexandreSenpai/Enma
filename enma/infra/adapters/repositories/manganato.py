@@ -45,6 +45,15 @@ class Manganato(IMangaRepository):
                        main_title: str, 
                        alternative: str) -> Title:
         logger.debug(f'Building manga title main: {main_title} and alternative: {alternative}')
+
+        has_many_alternatives = alternative.find(';') != -1 or alternative.find(',') != -1
+
+        if not has_many_alternatives:
+            jp = alternative
+            return Title(english=main_title.strip(),
+                         japanese=jp.strip(),
+                         other=main_title.strip())
+
         jp, cn, *_ = alternative.split(';') if alternative.find(';') != -1 else alternative.split(',')
         return Title(english=main_title.strip(),
                      japanese=jp.strip(),
@@ -149,8 +158,8 @@ class Manganato(IMangaRepository):
                      authors=[Author(name=author)] if author is not None else None,
                      genres=[Genre(name=genre_name) for genre_name in genres],
                      id=identifier,
-                     created_at=datetime.strptime(updated_at, "%b %d,%Y - %I:%M %p") if updated_at else None,
-                     updated_at=datetime.strptime(updated_at, "%b %d,%Y - %I:%M %p") if updated_at else None,
+                     created_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
+                     updated_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
                      thumbnail=Image(uri=cover), # type: ignore
                      cover=Image(uri=cover), # type: ignore
                      chapters=chapters) # type: ignore
