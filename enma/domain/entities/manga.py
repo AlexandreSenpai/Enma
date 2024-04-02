@@ -1,14 +1,18 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import TypedDict, Union
+from typing import Literal, TypedDict, Union
 
 from enma.domain.entities.base import Entity
 
 class MIME(Enum):
+    JPG = 'jpg'
     J = 'jpg'
+    PNG = 'png'
     P = 'png'
+    GIF = 'gif'
     G = 'gif'
+    
 
 @dataclass
 class Image:
@@ -59,6 +63,55 @@ class Genre:
 class Author(Genre):
     ...
 
+class ILanguage(TypedDict):
+    ja: Literal['japanese']
+    jp: Literal['japanese']
+    japanese: Literal['japanese']
+    portuguese: Literal['portuguese']
+    pt: Literal['portuguese']
+    pt_br: Literal['portuguese']
+    english: Literal['english']
+    en: Literal['english']
+    en_us: Literal['english']
+    chinese: Literal['chinese']
+    cn: Literal['chinese']
+    zh: Literal['chinese']
+    russian: Literal['russian']
+    ru: Literal['russian']
+    turkish: Literal['turkish']
+    tr: Literal['turkish']
+    spanish: Literal['spanish']
+    es_la: Literal['spanish']
+    malay: Literal['malay']
+    ms: Literal['malay']
+    korean: Literal['korean']
+    ko: Literal['korean']
+
+Language: ILanguage = {
+    'ja': 'japanese',
+    'jp': 'japanese',
+    'japanese': 'japanese',
+    'portuguese': 'portuguese',
+    'pt': 'portuguese',
+    'pt_br': 'portuguese',
+    'english': 'english',
+    'en': 'english',
+    'en_us': 'english',
+    'chinese': 'chinese',
+    'cn': 'chinese',
+    'zh': 'chinese',
+    'ru': 'russian',
+    'russian': 'russian',
+    'turkish': 'turkish',
+    'tr': 'turkish',
+    'spanish': 'spanish',
+    'es_la': 'spanish',
+    'malay': 'malay',
+    'ms': 'malay',
+    'korean': 'korean',
+    'ko': 'korean'
+}
+    
 class Manga(Entity[IMangaProps]):
     def __init__(self,
                  title: Title,
@@ -85,3 +138,8 @@ class Manga(Entity[IMangaProps]):
         self.chapters = chapters or []
 
         self.chapters_count = len(self.chapters if self.chapters else [])
+
+    def add_chapter(self,
+                    chapter: Chapter):
+        self.chapters.append(chapter)
+        self.chapters_count += 1

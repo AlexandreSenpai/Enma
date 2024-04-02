@@ -21,15 +21,14 @@ from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import Chapter, Manga, SymbolicLink
 from enma.domain.entities.pagination import Pagination
 from enma.domain.entities.search_result import SearchResult
+from enma.infra.adapters.repositories.mangadex import Mangadex
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.repositories.nhentai import NHentai, CloudFlareConfig
 from enma.infra.core.interfaces.lib import IEnma
 
-class SourcesEnum(str, Enum):
-    ...
-
-class DefaultAvailableSources(SourcesEnum):
+class SourcesEnum(Enum):
     NHENTAI = 'nhentai'
+    MANGADEX = 'mangadex'
     MANGANATO = 'manganato'
 
 class ExtraConfigs(TypedDict):
@@ -39,8 +38,7 @@ AvailableSources = TypeVar('AvailableSources', bound=SourcesEnum)
 
 class SourceManager(Generic[AvailableSources]):
     def __init__(self, **kwargs) -> None:
-        self.__SOURCES: dict[str, IMangaRepository] = {'nhentai': NHentai(config=kwargs.get('cloudflare_config')),
-                                                       'manganato': Manganato()}
+        self.__SOURCES: dict[str, IMangaRepository] = {}
         self.source: Union[IMangaRepository, None] = None
         self.source_name = ''
     
@@ -62,13 +60,13 @@ class SourceManager(Generic[AvailableSources]):
         self.source_name = source_name
 
     def add_source(self,
-                   source_name: str,
+                   source_name: Union[str, SourcesEnum],
                    source: IMangaRepository) -> None:
 
         if not isinstance(source, IMangaRepository):
             raise InstanceError('Provided source is not an instance of IMangaRepository.')
         
-        self.__SOURCES[source_name] = source
+        self.__SOURCES[source_name if isinstance(source_name, str) else source_name.value] = source
 
 def instantiate_source(callable):
     def wrapper(self, *args, **kwargs):
@@ -92,10 +90,16 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__downloader_use_case: Optional[IUseCase[DownloadChapterRequestDTO, DownloadChapterResponseDTO]] = None
         self.__get_author_page_use_case: Optional[IUseCase[GetAuthorPageRequestDTO, GetAuthorPageResponseDTO]] = None
         self.__fetch_chapter_by_symbolic_link_use_case: Optional[IUseCase[FetchChapterBySymbolicLinkRequestDTO, FetchChapterBySymbolicLinkResponseDTO]] = None
-        self.__current_source_name = None
+        self.__current_source_name: Optional[str] = None
 
         self.source_manager = SourceManager[AvailableSources](**kwargs)
+        self.__create_default_sources()
         if source is not None: self.__initialize_use_case(source=self.source_manager.get_source(source_name=source))
+
+    def __create_default_sources(self) -> None:
+        self.source_manager.add_source(SourcesEnum.NHENTAI, NHentai())
+        self.source_manager.add_source(SourcesEnum.MANGANATO, Manganato())
+        self.source_manager.add_source(SourcesEnum.MANGADEX, Mangadex())
 
     def __initialize_use_case(self, source: IMangaRepository) -> None:
         self.__get_manga_use_case = GetMangaUseCase(manga_repository=source)
@@ -121,7 +125,10 @@ class Enma(IEnma, Generic[AvailableSources]):
         return response.manga
     
     @instantiate_source
-    def search(self, query: str, page: int=1, **kwargs) -> SearchResult:
+    def search(self, 
+               query: str, 
+               page: int=1, 
+               **kwargs) -> SearchResult:
         if self.__search_manga_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -132,7 +139,8 @@ class Enma(IEnma, Generic[AvailableSources]):
         return response.result
     
     @instantiate_source
-    def paginate(self, page: int) -> Pagination:
+    def paginate(self, 
+                 page: int) -> Pagination:
         if self.__paginate_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -142,7 +150,10 @@ class Enma(IEnma, Generic[AvailableSources]):
     
     @instantiate_source
     def random(self) -> Manga:
-        response = self.__random_use_case.execute() # type: ignore
+        if self.__random_use_case is None:
+            raise SourceWasNotDefined('You must define a source before of performing actions.')
+        
+        response = self.__random_use_case.execute() 
         return response.result
     
     

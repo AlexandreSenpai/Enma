@@ -46,15 +46,15 @@ You can consult full Enma documentation at <strong><a href="https://enma.gitbook
 
 ## Features Comparison
 
-Feature    | NHentai | Manganato
------------|---------|-----------
-search     |    ✅   |     ✅    
-random     |    ✅   |     🚫    
-get        |    ✅   |     ✅    
-paginate   |    ✅   |     ✅
-download   |    ✅   |     ✅       
-author_page|    ✅   |     🚫       
-set_config |    ✅   |     🚫
+Feature    | NHentai | Manganato | Mangadex
+-----------|---------|-----------|-----------
+search     |    ✅   |     ✅   |   ✅
+random     |    ✅   |     🚫   |   🚫  
+get        |    ✅   |     ✅   |   ✅
+paginate   |    ✅   |     ✅   |   🚫
+download   |    ✅   |     ✅   |   ✅  
+author_page|    ✅   |     🚫   |   🚫   
+set_config |    ✅   |     🚫   |   🚫
 
 ## Usage
 

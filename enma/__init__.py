@@ -1,7 +1,7 @@
 import sys
 from enma.application.core.utils.logger import LogMode, logger
 from enma.application.use_cases.download_chapter import Threaded
-from enma.infra.entrypoints.lib import Enma, SourcesEnum, DefaultAvailableSources
+from enma.infra.entrypoints.lib import Enma, SourcesEnum
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.downloaders.default import DefaultDownloader
