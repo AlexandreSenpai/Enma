@@ -18,7 +18,7 @@ from enma.application.use_cases.get_random import RandomResponseDTO, RandomUseCa
 from enma.application.use_cases.paginate import PaginateRequestDTO, PaginateResponseDTO, PaginateUseCase
 from enma.application.use_cases.search_manga import SearchMangaRequestDTO, SearchMangaResponseDTO, SearchMangaUseCase
 from enma.domain.entities.author_page import AuthorPage
-from enma.domain.entities.manga import Chapter, Manga, SymbolicLink
+from enma.domain.entities.manga import Chapter, Manga
 from enma.domain.entities.pagination import Pagination
 from enma.domain.entities.search_result import SearchResult
 from enma.infra.adapters.repositories.mangadex import Mangadex
@@ -37,14 +37,37 @@ class ExtraConfigs(TypedDict):
 AvailableSources = TypeVar('AvailableSources', bound=SourcesEnum)
 
 class SourceManager(Generic[AvailableSources]):
+    """
+    Manages manga source repositories available to the Enma application, allowing for dynamic source selection at runtime.
+
+    Attributes:
+        source (Union[IMangaRepository, None]): The currently selected manga repository source.
+        source_name (str): The name of the currently selected source.
+    """
+
     def __init__(self, **kwargs) -> None:
+        """
+        Initializes the SourceManager with empty sources and no selected source.
+        """
         self.__SOURCES: dict[str, IMangaRepository] = {}
         self.source: Union[IMangaRepository, None] = None
         self.source_name = ''
     
     def get_source(self,
                    source_name: Union[AvailableSources, str]) -> IMangaRepository:
-        
+        """
+        Retrieves a source repository by name.
+
+        Args:
+            source_name (Union[AvailableSources, str]): The name of the source to retrieve, either as a string or an enum.
+
+        Returns:
+            IMangaRepository: The manga repository source.
+
+        Raises:
+            SourceNotAvailable: If the requested source is not available.
+        """
+
         source_name = source_name.value if isinstance(source_name, Enum) else source_name
         source = self.__SOURCES.get(source_name)
 
@@ -55,6 +78,12 @@ class SourceManager(Generic[AvailableSources]):
     
     def set_source(self,
                    source_name: Union[AvailableSources, str]) -> None:
+        """
+        Sets the currently active source to the specified source name.
+
+        Args:
+            source_name (Union[AvailableSources, str]): The name of the source to activate, either as a string or an enum.
+        """
         source = self.get_source(source_name=source_name)
         self.source = source
         self.source_name = source_name
@@ -62,13 +91,32 @@ class SourceManager(Generic[AvailableSources]):
     def add_source(self,
                    source_name: Union[str, SourcesEnum],
                    source: IMangaRepository) -> None:
+        """
+        Adds a new source repository to the available sources.
 
+        Args:
+            source_name (Union[str, SourcesEnum]): The name of the source to add.
+            source (IMangaRepository): The manga repository source instance.
+
+        Raises:
+            InstanceError: If the provided source is not an instance of IMangaRepository.
+        """
         if not isinstance(source, IMangaRepository):
             raise InstanceError('Provided source is not an instance of IMangaRepository.')
         
         self.__SOURCES[source_name if isinstance(source_name, str) else source_name.value] = source
 
 def instantiate_source(callable):
+    """
+    Decorator function to ensure the current use case is instantiated with the current source.
+    This is used to decorate methods of the Enma class that require a source to have been set.
+
+    Args:
+        callable: The method to be decorated.
+    
+    Returns:
+        The wrapped method with source initialization logic.
+    """
     def wrapper(self, *args, **kwargs):
         if self.source_manager.source is not None and \
             self._Enma__current_source_name != self.source_manager.source_name:
@@ -79,10 +127,22 @@ def instantiate_source(callable):
     return wrapper
 
 class Enma(IEnma, Generic[AvailableSources]):
+    """
+    Main application class for Enma, providing interfaces to execute various manga-related use cases.
+    Allows dynamic selection of manga sources and performs actions like fetching manga, searching, and downloading chapters.
+
+    Attributes:
+        source_manager (SourceManager[AvailableSources]): Manages the available sources and the current source selection.
+    """
     def __init__(self, 
                  source: Optional[AvailableSources] = None, 
                  **kwargs) -> None:
+        """
+        Initializes the Enma application with optional default source selection and extra configurations.
 
+        Args:
+            source (Optional[AvailableSources], optional): The default source to be used. If provided, use cases will be initialized with this source.
+        """
         self.__get_manga_use_case: Optional[IUseCase[GetMangaRequestDTO, GetMangaResponseDTO]] = None
         self.__search_manga_use_case: Optional[IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]] = None
         self.__paginate_use_case: Optional[IUseCase[PaginateRequestDTO, PaginateResponseDTO]] = None
@@ -97,11 +157,20 @@ class Enma(IEnma, Generic[AvailableSources]):
         if source is not None: self.__initialize_use_case(source=self.source_manager.get_source(source_name=source))
 
     def __create_default_sources(self) -> None:
+        """
+        Creates and adds the default manga sources to the source manager. Currently, NHentai, Manganato, and Mangadex are added.
+        """
         self.source_manager.add_source(SourcesEnum.NHENTAI, NHentai())
         self.source_manager.add_source(SourcesEnum.MANGANATO, Manganato())
         self.source_manager.add_source(SourcesEnum.MANGADEX, Mangadex())
 
     def __initialize_use_case(self, source: IMangaRepository) -> None:
+        """
+        Initializes the use cases with the given source repository. This method sets up all use cases available in Enma.
+
+        Args:
+            source (IMangaRepository): The source repository to initialize use cases with.
+        """
         self.__get_manga_use_case = GetMangaUseCase(manga_repository=source)
         self.__search_manga_use_case = SearchMangaUseCase(manga_repository=source)     
         self.__paginate_use_case = PaginateUseCase(manga_repository=source)     
@@ -114,7 +183,20 @@ class Enma(IEnma, Generic[AvailableSources]):
     @instantiate_source
     def get(self, 
             identifier: str,
-            with_symbolic_links: bool = False) -> Union[Manga, None]:
+            with_symbolic_links: bool = True) -> Union[Manga, None]:
+        """
+        Retrieves detailed information for a specific manga identified by its ID.
+
+        Args:
+            identifier (str): The unique identifier of the manga to retrieve.
+            with_symbolic_links (bool, optional): If True, fetches the manga with symbolic links to chapters. Defaults to True.
+
+        Returns:
+            Union[Manga, None]: The Manga object if found, None otherwise.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+        """
         if self.__get_manga_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
 
@@ -129,6 +211,20 @@ class Enma(IEnma, Generic[AvailableSources]):
                query: str, 
                page: int=1, 
                **kwargs) -> SearchResult:
+        """
+        Searches for manga that match the given query string.
+
+        Args:
+            query (str): The search query string.
+            page (int, optional): The page number of the search results to retrieve. Defaults to 1.
+            **kwargs: Additional parameters for search customization.
+
+        Returns:
+            SearchResult: An object containing the paginated search results, including manga thumbnails.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+        """
         if self.__search_manga_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -141,6 +237,18 @@ class Enma(IEnma, Generic[AvailableSources]):
     @instantiate_source
     def paginate(self, 
                  page: int) -> Pagination:
+        """
+        Retrieves a specific page of manga listings.
+
+        Args:
+            page (int): The page number of manga listings to retrieve.
+
+        Returns:
+            Pagination: An object containing the paginated list of manga thumbnails and pagination details.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+        """
         if self.__paginate_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -150,6 +258,16 @@ class Enma(IEnma, Generic[AvailableSources]):
     
     @instantiate_source
     def random(self) -> Manga:
+        """
+        Fetches a random manga from the currently selected source.
+
+        Returns:
+            Manga: A Manga object for the randomly selected manga.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+            NotImplementedError: If the current source does not support fetching an author's page.
+        """
         if self.__random_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -164,6 +282,19 @@ class Enma(IEnma, Generic[AvailableSources]):
                          downloader: IDownloaderAdapter,
                          saver: ISaverAdapter,
                          threaded: Threaded) -> None:
+        """
+        Downloads a manga chapter to the specified path using the provided downloader and saver adapters.
+
+        Args:
+            path (str): The filesystem path where the chapter should be saved.
+            chapter (Chapter): The manga chapter to download.
+            downloader (IDownloaderAdapter): The adapter to use for downloading the chapter pages.
+            saver (ISaverAdapter): The adapter to use for saving the downloaded pages.
+            threaded (Threaded): Determines whether the download should be performed in a threaded manner for concurrency.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+        """
         if self.__downloader_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -175,6 +306,20 @@ class Enma(IEnma, Generic[AvailableSources]):
     
     @instantiate_source
     def author_page(self, author: str, page: int) -> AuthorPage:
+        """
+        Fetches manga authored by a specific author.
+
+        Args:
+            author (str): The name or identifier of the author.
+            page (int): The page number of results to retrieve.
+
+        Returns:
+            AuthorPage: An object containing a list of manga by the specified author.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+            NotImplementedError: If the current source does not support fetching an author's page.
+        """
         if self.__get_author_page_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
@@ -184,6 +329,19 @@ class Enma(IEnma, Generic[AvailableSources]):
     @instantiate_source
     def fetch_chapter_by_symbolic_link(self, 
                                        chapter: Chapter) -> Chapter:
+        """
+        Fetches a manga chapter's details including pages and images by its symbolic link.
+
+        Args:
+            chapter (Chapter): The manga chapter to fetch, which must include a valid symbolic link.
+
+        Returns:
+            Chapter: An object containing the fetched chapter details such as pages and images.
+
+        Raises:
+            SourceWasNotDefined: If no source has been defined prior to calling this method.
+            InvalidResource: If the provided chapter does not have a valid symbolic link.
+        """
         if self.__fetch_chapter_by_symbolic_link_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         

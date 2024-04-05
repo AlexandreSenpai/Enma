@@ -19,7 +19,7 @@
 Enma is a Python library designed to fetch manga and doujinshi data from many sources. It provides a unified interface to interact with different manga repositories, making it easier to retrieve manga details, search for manga, paginate through results, and fetch random manga.
 
 ## :warning: Warning
-> **:exclamation: Important: The Enma library is not intended for mass querying or placing heavy loads on supported sources. Please use responsibly, adhering to the terms of service of the data sources. Misuse may result in service disruption or access denial.**
+> **:exclamation: Important: Enma is not intended for mass querying or placing heavy loads on supported sources. Please use responsibly, adhering to the terms of service of the data sources. Misuse may result in service disruption or access denial.**
 
 ## Requirements
 
