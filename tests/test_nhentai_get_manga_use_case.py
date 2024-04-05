@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from enma.application.core.handlers.error import Forbidden, InvalidRequest
+from enma.application.core.handlers.error import Forbidden, InvalidRequest, NotFound
 from enma.infra.core.interfaces.nhentai_response import NHentaiResponse
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaUseCase
 from enma.application.core.interfaces.use_case import DTO
@@ -86,11 +86,8 @@ class TestNHentaiGetDoujin:
             assert res.manga.title.other == None
         
     def test_response_when_it_could_not_get_doujin(self):
-        with patch('enma.infra.adapters.repositories.nhentai.NHentai.get') as mock_method:
-            mock_method.return_value = None
-
+        with patch('enma.infra.adapters.repositories.nhentai.NHentai.get', side_effect=NotFound("Could not find the manga")) as mock_method:
             doujin = self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='1')))
-            
             assert doujin.found == False
             assert doujin.manga is None
     
