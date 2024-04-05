@@ -209,6 +209,8 @@ Set the logging mode to debug and try again.')
         
         chapter_list = self.__list_chapters(manga_id=str(manga.id))
 
+        print(1, chapter_list)
+
         for chapter in chapter_list:
             manga.add_chapter(self.__create_chapter(chapter=chapter,
                                                     with_symbolic_links=with_symbolic_links))

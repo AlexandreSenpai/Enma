@@ -206,8 +206,12 @@ class TestNHentaiGetDoujin:
             cover_mime = data['images']['cover']['t']
             thumb_mime = data['images']['thumbnail']['t']
 
-            assert cover_mime.upper() == doujin.manga.cover.mime.name # type: ignore
-            assert thumb_mime.upper() == doujin.manga.thumbnail.mime.name # type: ignore
+            assert doujin.manga.thumbnail is not None
+            assert doujin.manga.cover is not None
+            assert cover_mime.upper() == 'P'
+            assert doujin.manga.cover.mime.value == 'png'
+            assert thumb_mime.upper() == 'J'
+            assert doujin.manga.thumbnail.mime.value == 'jpg'
 
     @patch('enma.application.use_cases.get_manga.GetMangaUseCase.execute')
     def test_symbolic_links_must_be_disabled_by_default(self, use_case_mock: MagicMock):

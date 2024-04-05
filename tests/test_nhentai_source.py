@@ -18,7 +18,7 @@ from tests.data.mocked_doujins import (nhentai_doujin_mocked,
                                        nhentai_author_mocked,
                                        nhentai_author_not_found_mocked)
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
-from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, Manga, SymbolicLink
+from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, SymbolicLink
 from enma.application.core.utils.logger import logger
 
 class TestNHentaiUtils:
@@ -85,7 +85,7 @@ class TestNHentaiUtils:
         assert isinstance(chapter.pages[0], Image)
         assert chapter.pages[0].width == 123
         assert chapter.pages[0].height == 123
-        assert chapter.pages[0].mime.name == 'J'
+        assert chapter.pages[0].mime.value == 'jpg'
         assert chapter.link is None
 
     def test_chapter_creator_with_symbolic_links(self):
@@ -260,8 +260,12 @@ class TestNHentaiSourceGetMethod:
         cover_mime = nhentai_doujin_mocked['images']['cover']['t']
         thumb_mime = nhentai_doujin_mocked['images']['thumbnail']['t']
 
-        assert cover_mime.upper() == doujin.cover.mime.name
-        assert thumb_mime.upper() == doujin.thumbnail.mime.name
+        assert doujin.thumbnail is not None
+        assert doujin.cover is not None
+        assert cover_mime.upper() == 'P'
+        assert doujin.cover.mime.value == 'png'
+        assert thumb_mime.upper() == 'J'
+        assert doujin.thumbnail.mime.value == 'jpg'
 
 class TestNHentaiSourcePaginationMethod:
     sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
