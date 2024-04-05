@@ -18,6 +18,9 @@
 
 Enma is a Python library designed to fetch manga and doujinshi data from many sources. It provides a unified interface to interact with different manga repositories, making it easier to retrieve manga details, search for manga, paginate through results, and fetch random manga.
 
+## :warning: Warning
+> **:exclamation: Important: The Enma library is not intended for mass querying or placing heavy loads on supported sources. Please use responsibly, adhering to the terms of service of the data sources. Misuse may result in service disruption or access denial.**
+
 ## Requirements
 
 - Python 3.9+
@@ -258,6 +261,18 @@ We welcome contributions! If you'd like to contribute:
 3. Submit a pull request.
 
 Ensure you follow the coding standards and write tests for new features.
+
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind, express or implied. The developers and contributors of the Enma library shall not be liable for any misuse, damages, or other consequences arising from the use of this software.
+
+It is important to emphasize that the Enma library was developed with the goal of facilitating efficient and responsible access and manipulation of data. We do not encourage or support the use of this tool for conducting mass queries or accesses that could overload, harm, or in any way negatively affect the servers or services of the supported sources.
+
+Users of the Enma library must always follow the guidelines, terms of use, and limitations imposed by the accessed data sources. We strongly recommend the implementation of responsible rate limiting practices and obtaining appropriate permissions when necessary, to ensure that the use of the library complies with all applicable laws and regulations, in addition to respecting ethical principles of data use.
+
+By using the Enma library, you agree to use the tool in an ethical and responsible manner, acknowledging that the developers of Enma will not be responsible for any use that violates these guidelines.
+
+We remind you that respect for the services and APIs of the supported sources is fundamental for the sustainability and longevity of both the Enma and the services used. We value the community and the development ecosystem and encourage all users to contribute to a safer, more respectful, and collaborative digital environment.
 
 ## License
 

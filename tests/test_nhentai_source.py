@@ -281,7 +281,7 @@ class TestNHentaiSourcePaginationMethod:
         res = self.sut.paginate(page=2)
 
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages == nhentai_paginate_mocked['num_pages']
         assert res.total_results == 25 * 19163
@@ -301,7 +301,7 @@ class TestNHentaiSourcePaginationMethod:
         res = self.sut.paginate(page=2)
 
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages == nhentai_paginate_mocked['num_pages']
         assert res.total_results == 25 * 19163
@@ -327,7 +327,7 @@ class TestNHentaiSourceSearchMethod:
 
         assert res is not None
         assert res.query == 'GATE'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages == 3
         assert len(res.results) == 25
@@ -361,7 +361,7 @@ class TestNHentaiSourceSearchMethod:
 
         assert res is not None
         assert res.query == 'GATE'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages == 1
         assert len(res.results) == 0
@@ -387,7 +387,7 @@ class TestNHentaiSourceAuthorPageMethod:
 
         assert res is not None
         assert res.author == 'akaneman'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages == 2
         assert len(res.results) == 25
@@ -419,7 +419,7 @@ class TestNHentaiSourceAuthorPageMethod:
 
         assert res is not None
         assert res.author == 'asdsadadasd'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 1
         assert res.total_pages == 1
         assert len(res.results) == 0

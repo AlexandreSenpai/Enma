@@ -5,7 +5,7 @@ It sets up the necessary configurations and imports required for the entrypoints
 from enum import Enum
 from typing import Any, Generic, Optional, TypeVar, TypedDict, Union
 
-from enma.application.core.handlers.error import InstanceError, SourceNotAvailable, SourceWasNotDefined
+from enma.application.core.handlers.error import InstanceError, InvalidResource, SourceNotAvailable, SourceWasNotDefined
 from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.interfaces.saver_adapter import ISaverAdapter
@@ -182,10 +182,16 @@ class Enma(IEnma, Generic[AvailableSources]):
                                                                                             page=page))).result
 
     @instantiate_source
-    def fetch_chapter_by_symbolic_link(self, link: SymbolicLink) -> Chapter:
+    def fetch_chapter_by_symbolic_link(self, 
+                                       chapter: Chapter) -> Chapter:
         if self.__fetch_chapter_by_symbolic_link_use_case is None:
             raise SourceWasNotDefined('You must define a source before of performing actions.')
         
-        response = self.__fetch_chapter_by_symbolic_link_use_case.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
+        if chapter.link is None or chapter.link.link is None:
+            raise InvalidResource('Chapter does not have a symbolic link.')
         
+        response = self.__fetch_chapter_by_symbolic_link_use_case.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=chapter.link)))
+        
+        response.chapter.id = chapter.id
+
         return response.chapter

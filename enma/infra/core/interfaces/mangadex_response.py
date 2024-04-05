@@ -1,4 +1,4 @@
-from typing import Any, Literal, TypedDict, Union
+from typing import Any, Literal, TypedDict, Union, TypeVar
 
 
 class Title(TypedDict):
@@ -14,15 +14,17 @@ class TagAttrs(TypedDict):
                  Literal["format"]]
     version: int
 
-class MangaTag(TypedDict):
+class IMangaTag(TypedDict):
     id: str
     type: str
     attributes: TagAttrs
     relationships: list[Any]
 
+IAltTitles = list[dict[str, str]]
+
 class MangaAttrs(TypedDict):
     title: Title
-    altTitles: list[dict[str, str]]
+    altTitles: IAltTitles
     description: MangaDesc
     isLocked: bool
     links: dict[str, str]
@@ -33,7 +35,7 @@ class MangaAttrs(TypedDict):
     status: str
     year: int
     contentRating: str
-    tags: list[MangaTag]
+    tags: list[IMangaTag]
     state: str
     chapterNumbersResetOnNewVolume: bool
     createdAt: str
@@ -83,13 +85,15 @@ class AuthorRelation(TypedDict):
     type: Union[Literal["author"], Literal["artist"]]
     attributes: PersonAttrs
 
+IRelations = list[Union[CoverArtRelation,
+                       AuthorRelation,
+                       dict[str, str]]]
+
 class IManga(TypedDict):
     id: str
     type: str
     attributes: MangaAttrs
-    relationships: list[Union[CoverArtRelation, 
-                              AuthorRelation, 
-                              dict[str, str]]]
+    relationships: IRelations
 
 class IGetResult(TypedDict):
     result: str

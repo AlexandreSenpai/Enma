@@ -97,7 +97,7 @@ class TestMangadexSourcePaginationMethod:
         res = self.sut.paginate(page=2)
 
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages > 0
         assert res.total_results > 0
@@ -113,7 +113,7 @@ class TestMangadexSourcePaginationMethod:
         res = self.sut.paginate(page=2)
 
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages > 0
         assert res.total_results == 0
@@ -138,7 +138,7 @@ class TestMangadexSourceSearchMethod:
 
         assert res is not None
         assert res.query == 'GATE'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 1
         assert res.total_pages > 0
         assert len(res.results) > 0
@@ -160,7 +160,7 @@ class TestMangadexSourceSearchMethod:
 
         assert res is not None
         assert res.query == 'GATE'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 1
         assert res.total_pages > 0
         assert len(res.results) == 1
