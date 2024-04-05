@@ -1,6 +1,6 @@
 from datetime import datetime
-import json
 from typing import Generic, TypeVar, Union
+from uuid import uuid4
 
 T = TypeVar('T')
 
@@ -23,12 +23,12 @@ class Entity(Generic[T]):
         """Initializes an Entity with given or default values.
 
         Args:
-            id: A Union of int, str, and None representing the entity's ID. Defaults to 0.
+            id: A Union of int, str, and None representing the entity's ID. Defaults to uuidv4.
             created_at: A Union of datetime and None representing when the entity was created. Defaults to current UTC time.
             updated_at: A Union of datetime and None representing when the entity was last updated. Defaults to current UTC time.
         """
 
-        self.id = id if id is not None else 0
+        self.id = id if id is not None else uuid4()
         self.created_at = created_at if created_at is not None else datetime.utcnow()
         self.updated_at = updated_at if updated_at is not None else datetime.utcnow()
 

@@ -45,12 +45,21 @@ class Manganato(IMangaRepository):
                        main_title: str, 
                        alternative: str) -> Title:
         logger.debug(f'Building manga title main: {main_title} and alternative: {alternative}')
+
+        has_many_alternatives = alternative.find(';') != -1 or alternative.find(',') != -1
+
+        if not has_many_alternatives:
+            jp = alternative
+            return Title(english=main_title.strip(),
+                         japanese=jp.strip(),
+                         other=main_title.strip())
+
         jp, cn, *_ = alternative.split(';') if alternative.find(';') != -1 else alternative.split(',')
         return Title(english=main_title.strip(),
                      japanese=jp.strip(),
                      other=cn.strip())
     
-    def __find_chapets_list(self, html: BeautifulSoup) -> list[str]:
+    def __find_chapters_list(self, html: BeautifulSoup) -> list[str]:
         chapter_list = cast(Tag, html.find('ul', {'class': 'row-content-chapter'}))
         chapters = chapter_list.find_all('li') if chapter_list else []
         return [chapter.find('a')['href'] for chapter in chapters]
@@ -66,7 +75,6 @@ class Manganato(IMangaRepository):
         if response.status_code != 200:
             logger.error(f'Could not fetch the chapter with url: {url}. status code: {response.status_code}')
             return
-        
         
         chapter = Chapter(id=response.url.split('/')[-1])
         html = BeautifulSoup(response.text, 'html.parser')
@@ -134,14 +142,14 @@ class Manganato(IMangaRepository):
             updated_at = updated_at_field.find('span', {'class': 'stre-value'}).text
 
         if with_symbolic_links:
-            chapters_links = self.__find_chapets_list(html=soup)
+            chapters_links = self.__find_chapters_list(html=soup)
             chapters = [self.__create_chapter(link, symbolic=True) for link in chapters_links]
         else:
             workers = cpu_count()
             logger.debug(f'Initializing {workers} workers to fetch chapters of {identifier}.')
 
             with ThreadPoolExecutor(max_workers=workers) as executor:
-                chapters = executor.map(self.__create_chapter, self.__find_chapets_list(html=soup))
+                chapters = executor.map(self.__create_chapter, self.__find_chapters_list(html=soup))
                 chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
                 executor.shutdown()
         
@@ -149,8 +157,8 @@ class Manganato(IMangaRepository):
                      authors=[Author(name=author)] if author is not None else None,
                      genres=[Genre(name=genre_name) for genre_name in genres],
                      id=identifier,
-                     created_at=datetime.strptime(updated_at, "%b %d,%Y - %I:%M %p") if updated_at else None,
-                     updated_at=datetime.strptime(updated_at, "%b %d,%Y - %I:%M %p") if updated_at else None,
+                     created_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
+                     updated_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
                      thumbnail=Image(uri=cover), # type: ignore
                      cover=Image(uri=cover), # type: ignore
                      chapters=chapters) # type: ignore

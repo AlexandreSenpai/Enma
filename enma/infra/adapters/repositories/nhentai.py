@@ -11,8 +11,8 @@ from pydantic import BaseModel, field_validator
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from enma.application.core.handlers.error import (ExceedRetryCount, InvalidConfig, InvalidRequest,
-                                                  NhentaiSourceWithoutConfig)
+from enma.application.core.handlers.error import (ExceedRetryCount, Forbidden, InvalidConfig, InvalidRequest,
+                                                  NhentaiSourceWithoutConfig, NotFound, Unknown)
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
@@ -58,6 +58,18 @@ class NHentai(IMangaRepository):
         self.__AVATAR_URL = 'https://i5.nhentai.net/'
         self.__TINY_IMAGE_BASE_URL = self.__IMAGE_BASE_URL.replace('/i.', '/t.')
 
+    def __handle_source_response(self, response: requests.Response):
+        logger.debug(f'Fetched {response.url} with response status code {response.status_code} and text {response.text}')
+        if response.status_code == 200: return
+        if response.status_code == 403: 
+            raise Forbidden(message='Could not perform a successfull request to the source due credentials issues. \
+Check your credentials and try again.')
+        if response.status_code == 404:
+            raise NotFound(message=f'Could not find the requested resource at "{response.url}". \
+Check the provided request parameters and try again.')
+        raise Unknown(message='Something unexpected happened while trying to fetch source content. \
+Set the logging mode to debug and try again.')
+
     def __make_request(self,
                        url: str,
                        headers: Union[dict[str, Any], None] = None,
@@ -72,21 +84,17 @@ class NHentai(IMangaRepository):
         logger.debug(f'Fetching {url} with headers {headers} and params {params} the current config cf_clearance: {self.__config.cf_clearance}')
 
         response = requests.get(url=urlparse(url).geturl(),
-                                headers={**headers, 'User-Agent': self.__config.user_agent},
+                                headers={**headers, 'User-Agent': f'{self.__config.user_agent}'},
                                 params={**params},
                                 cookies={'cf_clearance': self.__config.cf_clearance})
         
-        logger.debug(f'Fetched {url} with response status code {response.status_code} and text {response.text}')
+        self.__handle_source_response(response)
 
         return response
 
     def set_config(self, config: CloudFlareConfig) -> None:
         if not isinstance(config, CloudFlareConfig): raise InvalidConfig(message='You must provide a CloudFlareConfig object.') 
         self.__config = config
-
-    def __handle_request_error(self, msg: str) -> None:
-        logger.error(msg)
-        return None
     
     def __make_page_uri(self,
                         type: Union[Literal['cover'], Literal['page'], Literal['thumbnail']],
@@ -111,10 +119,6 @@ class NHentai(IMangaRepository):
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
         response = self.__make_request(url=link.link)
-
-        if response.status_code != 200:
-            self.__handle_request_error(msg=f'Could not fetch {link.link} because nhentai\'s request ends up with {response.status_code} status code.')
-            return Chapter()
         
         doujin: NHentaiResponse = response.json()
 
@@ -154,9 +158,6 @@ class NHentai(IMangaRepository):
 
         url = f'{self.__API_URL}/gallery/{identifier}'
         response = self.__make_request(url=url)
-
-        if response.status_code != 200:
-            return self.__handle_request_error(msg=f'Could not fetch {identifier} because nhentai\'s request ends up with {response.status_code} status code.')
 
         doujin: NHentaiResponse = response.json()
         media_id = doujin.get('media_id')
@@ -221,10 +222,6 @@ class NHentai(IMangaRepository):
                                      total_results=0,
                                      results=[])
         
-        if request_response.status_code != 200:
-            self.__handle_request_error(f'Could not search by {query} because nhentai\'s request ends up with {request_response.status_code} status code.')
-            return search_result
-
         soup = BeautifulSoup(request_response.text, 'html.parser')
 
         search_results_container = soup.find('div', {'class': 'container'})
@@ -290,10 +287,6 @@ class NHentai(IMangaRepository):
         response = self.__make_request(url=urljoin(self.__API_URL, f'galleries/all'),
                                        params={'page': page})
 
-        if response.status_code != 200:
-            self.__handle_request_error(f'Could not paginate to page {page} because nhentai\'s request ends up with {response.status_code} status code.')
-            return Pagination(page=page)
-
         data = response.json()
 
         PAGES = data.get('num_pages', 0)
@@ -314,9 +307,6 @@ class NHentai(IMangaRepository):
 
     def random(self, retry=0) -> Manga:
         response = self.__make_request(url=urljoin(self.__BASE_URL, 'random'))
-
-        if response.status_code != 200:
-            self.__handle_request_error(f'Could not fetch a random manga because nhentai\'s request ends up with {response.status_code} status code.')
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -345,11 +335,7 @@ class NHentai(IMangaRepository):
                             total_pages=0,
                             page=page,
                             total_results=0,
-                            results=[])
-        
-        if request_response.status_code != 200:
-            logger.error('Could not fetch author page properly')
-            return result    
+                            results=[]) 
    
         soup = BeautifulSoup(request_response.text, 'html.parser')
 

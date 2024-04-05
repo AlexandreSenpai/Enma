@@ -8,6 +8,7 @@ import pytest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from enma.application.core.handlers.error import NotFound
 from enma.application.use_cases.fetch_chapter_by_symbolic_link import FetchChapterBySymbolicLinkRequestDTO, FetchChapterBySymbolicLinkUseCase
 from enma.application.core.interfaces.use_case import DTO
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai
@@ -51,7 +52,7 @@ class TestFetchChapterWithSymbolicLink:
             assert response.chapter.id == 0
             assert len(response.chapter.pages) == 14
 
-    def test_should_return_empty_chapter_for_broken_link(self):
+    def test_should_raise_exception_for_broken_link(self):
         with patch('requests.get') as mock_method:
             mock = Mock()
             mock.status_code = 404
@@ -59,14 +60,10 @@ class TestFetchChapterWithSymbolicLink:
             mock_method.return_value = mock
 
             link = SymbolicLink(link='https://nhentai.net')
-            response = self.sut.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
             
-            assert isinstance(response.chapter, Chapter)
-            assert response.chapter.link is None
-            assert response.chapter.pages_count == 0
-            assert response.chapter.id == 0
-            assert len(response.chapter.pages) == 0
-
+            with pytest.raises(NotFound):
+                self.sut.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
+        
     def test_should_return_empty_chapter_for_broken_response(self):
         with patch('requests.get') as mock_method:
             mock = Mock()
