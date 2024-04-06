@@ -38,6 +38,13 @@ jobs:
           ENMA_CACHING_MANGANATO_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS='0' \
           pytest --cov=. --cov-report=xml ./tests
 
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: pytest
+
       - name: Building and Deploying
         run: |
           python -m pip install build twine wheel setuptools_scm setuptools
