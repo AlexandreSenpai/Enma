@@ -52,7 +52,6 @@ class TestMangadexSourceGetMethod:
         
     @patch('requests.get')
     def test_raise_forbidden_in_case_of_403_status_code(self, mock_method: MagicMock):
-            print()
             mock = Mock()
             mock.status_code = 403
             mock_method.return_value = mock

@@ -26,7 +26,7 @@ from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.repositories.nhentai import NHentai, CloudFlareConfig
 from enma.infra.core.interfaces.lib import IEnma
 
-class SourcesEnum(Enum):
+class Sources(Enum):
     NHENTAI = 'nhentai'
     MANGADEX = 'mangadex'
     MANGANATO = 'manganato'
@@ -34,7 +34,7 @@ class SourcesEnum(Enum):
 class ExtraConfigs(TypedDict):
     cloudflare_config: CloudFlareConfig
 
-AvailableSources = TypeVar('AvailableSources', bound=SourcesEnum)
+AvailableSources = TypeVar('AvailableSources', bound=Sources)
 
 class SourceManager(Generic[AvailableSources]):
     """
@@ -59,7 +59,7 @@ class SourceManager(Generic[AvailableSources]):
         Retrieves a source repository by name.
 
         Args:
-            source_name (Union[AvailableSources, str]): The name of the source to retrieve, either as a string or an enum.
+            source_name (Union[Sources, str]): The name of the source to retrieve, either as a string or an enum.
 
         Returns:
             IMangaRepository: The manga repository source.
@@ -89,13 +89,13 @@ class SourceManager(Generic[AvailableSources]):
         self.source_name = source_name
 
     def add_source(self,
-                   source_name: Union[str, SourcesEnum],
+                   source_name: Union[str, Sources],
                    source: IMangaRepository) -> None:
         """
         Adds a new source repository to the available sources.
 
         Args:
-            source_name (Union[str, SourcesEnum]): The name of the source to add.
+            source_name (Union[str, Sources]): The name of the source to add.
             source (IMangaRepository): The manga repository source instance.
 
         Raises:
@@ -160,9 +160,9 @@ class Enma(IEnma, Generic[AvailableSources]):
         """
         Creates and adds the default manga sources to the source manager. Currently, NHentai, Manganato, and Mangadex are added.
         """
-        self.source_manager.add_source(SourcesEnum.NHENTAI, NHentai())
-        self.source_manager.add_source(SourcesEnum.MANGANATO, Manganato())
-        self.source_manager.add_source(SourcesEnum.MANGADEX, Mangadex())
+        self.source_manager.add_source(Sources.NHENTAI, NHentai())
+        self.source_manager.add_source(Sources.MANGANATO, Manganato())
+        self.source_manager.add_source(Sources.MANGADEX, Mangadex())
 
     def __initialize_use_case(self, source: IMangaRepository) -> None:
         """

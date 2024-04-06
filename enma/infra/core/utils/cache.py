@@ -19,8 +19,6 @@ class Cache:
         else:
             _args = list([*list(kwargs.values()), *args[1:]])
 
-        print(_args)
-
         if self._CACHE.get(str(_args)) is not None:
             logger.debug(f'Retrieving cached object with key {str(_args)}')
             return self._CACHE.get(str(_args))

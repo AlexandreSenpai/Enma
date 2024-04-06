@@ -1,7 +1,7 @@
 import sys
 from enma.application.core.utils.logger import LogMode, logger
 from enma.application.use_cases.download_chapter import Threaded
-from enma.infra.entrypoints.lib import Enma, SourcesEnum
+from enma.infra.entrypoints.lib import Enma, Sources
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort as NHentaiSort
 from enma.infra.adapters.repositories.mangadex import Mangadex, Sort as MangadexSort
 from enma.infra.adapters.repositories.manganato import Manganato
