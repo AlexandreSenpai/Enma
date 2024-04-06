@@ -5,7 +5,6 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
-from functools import lru_cache
 from multiprocessing import cpu_count
 from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse, urljoin
