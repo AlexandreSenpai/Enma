@@ -6,6 +6,12 @@ import os
 
 import pytest
 
+os.environ['ENMA_CACHING_NHENTAI_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_NHENTAI_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_NHENTAI_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_NHENTAI_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_NHENTAI_AUTHOR_TTL_IN_SECONDS'] = '0'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from enma.application.core.handlers.error import NotFound

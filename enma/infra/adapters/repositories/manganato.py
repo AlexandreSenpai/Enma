@@ -1,22 +1,25 @@
 """
-This module provides an adapter for the nhentai repository.
-It contains functions and classes to interact with the nhentai API and retrieve manga data.
+This module provides an adapter for the MANGANATO repository.
+It contains functions and classes to interact with the MANGANATO API and retrieve manga data.
 """
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from multiprocessing import cpu_count
+import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup, Tag
 
 import requests
 
+from enma._version import __version__
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import Author, Chapter, Genre, Image, Manga, SymbolicLink, Title
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
+from enma.infra.core.utils.cache import Cache
 
 class Manganato(IMangaRepository):
     """
@@ -38,7 +41,9 @@ class Manganato(IMangaRepository):
         logger.debug(f'Fetching {url} with headers {headers} and params {params}')
 
         return requests.get(url=urlparse(url).geturl(), 
-                            headers={**headers, 'Referer': 'https://chapmanganato.com/'},
+                            headers={**headers, 
+                                     'Referer': 'https://chapmanganato.com/', 
+                                     "User-Agent": f"Enma/{__version__}"},
                             params={**params})
     
     def __create_title(self, 
@@ -87,6 +92,8 @@ class Manganato(IMangaRepository):
                                    height=0))
         return chapter
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_GET_TTL_IN_SECONDS', 300)), 
+           max_size=20).cache
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Union[Manga, None]:
@@ -163,6 +170,8 @@ class Manganato(IMangaRepository):
                      cover=Image(uri=cover), # type: ignore
                      chapters=chapters) # type: ignore
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_SEARCH_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def search(self, 
                query: str,
                page: int) -> SearchResult:
@@ -195,6 +204,8 @@ class Manganato(IMangaRepository):
                             total_pages=total_pages,
                             results=thumbs)
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_PAGINATE_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=f'{self.__BASE_URL}/genre-all/{page}')
         
@@ -236,6 +247,8 @@ class Manganato(IMangaRepository):
     def author_page(self, author: str, page: int) -> AuthorPage:
         raise NotImplementedError('Manganato does not support author_page')
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+           max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, link: SymbolicLink) -> Chapter:
         chapter =  self.__create_chapter(url=link.link)
         

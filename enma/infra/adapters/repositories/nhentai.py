@@ -4,6 +4,7 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 """
 from datetime import datetime, timezone
 from enum import Enum
+import os
 from typing import Any, Literal, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
 from pydantic import BaseModel, field_validator
@@ -20,6 +21,7 @@ from enma.domain.entities.manga import (MIME, Chapter, Genre, Author, Image, Man
                                         Title)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse
+from enma.infra.core.utils.cache import Cache
 
 
 class CloudFlareConfig(BaseModel):
@@ -116,6 +118,8 @@ Set the logging mode to debug and try again.')
 
         return url
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+           max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
         response = self.__make_request(url=link.link)
@@ -152,6 +156,8 @@ Set the logging mode to debug and try again.')
                                 height=page.get('h')))
             return chapter
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_GET_TTL_IN_SECONDS', 300)), 
+           max_size=20).cache
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Union[Manga, None]:
@@ -203,7 +209,9 @@ Set the logging mode to debug and try again.')
                       chapters=[chapter])
 
         return manga
-
+    
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_SEARCH_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def search(self,
                query: str,
                page: int,
@@ -283,6 +291,8 @@ Set the logging mode to debug and try again.')
 
         return search_result
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_PAGINATE_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=urljoin(self.__API_URL, f'galleries/all'),
                                        params={'page': page})
@@ -325,6 +335,8 @@ Set the logging mode to debug and try again.')
 
         return doujin
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_AUTHOR_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def author_page(self,
                     author: str,
                     page: int) -> AuthorPage:

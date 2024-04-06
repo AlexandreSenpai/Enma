@@ -4,13 +4,13 @@ It contains functions and classes to interact with the mangadex API and retrieve
 """
 from datetime import datetime
 from enum import Enum
+import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
 
-from requests import Response
-
 import requests
 
+from enma._version import __version__
 from enma.application.core.handlers.error import (ExceedRateLimit, 
                                                   Forbidden, 
                                                   NotFound, 
@@ -34,6 +34,7 @@ from enma.infra.core.interfaces.mangadex_response import (AuthorRelation,
                                                           IHash, IManga, IMangaTag, IRelations, 
                                                           ISearchResult, 
                                                           IVolumesResponse)
+from enma.infra.core.utils.cache import Cache
 
 
 class Sort(Enum):
@@ -52,7 +53,7 @@ class Mangadex(IMangaRepository):
         self.__HASH_URL = 'https://api.mangadex.org/at-home/server/'
         self.__CHAPTER_PAGE_URL = 'https://cmdxd98sb0x3yprd.mangadex.network/data/'
 
-    def __handle_source_response(self, response: Response):
+    def __handle_source_response(self, response: requests.Response):
         """
         Evaluates the HTTP response from the Mangadex API, raising specific exceptions based on the HTTP status code
         to indicate various error conditions such as rate limits exceeded, forbidden access, or resource not found.
@@ -100,7 +101,7 @@ class Mangadex(IMangaRepository):
         logger.debug(f'Fetching {url} with headers {headers} and params {params}')
 
         response = requests.get(url=urlparse(url).geturl(),
-                                headers={**headers, "User-Agent": "Enma/2.4.0"},
+                                headers={**headers, "User-Agent": f"Enma/{__version__}"},
                                 params=params)
         
         self.__handle_source_response(response)
@@ -125,6 +126,8 @@ class Mangadex(IMangaRepository):
         """
         return urljoin(self.__COVER_URL, f'{manga_id}/{file_name}.512.jpg')
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+           max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
         """
@@ -379,6 +382,8 @@ class Mangadex(IMangaRepository):
                      cover=self.__get_cover(manga_id=manga.get('id'),
                                             relations=manga.get('relationships', list())))
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_GET_TTL_IN_SECONDS', 300)), 
+           max_size=20).cache
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Manga:
@@ -415,6 +420,8 @@ class Mangadex(IMangaRepository):
         """
         return { f'order[{sort.value if isinstance(sort, Sort) else sort}]': 'desc' }
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_SEARCH_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def search(self,
                query: str,
                page: int,
@@ -459,6 +466,8 @@ class Mangadex(IMangaRepository):
 
         return search_result
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_PAGINATE_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         """
         Retrieves a specific page of manga listings from the Mangadex API, returning a Pagination object
