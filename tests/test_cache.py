@@ -29,14 +29,14 @@ def test_cache_decorator():
     # Assert that the function is only executed once and the cached result is returned
     assert result1 == result2 == result3
 
-    assert cache._CACHE.get(str({5})) == result1
+    assert cache._CACHE.get(str([5])) == result1
 
     # Call the fibonacci function with a different argument
     result4 = fib.fibonacci(10)
 
     # Assert that a new execution is performed and the result is cached
     assert result4 == 55
-    assert cache._CACHE.get(str({10})) == result4
+    assert cache._CACHE.get(str([10])) == result4
 
 def test_cache_expiration():
     # Create an instance of the Cache class with a short expiration time
