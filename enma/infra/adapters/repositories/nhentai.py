@@ -52,7 +52,7 @@ class NHentai(IMangaRepository):
     def __init__(self,
                  config: Optional[CloudFlareConfig] = None) -> None:
         self.__config = config
-        self.__BASE_URL = 'https://nhentai.net'
+        self.__BASE_URL = 'https://nhentai.net/'
         self.__API_URL = 'https://nhentai.net/api/'
         self.__IMAGE_BASE_URL = 'https://i.nhentai.net/galleries/'
         self.__AVATAR_URL = 'https://i5.nhentai.net/'
@@ -156,7 +156,7 @@ Set the logging mode to debug and try again.')
             identifier: str,
             with_symbolic_links: bool = False) -> Union[Manga, None]:
 
-        url = f'{self.__API_URL}/gallery/{identifier}'
+        url = urljoin(self.__API_URL, f'gallery/{identifier}')
         response = self.__make_request(url=url)
 
         doujin: NHentaiResponse = response.json()

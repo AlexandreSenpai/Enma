@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from enma.application.core.handlers.error import Forbidden, InvalidRequest, NotFound
+from enma.application.core.handlers.error import Forbidden, NotFound
 from enma.infra.core.interfaces.nhentai_response import NHentaiResponse
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaUseCase
 from enma.application.core.interfaces.use_case import DTO
