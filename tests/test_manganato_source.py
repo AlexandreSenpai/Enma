@@ -4,12 +4,18 @@ import os
 
 import pytest
 
+os.environ['ENMA_CACHING_MANGANATO_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_MANGANATO_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_MANGANATO_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_MANGANATO_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from enma.domain.entities.pagination import Thumb
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, SymbolicLink
 from tests.data.mocked_doujins import manganato_manga_page_empty_chapters_mocked, manganato_manga_page_empty_pagination_mocked
+from enma._version import __version__
 
 class TestManganatoSourceGetMethod:
 
@@ -53,7 +59,8 @@ class TestManganatoSourceGetMethod:
 
             assert doujin is None
             mock_method.assert_called_with(url='https://chapmanganato.com/manga-kb951984', 
-                                           headers={'Referer': 'https://chapmanganato.com/'}, 
+                                           headers={'Referer': 'https://chapmanganato.com/',
+                                                    'User-Agent': f'Enma/{__version__}'}, 
                                            params={})
     
     @patch('requests.get')

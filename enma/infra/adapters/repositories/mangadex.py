@@ -4,6 +4,7 @@ It contains functions and classes to interact with the mangadex API and retrieve
 """
 from datetime import datetime
 from enum import Enum
+import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
 
@@ -125,7 +126,7 @@ class Mangadex(IMangaRepository):
         """
         return urljoin(self.__COVER_URL, f'{manga_id}/{file_name}.512.jpg')
     
-    @Cache(max_age_seconds=100, 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
            max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
@@ -381,7 +382,7 @@ class Mangadex(IMangaRepository):
                      cover=self.__get_cover(manga_id=manga.get('id'),
                                             relations=manga.get('relationships', list())))
     
-    @Cache(max_age_seconds=300, 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_GET_TTL_IN_SECONDS', 300)), 
            max_size=20).cache
     def get(self, 
             identifier: str,
@@ -419,7 +420,7 @@ class Mangadex(IMangaRepository):
         """
         return { f'order[{sort.value if isinstance(sort, Sort) else sort}]': 'desc' }
 
-    @Cache(max_age_seconds=100, 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_SEARCH_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def search(self,
                query: str,
@@ -465,7 +466,7 @@ class Mangadex(IMangaRepository):
 
         return search_result
 
-    @Cache(max_age_seconds=100, 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_PAGINATE_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         """

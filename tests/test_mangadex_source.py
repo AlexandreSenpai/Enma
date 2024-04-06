@@ -4,12 +4,17 @@ import os
 
 import pytest
 
+os.environ['ENMA_CACHING_MANGADEX_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_MANGADEX_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_MANGADEX_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_MANGADEX_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from enma.application.core.handlers.error import Forbidden, NotFound, Unknown
 from enma.domain.entities.pagination import Thumb
 from enma.infra.adapters.repositories.mangadex import Mangadex
-from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, SymbolicLink
+from enma.domain.entities.manga import Author, Chapter, Genre, Image, SymbolicLink
 
 from tests.data.mocked_doujins import mangadex_paginate_mocked
 
@@ -47,6 +52,7 @@ class TestMangadexSourceGetMethod:
         
     @patch('requests.get')
     def test_raise_forbidden_in_case_of_403_status_code(self, mock_method: MagicMock):
+            print()
             mock = Mock()
             mock.status_code = 403
             mock_method.return_value = mock

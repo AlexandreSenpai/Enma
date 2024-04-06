@@ -12,12 +12,12 @@ class Cache:
   def cache(self, function: Callable):
     def wrapper(*args, **kwargs):
         
-        _args = set()
+        _args = list()
 
         if len(kwargs.keys()) == 0:
-            _args = set(args[1:])
+            _args = list(args[1:])
         else:
-            _args = set([*list(kwargs.values()), *args[1:]])
+            _args = list([*list(kwargs.values()), *args[1:]])
 
         if self._CACHE.get(str(_args)) is not None:
             logger.debug(f'Retrieving cached object with key {str(_args)}')
