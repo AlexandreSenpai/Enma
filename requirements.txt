@@ -3,3 +3,4 @@ beautifulsoup4==4.10.0
 pydantic==2.5.3
 pytest==8.0.2
 expiringdict==1.2.2
+pytest-cov==4.1.0
