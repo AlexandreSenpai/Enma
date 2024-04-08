@@ -7,6 +7,11 @@ jobs:
   testing-deploy:
     name: Pypi
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/enma
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v2
@@ -43,7 +48,7 @@ jobs:
           python -m build
 
       - name: Publish a Python distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           repository-url: https://test.pypi.org/legacy/
           user: __token__
