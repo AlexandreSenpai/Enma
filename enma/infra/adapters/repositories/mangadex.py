@@ -230,7 +230,7 @@ class Mangadex(IMangaRepository):
         data: IVolumesResponse = response.json()
 
         chapters = []
-        for volume in data.get('volumes'):
+        for volume in data.get('volumes', []):
             volume = data.get('volumes').get(volume)
             
             if volume is None: continue
@@ -319,12 +319,12 @@ class Mangadex(IMangaRepository):
         japanese_titles = [ title.get('ja-ro') for title in alt_titles if title.get('ja-ro') is not None ]
         japanese_title = japanese_titles[0] if len(japanese_titles) > 0 else None
 
-        other_keys = list(alt_titles[-1].keys())
+        other_keys = list(alt_titles[-1].keys()) if len(alt_titles) > 0 else []
         other_key = other_keys[0] if len(other_keys) > 0 else ''
 
         return Title(english=title,
                      japanese=japanese_title or '',
-                     other=alt_titles[-1].get(other_key) or '')
+                     other=alt_titles[-1].get(other_key, '') if len(alt_titles) > 0 else '')
 
     def __parse_full_manga(self, 
                            manga_data: IManga, 
@@ -522,8 +522,7 @@ class Mangadex(IMangaRepository):
                                                ('contentRating[]', 'suggestive'),
                                                ('contentRating[]', 'erotica'),
                                                ('includes[]', 'author'),
-                                               ('includes[]', 'artist'),
-                                               ('hasAvailableChapters', 'true')])
+                                               ('includes[]', 'artist')])
 
         result: IGetResult = response.json()
 
