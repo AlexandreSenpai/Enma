@@ -13,7 +13,6 @@ class MIME(Enum):
     GIF = 'gif'
     G = 'gif'
     
-
 @dataclass
 class Image:
     uri: str
@@ -33,6 +32,7 @@ class IMangaProps(TypedDict):
     created_at: datetime
     updated_at: datetime
     title: Title
+    url: str
     pages_count: int
     pages: list[Image]
 
@@ -115,6 +115,7 @@ Language: ILanguage = {
 class Manga(Entity[IMangaProps]):
     def __init__(self,
                  title: Title,
+                 url: str,
                  chapters: Union[list[Chapter], None] = None,
                  language: Union[str, None] = None,
                  genres: Union[list[Genre], None] = None,
@@ -132,6 +133,7 @@ class Manga(Entity[IMangaProps]):
         self.title = title
         self.language = language
         self.cover = cover
+        self.url = url
         self.thumbnail = thumbnail
         self.authors = authors or []
         self.genres = genres or []

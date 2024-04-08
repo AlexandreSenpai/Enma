@@ -4,10 +4,10 @@ import os
 
 import pytest
 
-os.environ['ENMA_CACHING_MANGANATO_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_MANGANATO_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_MANGANATO_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_MANGANATO_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -30,6 +30,7 @@ class TestManganatoSourceGetMethod:
         assert res.title.english == "Monster Musume No Iru Nichijou"
         assert res.title.japanese == "モンスター娘のいる日常"
         assert res.title.other == "魔物娘的同居日常"
+        assert res.url != ''
         
         for genre in res.genres:
             assert isinstance(genre, Genre)
@@ -140,7 +141,7 @@ class TestManganatoSourcePaginationMethod:
         assert res is not None
         assert res.id is not None
         assert res.page == 2
-        assert res.total_pages == 1
+        assert res.total_pages == 0
         assert res.total_results == 0
         assert len(res.results) == 0
 
@@ -182,5 +183,5 @@ class TestManganatoSourceSearchMethod:
         assert search.query == 'Monster Musume no Iru Nichijou'
         assert search.id is not None
         assert search.page == 1
-        assert search.total_pages == 1
+        assert search.total_pages == 0
         assert len(search.results) == 0

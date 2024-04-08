@@ -91,8 +91,11 @@ class Manganato(IMangaRepository):
                                    width=0,
                                    height=0))
         return chapter
+    
+    def set_config(self, **kwargs) -> None:
+        raise NotImplementedError('Manganato does not support set_config')
 
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_GET_TTL_IN_SECONDS', 300)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_GET_TTL_IN_SECONDS', 300)), 
            max_size=20).cache
     def get(self, 
             identifier: str,
@@ -163,6 +166,7 @@ class Manganato(IMangaRepository):
         return Manga(title=title,
                      authors=[Author(name=author)] if author is not None else None,
                      genres=[Genre(name=genre_name) for genre_name in genres],
+                     url=urljoin(self.__BASE_URL, identifier),
                      id=identifier,
                      created_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
                      updated_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
@@ -170,7 +174,7 @@ class Manganato(IMangaRepository):
                      cover=Image(uri=cover), # type: ignore
                      chapters=chapters) # type: ignore
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_SEARCH_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_SEARCH_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def search(self, 
                query: str,
@@ -196,6 +200,7 @@ class Manganato(IMangaRepository):
 
         for result in results:
             thumbs.append(Thumb(title=result.find('h3').text.replace('\n', '').strip(),
+                                url=result.find('a', {'class': 'a-h text-nowrap item-title'})['href'],
                                 cover=Image(uri=result.find('img')['src'], width=0, height=0),
                                 id=result.find('a', {'class': 'a-h text-nowrap item-title'})['href'].split('/')[-1]))
 
@@ -204,7 +209,7 @@ class Manganato(IMangaRepository):
                             total_pages=total_pages,
                             results=thumbs)
 
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_PAGINATE_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_PAGINATE_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=f'{self.__BASE_URL}/genre-all/{page}')
@@ -229,6 +234,7 @@ class Manganato(IMangaRepository):
             info = cast(Tag, item.find('a', {'class': 'genres-item-img bookmark_check'}))
             cover = info.find('img')
             pagination.results.append(Thumb(id=info['href'].split('/')[-1], # type: ignore
+                                            url=info['href'],
                                             title=info['title'] if info is not None else "",
                                             cover=Image(uri=cover['src'], width=0, height=0))) # type: ignore
             
@@ -241,13 +247,10 @@ class Manganato(IMangaRepository):
     def random(self) -> Manga:
         raise NotImplementedError('Manganato does not support random')
     
-    def set_config(self, **kwargs) -> None:
-        raise NotImplementedError('Manganato does not support set_config')
-    
     def author_page(self, author: str, page: int) -> AuthorPage:
         raise NotImplementedError('Manganato does not support author_page')
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGANATO_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
            max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, link: SymbolicLink) -> Chapter:
         chapter =  self.__create_chapter(url=link.link)

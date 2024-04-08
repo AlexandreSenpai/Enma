@@ -7,11 +7,11 @@ import os
 import pytest
 from pydantic import ValidationError
 
-os.environ['ENMA_CACHING_NHENTAI_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_AUTHOR_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_AUTHOR_TTL_IN_SECONDS'] = '0'
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -31,6 +31,7 @@ class TestNHentaiGetDoujin:
     mocked_manga = Manga(title=Title(english="[Hikoushiki (CowBow)] Marine Senchou no Yopparai Archive | Marine's Drunken Archives (Houshou Marine) [English] [Watson] [Digital]",
                                      japanese='[飛行式 (矼房)] マリン船長の酔っぱっぱアーカイブ (宝鐘マリン) [英訳] [DL版]',
                                      other="Marine Senchou no Yopparai Archive | Marine's Drunken Archives"),
+                         url='mocked',
                          id=489504,
                          created_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
                          updated_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),

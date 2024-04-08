@@ -28,13 +28,14 @@ class Entity(Generic[T]):
             updated_at: A Union of datetime and None representing when the entity was last updated. Defaults to current UTC time.
         """
 
-        self.id = id if id is not None else uuid4()
+        self.id = id if id is not None else str(uuid4())
         self.created_at = created_at if created_at is not None else datetime.utcnow()
         self.updated_at = updated_at if updated_at is not None else datetime.utcnow()
 
     def __repr__(self) -> str:
-        attrs = ', '.join([f"{chave}={valor!r}" for chave, valor in self.__dict__.items()])
-        return f"{self.__class__.__name__}({attrs})"
+        non_special_attrs = [f"{chave}={valor!r}" for chave, valor in self.__dict__.items() if not isinstance(valor, list) and not isinstance(valor, dict)]
+        special_attrs = [f"{chave}={valor!r}" for chave, valor in self.__dict__.items() if isinstance(valor, list) or isinstance(valor, dict)]
+        return f"{self.__class__.__name__}({', '.join([*non_special_attrs, *special_attrs])})"
 
     def to_dict(self) -> T:
         """Converts the entity to a dictionary.

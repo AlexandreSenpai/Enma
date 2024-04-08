@@ -25,6 +25,7 @@ from enma.infra.adapters.repositories.mangadex import Mangadex
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.infra.adapters.repositories.nhentai import NHentai, CloudFlareConfig
 from enma.infra.core.interfaces.lib import IEnma
+from enma.application.core.utils.logger import logger
 
 class Sources(Enum):
     NHENTAI = 'nhentai'
@@ -34,9 +35,9 @@ class Sources(Enum):
 class ExtraConfigs(TypedDict):
     cloudflare_config: CloudFlareConfig
 
-AvailableSources = TypeVar('AvailableSources', bound=Sources)
+Source = TypeVar('Source', Sources, str)
 
-class SourceManager(Generic[AvailableSources]):
+class SourceManager(Generic[Source]):
     """
     Manages manga source repositories available to the Enma application, allowing for dynamic source selection at runtime.
 
@@ -45,16 +46,20 @@ class SourceManager(Generic[AvailableSources]):
         source_name (str): The name of the currently selected source.
     """
 
-    def __init__(self, **kwargs) -> None:
+    def __init__(self) -> None:
         """
         Initializes the SourceManager with empty sources and no selected source.
         """
         self.__SOURCES: dict[str, IMangaRepository] = {}
-        self.source: Union[IMangaRepository, None] = None
+        self.__CURRENT_SOURCE: Union[IMangaRepository, None] = None
         self.source_name = ''
     
+    @property
+    def source(self) -> Union[IMangaRepository, None]:
+        return self.__CURRENT_SOURCE
+
     def get_source(self,
-                   source_name: Union[AvailableSources, str]) -> IMangaRepository:
+                   source_name: Union[Sources, Source]) -> IMangaRepository:
         """
         Retrieves a source repository by name.
 
@@ -77,19 +82,19 @@ class SourceManager(Generic[AvailableSources]):
         return source
     
     def set_source(self,
-                   source_name: Union[AvailableSources, str]) -> None:
+                   source_name: Union[Sources, Source]) -> None:
         """
         Sets the currently active source to the specified source name.
 
         Args:
-            source_name (Union[AvailableSources, str]): The name of the source to activate, either as a string or an enum.
+            source_name (Union[Source, str]): The name of the source to activate, either as a string or an enum.
         """
         source = self.get_source(source_name=source_name)
-        self.source = source
+        self.__CURRENT_SOURCE = source
         self.source_name = source_name
 
     def add_source(self,
-                   source_name: Union[str, Sources],
+                   source_name: Union[str, Sources, Source],
                    source: IMangaRepository) -> None:
         """
         Adds a new source repository to the available sources.
@@ -105,6 +110,21 @@ class SourceManager(Generic[AvailableSources]):
             raise InstanceError('Provided source is not an instance of IMangaRepository.')
         
         self.__SOURCES[source_name if isinstance(source_name, str) else source_name.value] = source
+
+    def remove_source(self,
+                      source_name: Union[str, Source]) -> bool:
+
+        name = source_name if isinstance(source_name, str) else source_name.value
+
+        if name not in self.__SOURCES: 
+            logger.warning(f"Source {name} not found.")
+            return False
+        
+        del self.__SOURCES[name]
+        return True
+    
+    def clear_sources(self) -> None:
+        self.__SOURCES = dict()
 
 def instantiate_source(callable):
     """
@@ -126,22 +146,22 @@ def instantiate_source(callable):
         return callable(self, *args, **kwargs)
     return wrapper
 
-class Enma(IEnma, Generic[AvailableSources]):
+class Enma(IEnma, Generic[Source]):
     """
     Main application class for Enma, providing interfaces to execute various manga-related use cases.
     Allows dynamic selection of manga sources and performs actions like fetching manga, searching, and downloading chapters.
 
     Attributes:
-        source_manager (SourceManager[AvailableSources]): Manages the available sources and the current source selection.
+        source_manager (SourceManager[Source]): Manages the available sources and the current source selection.
     """
     def __init__(self, 
-                 source: Optional[AvailableSources] = None, 
+                 source: Optional[Source] = None, 
                  **kwargs) -> None:
         """
         Initializes the Enma application with optional default source selection and extra configurations.
 
         Args:
-            source (Optional[AvailableSources], optional): The default source to be used. If provided, use cases will be initialized with this source.
+            source (Optional[Source], optional): The default source to be used. If provided, use cases will be initialized with this source.
         """
         self.__get_manga_use_case: Optional[IUseCase[GetMangaRequestDTO, GetMangaResponseDTO]] = None
         self.__search_manga_use_case: Optional[IUseCase[SearchMangaRequestDTO, SearchMangaResponseDTO]] = None
@@ -152,7 +172,7 @@ class Enma(IEnma, Generic[AvailableSources]):
         self.__fetch_chapter_by_symbolic_link_use_case: Optional[IUseCase[FetchChapterBySymbolicLinkRequestDTO, FetchChapterBySymbolicLinkResponseDTO]] = None
         self.__current_source_name: Optional[str] = None
 
-        self.source_manager = SourceManager[AvailableSources](**kwargs)
+        self.source_manager = SourceManager[Source](**kwargs)
         self.__create_default_sources()
         if source is not None: self.__initialize_use_case(source=self.source_manager.get_source(source_name=source))
 
@@ -236,7 +256,7 @@ class Enma(IEnma, Generic[AvailableSources]):
     
     @instantiate_source
     def paginate(self, 
-                 page: int) -> Pagination:
+                 page: int=1) -> Pagination:
         """
         Retrieves a specific page of manga listings.
 
@@ -305,7 +325,9 @@ class Enma(IEnma, Generic[AvailableSources]):
                                                                                   threaded=threaded)))
     
     @instantiate_source
-    def author_page(self, author: str, page: int) -> AuthorPage:
+    def author_page(self, 
+                    author: str, 
+                    page: int=1) -> AuthorPage:
         """
         Fetches manga authored by a specific author.
 

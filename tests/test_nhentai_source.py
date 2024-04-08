@@ -5,11 +5,11 @@ import os
 
 import pytest
 
-os.environ['ENMA_CACHING_NHENTAI_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_NHENTAI_AUTHOR_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_AUTHOR_TTL_IN_SECONDS'] = '0'
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -368,7 +368,7 @@ class TestNHentaiSourceSearchMethod:
         assert res.query == 'GATE'
         assert res.id is not None
         assert res.page == 2
-        assert res.total_pages == 1
+        assert res.total_pages == 0
         assert len(res.results) == 0
 
     def test_response_when_forbidden(self):
@@ -426,7 +426,7 @@ class TestNHentaiSourceAuthorPageMethod:
         assert res.author == 'asdsadadasd'
         assert res.id is not None
         assert res.page == 1
-        assert res.total_pages == 1
+        assert res.total_pages == 0
         assert len(res.results) == 0
 
     def test_response_when_forbidden(self):

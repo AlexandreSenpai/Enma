@@ -118,7 +118,7 @@ Set the logging mode to debug and try again.')
 
         return url
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
            max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
@@ -156,7 +156,7 @@ Set the logging mode to debug and try again.')
                                 height=page.get('h')))
             return chapter
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_GET_TTL_IN_SECONDS', 300)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_GET_TTL_IN_SECONDS', 300)), 
            max_size=20).cache
     def get(self, 
             identifier: str,
@@ -201,6 +201,7 @@ Set the logging mode to debug and try again.')
                       id=doujin.get('id'),
                       created_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
                       updated_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
+                      url=urljoin(self.__BASE_URL, f'g/{doujin.get("id")}'),
                       language=language[0] if len(language) > 0 else None,
                       authors=authors,
                       genres=genres,
@@ -210,7 +211,7 @@ Set the logging mode to debug and try again.')
 
         return manga
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_SEARCH_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_SEARCH_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def search(self,
                query: str,
@@ -279,6 +280,7 @@ Set the logging mode to debug and try again.')
                 caption = result_caption.text
 
             thumbs.append(Thumb(id=doujin_id,
+                                url=urljoin(self.__BASE_URL, f'g/{doujin_id}'),
                                 cover=Image(uri=cover_uri or '',
                                             mime=MIME.J,
                                             width=int(width or 0),
@@ -291,7 +293,7 @@ Set the logging mode to debug and try again.')
 
         return search_result
 
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_PAGINATE_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_PAGINATE_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=urljoin(self.__API_URL, f'galleries/all'),
@@ -308,6 +310,7 @@ Set the logging mode to debug and try again.')
                           total_pages=PAGES,
                           results=[Thumb(id=result.get('id'),
                                          title=result.get('title').get('english'),
+                                         url=urljoin(self.__BASE_URL, f'g/{result.get("id")}'),
                                          cover=Image(uri=self.__make_page_uri(type='cover',
                                                                               media_id=result.get('media_id'),
                                                                               mime=MIME[result.get('images').get('cover').get('t').upper()]),
@@ -335,7 +338,7 @@ Set the logging mode to debug and try again.')
 
         return doujin
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_NHENTAI_AUTHOR_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_AUTHOR_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def author_page(self,
                     author: str,
@@ -394,6 +397,7 @@ Set the logging mode to debug and try again.')
                 caption = result_caption.text
 
             thumbs.append(Thumb(id=doujin_id,
+                                url=urljoin(self.__BASE_URL, f'g/{doujin_id}'),
                                 cover=Image(uri=cover_uri or '',
                                             mime=MIME.J,
                                             width=int(width or 0),

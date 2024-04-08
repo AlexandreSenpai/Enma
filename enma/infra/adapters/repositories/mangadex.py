@@ -48,6 +48,7 @@ class Mangadex(IMangaRepository):
     """
 
     def __init__(self) -> None:
+        self.__SITE_URL = 'https://mangadex.org/'
         self.__API_URL = 'https://api.mangadex.org/'
         self.__COVER_URL = 'https://mangadex.org/covers/'
         self.__HASH_URL = 'https://api.mangadex.org/at-home/server/'
@@ -126,7 +127,7 @@ class Mangadex(IMangaRepository):
         """
         return urljoin(self.__COVER_URL, f'{manga_id}/{file_name}.512.jpg')
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
            max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
@@ -350,6 +351,7 @@ class Mangadex(IMangaRepository):
                       id=manga_data.get('id'),
                       created_at=datetime.fromisoformat(attrs.get('createdAt')),
                       updated_at=datetime.fromisoformat(attrs.get('updatedAt')),
+                      url=urljoin(self.__SITE_URL, f'title/{manga_data.get("id")}'),
                       language=Language.get(attrs.get('originalLanguage').strip().lower().replace('-', '_'), 'unknown'),
                       authors=self.__extract_authors(manga_data.get('relationships', list())),
                       genres=self.__extract_genres(attrs.get('tags', list())),
@@ -379,10 +381,11 @@ class Mangadex(IMangaRepository):
         title = manga.get('attributes').get('title').get('en')
         return Thumb(id=manga.get('id'),
                      title=title,
+                     url=urljoin(self.__SITE_URL, f'title/{manga.get("id")}'),
                      cover=self.__get_cover(manga_id=manga.get('id'),
                                             relations=manga.get('relationships', list())))
     
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_GET_TTL_IN_SECONDS', 300)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_GET_TTL_IN_SECONDS', 300)), 
            max_size=20).cache
     def get(self, 
             identifier: str,
@@ -420,7 +423,7 @@ class Mangadex(IMangaRepository):
         """
         return { f'order[{sort.value if isinstance(sort, Sort) else sort}]': 'desc' }
 
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_SEARCH_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_SEARCH_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def search(self,
                query: str,
@@ -466,7 +469,7 @@ class Mangadex(IMangaRepository):
 
         return search_result
 
-    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_MANGADEX_PAGINATE_TTL_IN_SECONDS', 100)), 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_PAGINATE_TTL_IN_SECONDS', 100)), 
            max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         """

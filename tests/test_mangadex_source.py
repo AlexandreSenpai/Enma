@@ -4,10 +4,10 @@ import os
 
 import pytest
 
-os.environ['ENMA_CACHING_MANGADEX_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_MANGADEX_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_MANGADEX_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_MANGADEX_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -32,6 +32,7 @@ class TestMangadexSourceGetMethod:
         assert res.title.english == "Monster Musume no Iru Nichijou"
         assert res.title.japanese == "Monmusu"
         assert res.title.other != ''
+        assert res.url != ''
         
         for genre in res.genres:
             assert isinstance(genre, Genre)
@@ -72,7 +73,6 @@ class TestMangadexSourceGetMethod:
         assert doujin is not None
 
         assert len(doujin.chapters) == 0
-        assert doujin.chapters_count == 0
         assert doujin.id == '65498ee8-3c32-4228-b433-73a4d08f8927'
         assert doujin.title.english == "Monster Musume no Iru Nichijou"
         assert doujin.title.japanese == "Monmusu"
@@ -120,7 +120,7 @@ class TestMangadexSourcePaginationMethod:
         assert res is not None
         assert res.id is not None
         assert res.page == 2
-        assert res.total_pages > 0
+        assert res.total_pages == 0
         assert res.total_results == 0
         assert len(res.results) == 0
 

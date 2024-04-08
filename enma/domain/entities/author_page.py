@@ -17,7 +17,6 @@ class ISearchResultProps(TypedDict):
     total_results: int
     results: list[Manga]
 
-@dataclass
 class AuthorPage(Pagination):
     """
     Entity class representing a search result in the Enma application.
