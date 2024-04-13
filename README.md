@@ -102,6 +102,40 @@ manga = enma.random()
 print(manga)
 ```
 
+## Caching
+Caching is a key feature in Enma that improves your application's efficiency by storing the results of data requests. This means when the same data is requested again, Enma can quickly retrieve it from the cache instead of repeatedly calling the external source. This results in faster response times and less strain on both your application and the external APIs.
+
+### How Caching Benefits You
+- **Speed**: Retrieving data from the cache is faster than making a new request to a manga repository.
+- **Efficiency**: Reduces the number of network requests, which is especially useful when dealing with rate-limited APIs.
+- **Reliability**: Provides more consistent application performance even with varying network conditions.
+
+### Customizing Cache Settings
+While Enma provides default caching settings that suit most needs, you may want to customize these settings based on your specific requirements, like how often you expect data to change or specific API rate limits.
+
+#### Adjusting Cache Duration via Environment Variables
+You can control how long data is kept in the cache by setting environment variables. This allows you to fine-tune the balance between data freshness and retrieval speed without modifying the core library code.
+
+For example, to change the cache expiration for fetching chapters, you can set the `ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS` environment variable:
+
+```sh
+# Sets the cache duration to 30 minutes
+export ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS=1800
+```
+
+This customization capability ensures that you can adapt the caching behavior to best fit your application's performance and efficiency needs.
+
+By leveraging caching, Enma helps make your manga-related applications faster and more reliable, all while giving you the flexibility to tailor caching behavior as needed.
+
+#### Available Caching TTL Settings
+| KEY                                            | DEFAULT |
+|------------------------------------------------|---------|
+| ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS| 100     |
+| ENMA_CACHING_PAGINATE_TTL_IN_SECONDS           | 100     |
+| ENMA_CACHING_SEARCH_TTL_IN_SECONDS             | 100     |
+| ENMA_CACHING_GET_TTL_IN_SECONDS                | 300     |
+| ENMA_CACHING_AUTHOR_TTL_IN_SECONDS             | 100     |
+
 ## Downloading Chapters
 Using Enma you're able to download chapter pages to your local storage or any other storage that implements `ISaverAdapter`.
 
@@ -149,23 +183,6 @@ enma = Enma()
 
 enma.source_manager.set_source('manganato')
 doujin = enma.get(identifier='manga-kb951984', with_symbolic_links=True)
-
-# Manga(id='manga-kb951984', 
-#       created_at=datetime.datetime(2024, 1, 22, 10, 5), 
-#       updated_at=datetime.datetime(2024, 1, 22, 10, 5), 
-#       title=Title(english='Monster Musume No Iru Nichijou', 
-#                   japanese='モンスター娘のいる日常', 
-#                   other='魔物娘的同居日常'), 
-#       language=None, 
-#       cover=Image(uri='https://avt.mkklcdnv6temp.com/23/p/1-1583464626.jpg', name='image.jpg', width=0, height=0, mime=<MIME.J: 'jpg'>), 
-#       thumbnail=Image(uri='https://avt.mkklcdnv6temp.com/23/p/1-1583464626.jpg', name='image.jpg', width=0, height=0, mime=<MIME.J: 'jpg'>), 
-#       authors=[Author(name='Okayado', id=0)], 
-#       genres=[Genre(name='Comedy', id=0), 
-#               Genre(name='Fantasy', id=0), 
-#               Genre(name='Harem', id=0)], 
-#       chapters=[Chapter(id='chapter-84', pages=[], pages_count=0, link=SymbolicLink(link='https://chapmanganato.to/manga-kb951984/chapter-84')), 
-#                 Chapter(id='chapter-83', pages=[], pages_count=0, link=SymbolicLink(link='https://chapmanganato.to/manga-kb951984/chapter-83'))], 
-#       chapters_count=95)
 
 if doujin is not None:
     chapter_ref = doujin.chapters[0]
@@ -231,6 +248,23 @@ While using the library, you might encounter some specific errors. Here's a desc
 7. **InvalidRequest**:
     - **Description**: Raised when trying to perform an action with an invalid data type.
     - **Common Cause**: Making an action with wrong parameter data type.
+
+7. **Unknown**:
+    - **Description**: Raised when was not possible to determine the error root cause.
+    - **Common Cause**: Not properly handled error.
+
+7. **NotFound**:
+    - **Description**: Raised when was not possible to find the requested resource..
+    - **Common Cause**: Fetching an inexistent resource.
+
+7. **Forbidden**:
+    - **Description**: Raised when trying to perform a request to the source without right credentials.
+    - **Common Cause**: Making a request with no or invalid credentials.
+
+7. **ExceedRateLimit**:
+    - **Description**: Raised when trying to perform more requests than a server can handle.
+    - **Common Cause**: Looping through many pages without cooling down.
+
 
 When encountering one of these errors, refer to the description and common cause to assist in troubleshooting.
 

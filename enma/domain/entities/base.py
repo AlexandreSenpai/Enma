@@ -4,7 +4,6 @@ from uuid import uuid4
 
 T = TypeVar('T')
 
-
 class Entity(Generic[T]):
     """Base class for entities in the domain model.
 
