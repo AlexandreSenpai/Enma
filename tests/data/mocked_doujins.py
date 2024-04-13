@@ -1,5 +1,6 @@
 import json
 
+from enma.infra.core.interfaces.mangadex_response import ISearchResult
 from enma.infra.core.interfaces.nhentai_response import NHentaiPaginateResponse, NHentaiResponse
 
 with open('./tests/data/get.json', 'r') as get:
@@ -25,3 +26,6 @@ with open('./tests/data/manganato_manga_page_empty_chapters_mock.txt', 'r') as e
 
 with open('./tests/data/manganato_manga_page_empty_pagination_mock.txt', 'r') as empty_pag:
     manganato_manga_page_empty_pagination_mocked = empty_pag.read()
+
+with open('./tests/data/mangadex_empty_pagination_mock.json', 'r') as paginate:
+    mangadex_paginate_mocked: ISearchResult = json.loads(paginate.read())

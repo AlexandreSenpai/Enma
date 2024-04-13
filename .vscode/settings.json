@@ -1,4 +1,9 @@
 {
     "python.analysis.typeCheckingMode": "basic",
-    "cloudcode.duetAI.inlineSuggestions.enableAuto": false
+    "cloudcode.duetAI.inlineSuggestions.enableAuto": false,
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

@@ -7,6 +7,30 @@ class SourceNotAvailable(Exception):
         self.desc: str = 'This error occurs when the client chooses nonexistent source.'
         self.critical: bool = False
 
+class Unknown(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.code: str = 'UNKNOWN'
+        self.desc: str = 'This error occours when was not possible to determine the error root cause.'
+        self.critical: bool = True
+
+class NotFound(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.code: str = 'NOT_FOUND'
+        self.desc: str = 'This error occours when was not possible to find the requested resource.'
+        self.critical: bool = True
+
+class Forbidden(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.code: str = 'FORBIDDEN'
+        self.desc: str = 'This error occours when the client can\'t perform a request to the source due lack of credentials.'
+        self.critical: bool = True
+
 class InvalidRequest(Exception):
     def __init__(self, message: str) -> None:
         super().__init__(message)
@@ -68,3 +92,12 @@ class ExceedRetryCount(Exception):
         self.code: str = 'EXCEED_RETRY_COUNT'
         self.desc: str = 'This error occurs when enma tries perform some action but something went wrong.'
         self.critical: bool = True
+
+class ExceedRateLimit(Exception):
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+        self.message: str = message
+        self.code: str = 'EXCEED_RATE_EXCEED'
+        self.desc: str = 'This error occurs when enma perform more requests than a server can handle. Cool down your requests to this source!'
+        self.critical: bool = False

@@ -4,6 +4,7 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 """
 from datetime import datetime, timezone
 from enum import Enum
+import os
 from typing import Any, Literal, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
 from pydantic import BaseModel, field_validator
@@ -11,8 +12,8 @@ from pydantic import BaseModel, field_validator
 import requests
 from bs4 import BeautifulSoup, Tag
 
-from enma.application.core.handlers.error import (ExceedRetryCount, InvalidConfig, InvalidRequest,
-                                                  NhentaiSourceWithoutConfig)
+from enma.application.core.handlers.error import (ExceedRetryCount, Forbidden, InvalidConfig, InvalidRequest,
+                                                  NhentaiSourceWithoutConfig, NotFound, Unknown)
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
@@ -20,6 +21,7 @@ from enma.domain.entities.manga import (MIME, Chapter, Genre, Author, Image, Man
                                         Title)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse
+from enma.infra.core.utils.cache import Cache
 
 
 class CloudFlareConfig(BaseModel):
@@ -52,11 +54,23 @@ class NHentai(IMangaRepository):
     def __init__(self,
                  config: Optional[CloudFlareConfig] = None) -> None:
         self.__config = config
-        self.__BASE_URL = 'https://nhentai.net'
+        self.__BASE_URL = 'https://nhentai.net/'
         self.__API_URL = 'https://nhentai.net/api/'
         self.__IMAGE_BASE_URL = 'https://i.nhentai.net/galleries/'
         self.__AVATAR_URL = 'https://i5.nhentai.net/'
         self.__TINY_IMAGE_BASE_URL = self.__IMAGE_BASE_URL.replace('/i.', '/t.')
+
+    def __handle_source_response(self, response: requests.Response):
+        logger.debug(f'Fetched {response.url} with response status code {response.status_code} and text {response.text}')
+        if response.status_code == 200: return
+        if response.status_code == 403: 
+            raise Forbidden(message='Could not perform a successfull request to the source due credentials issues. \
+Check your credentials and try again.')
+        if response.status_code == 404:
+            raise NotFound(message=f'Could not find the requested resource at "{response.url}". \
+Check the provided request parameters and try again.')
+        raise Unknown(message='Something unexpected happened while trying to fetch source content. \
+Set the logging mode to debug and try again.')
 
     def __make_request(self,
                        url: str,
@@ -72,21 +86,17 @@ class NHentai(IMangaRepository):
         logger.debug(f'Fetching {url} with headers {headers} and params {params} the current config cf_clearance: {self.__config.cf_clearance}')
 
         response = requests.get(url=urlparse(url).geturl(),
-                                headers={**headers, 'User-Agent': self.__config.user_agent},
+                                headers={**headers, 'User-Agent': f'{self.__config.user_agent}'},
                                 params={**params},
                                 cookies={'cf_clearance': self.__config.cf_clearance})
         
-        logger.debug(f'Fetched {url} with response status code {response.status_code} and text {response.text}')
+        self.__handle_source_response(response)
 
         return response
 
     def set_config(self, config: CloudFlareConfig) -> None:
         if not isinstance(config, CloudFlareConfig): raise InvalidConfig(message='You must provide a CloudFlareConfig object.') 
         self.__config = config
-
-    def __handle_request_error(self, msg: str) -> None:
-        logger.error(msg)
-        return None
     
     def __make_page_uri(self,
                         type: Union[Literal['cover'], Literal['page'], Literal['thumbnail']],
@@ -108,13 +118,11 @@ class NHentai(IMangaRepository):
 
         return url
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+           max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, 
                                        link: SymbolicLink) -> Chapter:
         response = self.__make_request(url=link.link)
-
-        if response.status_code != 200:
-            self.__handle_request_error(msg=f'Could not fetch {link.link} because nhentai\'s request ends up with {response.status_code} status code.')
-            return Chapter()
         
         doujin: NHentaiResponse = response.json()
 
@@ -148,15 +156,14 @@ class NHentai(IMangaRepository):
                                 height=page.get('h')))
             return chapter
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_GET_TTL_IN_SECONDS', 300)), 
+           max_size=20).cache
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Union[Manga, None]:
 
-        url = f'{self.__API_URL}/gallery/{identifier}'
+        url = urljoin(self.__API_URL, f'gallery/{identifier}')
         response = self.__make_request(url=url)
-
-        if response.status_code != 200:
-            return self.__handle_request_error(msg=f'Could not fetch {identifier} because nhentai\'s request ends up with {response.status_code} status code.')
 
         doujin: NHentaiResponse = response.json()
         media_id = doujin.get('media_id')
@@ -194,6 +201,7 @@ class NHentai(IMangaRepository):
                       id=doujin.get('id'),
                       created_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
                       updated_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
+                      url=urljoin(self.__BASE_URL, f'g/{doujin.get("id")}'),
                       language=language[0] if len(language) > 0 else None,
                       authors=authors,
                       genres=genres,
@@ -202,7 +210,9 @@ class NHentai(IMangaRepository):
                       chapters=[chapter])
 
         return manga
-
+    
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_SEARCH_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def search(self,
                query: str,
                page: int,
@@ -221,10 +231,6 @@ class NHentai(IMangaRepository):
                                      total_results=0,
                                      results=[])
         
-        if request_response.status_code != 200:
-            self.__handle_request_error(f'Could not search by {query} because nhentai\'s request ends up with {request_response.status_code} status code.')
-            return search_result
-
         soup = BeautifulSoup(request_response.text, 'html.parser')
 
         search_results_container = soup.find('div', {'class': 'container'})
@@ -274,6 +280,7 @@ class NHentai(IMangaRepository):
                 caption = result_caption.text
 
             thumbs.append(Thumb(id=doujin_id,
+                                url=urljoin(self.__BASE_URL, f'g/{doujin_id}'),
                                 cover=Image(uri=cover_uri or '',
                                             mime=MIME.J,
                                             width=int(width or 0),
@@ -286,13 +293,11 @@ class NHentai(IMangaRepository):
 
         return search_result
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_PAGINATE_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=urljoin(self.__API_URL, f'galleries/all'),
                                        params={'page': page})
-
-        if response.status_code != 200:
-            self.__handle_request_error(f'Could not paginate to page {page} because nhentai\'s request ends up with {response.status_code} status code.')
-            return Pagination(page=page)
 
         data = response.json()
 
@@ -305,6 +310,7 @@ class NHentai(IMangaRepository):
                           total_pages=PAGES,
                           results=[Thumb(id=result.get('id'),
                                          title=result.get('title').get('english'),
+                                         url=urljoin(self.__BASE_URL, f'g/{result.get("id")}'),
                                          cover=Image(uri=self.__make_page_uri(type='cover',
                                                                               media_id=result.get('media_id'),
                                                                               mime=MIME[result.get('images').get('cover').get('t').upper()]),
@@ -314,9 +320,6 @@ class NHentai(IMangaRepository):
 
     def random(self, retry=0) -> Manga:
         response = self.__make_request(url=urljoin(self.__BASE_URL, 'random'))
-
-        if response.status_code != 200:
-            self.__handle_request_error(f'Could not fetch a random manga because nhentai\'s request ends up with {response.status_code} status code.')
 
         soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -335,6 +338,8 @@ class NHentai(IMangaRepository):
 
         return doujin
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_AUTHOR_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def author_page(self,
                     author: str,
                     page: int) -> AuthorPage:
@@ -345,11 +350,7 @@ class NHentai(IMangaRepository):
                             total_pages=0,
                             page=page,
                             total_results=0,
-                            results=[])
-        
-        if request_response.status_code != 200:
-            logger.error('Could not fetch author page properly')
-            return result    
+                            results=[]) 
    
         soup = BeautifulSoup(request_response.text, 'html.parser')
 
@@ -396,6 +397,7 @@ class NHentai(IMangaRepository):
                 caption = result_caption.text
 
             thumbs.append(Thumb(id=doujin_id,
+                                url=urljoin(self.__BASE_URL, f'g/{doujin_id}'),
                                 cover=Image(uri=cover_uri or '',
                                             mime=MIME.J,
                                             width=int(width or 0),

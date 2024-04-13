@@ -6,8 +6,15 @@ import os
 
 import pytest
 
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_AUTHOR_TTL_IN_SECONDS'] = '0'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
+from enma.application.core.handlers.error import NotFound
 from enma.application.use_cases.fetch_chapter_by_symbolic_link import FetchChapterBySymbolicLinkRequestDTO, FetchChapterBySymbolicLinkUseCase
 from enma.application.core.interfaces.use_case import DTO
 from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai
@@ -22,6 +29,7 @@ class TestFetchChapterWithSymbolicLink:
     mocked_manga = Manga(title=Title(english="[Hikoushiki (CowBow)] Marine Senchou no Yopparai Archive | Marine's Drunken Archives (Houshou Marine) [English] [Watson] [Digital]",
                                      japanese='[飛行式 (矼房)] マリン船長の酔っぱっぱアーカイブ (宝鐘マリン) [英訳] [DL版]',
                                      other="Marine Senchou no Yopparai Archive | Marine's Drunken Archives"),
+                         url="mocked",
                          id=489504,
                          created_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
                          updated_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
@@ -51,7 +59,7 @@ class TestFetchChapterWithSymbolicLink:
             assert response.chapter.id == 0
             assert len(response.chapter.pages) == 14
 
-    def test_should_return_empty_chapter_for_broken_link(self):
+    def test_should_raise_exception_for_broken_link(self):
         with patch('requests.get') as mock_method:
             mock = Mock()
             mock.status_code = 404
@@ -59,14 +67,10 @@ class TestFetchChapterWithSymbolicLink:
             mock_method.return_value = mock
 
             link = SymbolicLink(link='https://nhentai.net')
-            response = self.sut.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
             
-            assert isinstance(response.chapter, Chapter)
-            assert response.chapter.link is None
-            assert response.chapter.pages_count == 0
-            assert response.chapter.id == 0
-            assert len(response.chapter.pages) == 0
-
+            with pytest.raises(NotFound):
+                self.sut.execute(dto=DTO(data=FetchChapterBySymbolicLinkRequestDTO(link=link)))
+        
     def test_should_return_empty_chapter_for_broken_response(self):
         with patch('requests.get') as mock_method:
             mock = Mock()

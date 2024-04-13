@@ -4,12 +4,18 @@ import os
 
 import pytest
 
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from enma.domain.entities.pagination import Thumb
 from enma.infra.adapters.repositories.manganato import Manganato
 from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, SymbolicLink
 from tests.data.mocked_doujins import manganato_manga_page_empty_chapters_mocked, manganato_manga_page_empty_pagination_mocked
+from enma._version import __version__
 
 class TestManganatoSourceGetMethod:
 
@@ -24,6 +30,7 @@ class TestManganatoSourceGetMethod:
         assert res.title.english == "Monster Musume No Iru Nichijou"
         assert res.title.japanese == "モンスター娘のいる日常"
         assert res.title.other == "魔物娘的同居日常"
+        assert res.url != ''
         
         for genre in res.genres:
             assert isinstance(genre, Genre)
@@ -53,7 +60,8 @@ class TestManganatoSourceGetMethod:
 
             assert doujin is None
             mock_method.assert_called_with(url='https://chapmanganato.com/manga-kb951984', 
-                                           headers={'Referer': 'https://chapmanganato.com/'}, 
+                                           headers={'Referer': 'https://chapmanganato.com/',
+                                                    'User-Agent': f'Enma/{__version__}'}, 
                                            params={})
     
     @patch('requests.get')
@@ -98,7 +106,7 @@ class TestManganatoSourcePaginationMethod:
         res = self.sut.paginate(page=2)
 
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages > 0
         assert res.total_results > 0
@@ -116,7 +124,7 @@ class TestManganatoSourcePaginationMethod:
         res = self.sut.paginate(page=2)
 
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
         assert res.total_pages > 0
         assert res.total_results > 0
@@ -131,9 +139,9 @@ class TestManganatoSourcePaginationMethod:
         res = self.sut.paginate(page=2)
         
         assert res is not None
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 2
-        assert res.total_pages == 1
+        assert res.total_pages == 0
         assert res.total_results == 0
         assert len(res.results) == 0
 
@@ -147,7 +155,7 @@ class TestManganatoSourceSearchMethod:
 
         assert res is not None
         assert res.query == 'GATE'
-        assert res.id == 0
+        assert res.id is not None
         assert res.page == 1
         assert res.total_pages == 4
         assert len(res.results) == 20
@@ -173,7 +181,7 @@ class TestManganatoSourceSearchMethod:
         
         assert search is not None
         assert search.query == 'Monster Musume no Iru Nichijou'
-        assert search.id == 0
+        assert search.id is not None
         assert search.page == 1
-        assert search.total_pages == 1
+        assert search.total_pages == 0
         assert len(search.results) == 0

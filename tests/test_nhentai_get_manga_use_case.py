@@ -7,9 +7,15 @@ import os
 import pytest
 from pydantic import ValidationError
 
+os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
+os.environ['ENMA_CACHING_AUTHOR_TTL_IN_SECONDS'] = '0'
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
-from enma.application.core.handlers.error import InvalidRequest
+from enma.application.core.handlers.error import Forbidden, NotFound
 from enma.infra.core.interfaces.nhentai_response import NHentaiResponse
 from enma.application.use_cases.get_manga import GetMangaRequestDTO, GetMangaUseCase
 from enma.application.core.interfaces.use_case import DTO
@@ -25,6 +31,7 @@ class TestNHentaiGetDoujin:
     mocked_manga = Manga(title=Title(english="[Hikoushiki (CowBow)] Marine Senchou no Yopparai Archive | Marine's Drunken Archives (Houshou Marine) [English] [Watson] [Digital]",
                                      japanese='[飛行式 (矼房)] マリン船長の酔っぱっぱアーカイブ (宝鐘マリン) [英訳] [DL版]',
                                      other="Marine Senchou no Yopparai Archive | Marine's Drunken Archives"),
+                         url='mocked',
                          id=489504,
                          created_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
                          updated_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
@@ -69,8 +76,8 @@ class TestNHentaiGetDoujin:
             with open('./tests/data/get.json', 'r') as get:
                 data: NHentaiResponse = json.loads(get.read())
                 
-                data['title']['japanese'] = None
-                data['title']['pretty'] = None
+                data['title']['japanese'] = None # type: ignore
+                data['title']['pretty'] = None # type: ignore
 
                 mock.json.return_value = data
             
@@ -86,27 +93,23 @@ class TestNHentaiGetDoujin:
             assert res.manga.title.other == None
         
     def test_response_when_it_could_not_get_doujin(self):
-        with patch('enma.infra.adapters.repositories.nhentai.NHentai.get') as mock_method:
-            mock_method.return_value = None
-
+        with patch('enma.infra.adapters.repositories.nhentai.NHentai.get', side_effect=NotFound("Could not find the manga")) as mock_method:
             doujin = self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='1')))
-            
             assert doujin.found == False
             assert doujin.manga is None
     
-    def test_return_none_when_not_receive_200_status_code(self):
+    def test_raise_forbidden_in_case_of_403(self):
         with patch('requests.get') as mock_method:
             mock = Mock()
             mock.status_code = 403
             mock_method.return_value = mock
 
-            doujin = self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='1')))
-            assert doujin.found == False
-            assert doujin.manga is None
-            mock_method.assert_called_with(url=f'https://nhentai.net/api//gallery/1',
-                                           headers={'User-Agent': 'mocked'},
-                                           params={},
-                                           cookies={'cf_clearance': 'mocked'})
+            with pytest.raises(Forbidden):
+                self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='1')))
+                mock_method.assert_called_with(url=f'https://nhentai.net/api//gallery/1',
+                                            headers={'User-Agent': 'mocked'},
+                                            params={},
+                                            cookies={'cf_clearance': 'mocked'})
 
     def test_return_empty_chapters(self):
         with patch('requests.get') as mock_method:
@@ -207,8 +210,12 @@ class TestNHentaiGetDoujin:
             cover_mime = data['images']['cover']['t']
             thumb_mime = data['images']['thumbnail']['t']
 
-            assert cover_mime.upper() == doujin.manga.cover.mime.name
-            assert thumb_mime.upper() == doujin.manga.thumbnail.mime.name
+            assert doujin.manga.thumbnail is not None
+            assert doujin.manga.cover is not None
+            assert cover_mime.upper() == 'P'
+            assert doujin.manga.cover.mime.value == 'png'
+            assert thumb_mime.upper() == 'J'
+            assert doujin.manga.thumbnail.mime.value == 'jpg'
 
     @patch('enma.application.use_cases.get_manga.GetMangaUseCase.execute')
     def test_symbolic_links_must_be_disabled_by_default(self, use_case_mock: MagicMock):
@@ -217,4 +224,4 @@ class TestNHentaiGetDoujin:
 
     def test_must_raise_an_exception_case_user_has_provided_wrong_data_type(self):
         with pytest.raises(ValidationError) as _:
-            self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='420719', with_symbolic_links='nao')))
+            self.sut.execute(dto=DTO(data=GetMangaRequestDTO(identifier='420719', with_symbolic_links='nao'))) # type: ignore

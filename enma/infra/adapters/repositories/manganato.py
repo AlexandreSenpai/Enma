@@ -1,22 +1,25 @@
 """
-This module provides an adapter for the nhentai repository.
-It contains functions and classes to interact with the nhentai API and retrieve manga data.
+This module provides an adapter for the MANGANATO repository.
+It contains functions and classes to interact with the MANGANATO API and retrieve manga data.
 """
 
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from multiprocessing import cpu_count
+import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup, Tag
 
 import requests
 
+from enma._version import __version__
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import Author, Chapter, Genre, Image, Manga, SymbolicLink, Title
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
+from enma.infra.core.utils.cache import Cache
 
 class Manganato(IMangaRepository):
     """
@@ -38,7 +41,9 @@ class Manganato(IMangaRepository):
         logger.debug(f'Fetching {url} with headers {headers} and params {params}')
 
         return requests.get(url=urlparse(url).geturl(), 
-                            headers={**headers, 'Referer': 'https://chapmanganato.com/'},
+                            headers={**headers, 
+                                     'Referer': 'https://chapmanganato.com/', 
+                                     "User-Agent": f"Enma/{__version__}"},
                             params={**params})
     
     def __create_title(self, 
@@ -59,7 +64,7 @@ class Manganato(IMangaRepository):
                      japanese=jp.strip(),
                      other=cn.strip())
     
-    def __find_chapets_list(self, html: BeautifulSoup) -> list[str]:
+    def __find_chapters_list(self, html: BeautifulSoup) -> list[str]:
         chapter_list = cast(Tag, html.find('ul', {'class': 'row-content-chapter'}))
         chapters = chapter_list.find_all('li') if chapter_list else []
         return [chapter.find('a')['href'] for chapter in chapters]
@@ -76,7 +81,6 @@ class Manganato(IMangaRepository):
             logger.error(f'Could not fetch the chapter with url: {url}. status code: {response.status_code}')
             return
         
-        
         chapter = Chapter(id=response.url.split('/')[-1])
         html = BeautifulSoup(response.text, 'html.parser')
         images_container = cast(Tag, html.find('div', {'class': 'container-chapter-reader'}))
@@ -87,7 +91,12 @@ class Manganato(IMangaRepository):
                                    width=0,
                                    height=0))
         return chapter
+    
+    def set_config(self, **kwargs) -> None:
+        raise NotImplementedError('Manganato does not support set_config')
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_GET_TTL_IN_SECONDS', 300)), 
+           max_size=20).cache
     def get(self, 
             identifier: str,
             with_symbolic_links: bool = False) -> Union[Manga, None]:
@@ -143,20 +152,21 @@ class Manganato(IMangaRepository):
             updated_at = updated_at_field.find('span', {'class': 'stre-value'}).text
 
         if with_symbolic_links:
-            chapters_links = self.__find_chapets_list(html=soup)
+            chapters_links = self.__find_chapters_list(html=soup)
             chapters = [self.__create_chapter(link, symbolic=True) for link in chapters_links]
         else:
             workers = cpu_count()
             logger.debug(f'Initializing {workers} workers to fetch chapters of {identifier}.')
 
             with ThreadPoolExecutor(max_workers=workers) as executor:
-                chapters = executor.map(self.__create_chapter, self.__find_chapets_list(html=soup))
+                chapters = executor.map(self.__create_chapter, self.__find_chapters_list(html=soup))
                 chapters = list(filter(lambda x: isinstance(x, Chapter), list(chapters)))
                 executor.shutdown()
         
         return Manga(title=title,
                      authors=[Author(name=author)] if author is not None else None,
                      genres=[Genre(name=genre_name) for genre_name in genres],
+                     url=urljoin(self.__BASE_URL, identifier),
                      id=identifier,
                      created_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
                      updated_at=datetime.strptime(updated_at, "%b %d,%Y - %H:%M %p") if updated_at else None,
@@ -164,6 +174,8 @@ class Manganato(IMangaRepository):
                      cover=Image(uri=cover), # type: ignore
                      chapters=chapters) # type: ignore
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_SEARCH_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def search(self, 
                query: str,
                page: int) -> SearchResult:
@@ -188,6 +200,7 @@ class Manganato(IMangaRepository):
 
         for result in results:
             thumbs.append(Thumb(title=result.find('h3').text.replace('\n', '').strip(),
+                                url=result.find('a', {'class': 'a-h text-nowrap item-title'})['href'],
                                 cover=Image(uri=result.find('img')['src'], width=0, height=0),
                                 id=result.find('a', {'class': 'a-h text-nowrap item-title'})['href'].split('/')[-1]))
 
@@ -196,6 +209,8 @@ class Manganato(IMangaRepository):
                             total_pages=total_pages,
                             results=thumbs)
 
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_PAGINATE_TTL_IN_SECONDS', 100)), 
+           max_size=5).cache
     def paginate(self, page: int) -> Pagination:
         response = self.__make_request(url=f'{self.__BASE_URL}/genre-all/{page}')
         
@@ -219,6 +234,7 @@ class Manganato(IMangaRepository):
             info = cast(Tag, item.find('a', {'class': 'genres-item-img bookmark_check'}))
             cover = info.find('img')
             pagination.results.append(Thumb(id=info['href'].split('/')[-1], # type: ignore
+                                            url=info['href'],
                                             title=info['title'] if info is not None else "",
                                             cover=Image(uri=cover['src'], width=0, height=0))) # type: ignore
             
@@ -231,12 +247,11 @@ class Manganato(IMangaRepository):
     def random(self) -> Manga:
         raise NotImplementedError('Manganato does not support random')
     
-    def set_config(self, **kwargs) -> None:
-        raise NotImplementedError('Manganato does not support set_config')
-    
     def author_page(self, author: str, page: int) -> AuthorPage:
         raise NotImplementedError('Manganato does not support author_page')
     
+    @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS', 100)), 
+           max_size=20).cache
     def fetch_chapter_by_symbolic_link(self, link: SymbolicLink) -> Chapter:
         chapter =  self.__create_chapter(url=link.link)
         

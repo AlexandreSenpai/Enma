@@ -7,6 +7,11 @@ jobs:
   testing-deploy:
     name: Pypi
     runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/enma
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v2
@@ -19,11 +24,23 @@ jobs:
       - name: Preparing the environment
         run: |
           python -m pip install --upgrade pip
-          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; else python -m pip install beautifulsoup4 requests pydantic; fi
+          if [ -f requirements.txt ]; then python -m pip install -r requirements.txt; else python -m pip install beautifulsoup4 requests pydantic expiringdict pytest; fi
 
       - name: Starting Testing Suites
         run: |
-          python -m pytest ./tests
+          ENMA_CACHING_PAGINATE_TTL_IN_SECONDS='0' \
+          ENMA_CACHING_SEARCH_TTL_IN_SECONDS='0' \
+          ENMA_CACHING_GET_TTL_IN_SECONDS='0' \
+          ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS='0' \
+          ENMA_CACHING_AUTHOR_TTL_IN_SECONDS='0' \
+          pytest ./tests
+
+      - name: Upload Report to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          flags: pytest
 
       - name: Building and Deploying
         run: |
@@ -31,7 +48,7 @@ jobs:
           python -m build
 
       - name: Publish a Python distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@v1.8.14
         with:
           repository-url: https://test.pypi.org/legacy/
           user: __token__

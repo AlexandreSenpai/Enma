@@ -2,7 +2,6 @@
 This module defines the SearchResult entity for the Enma application.
 It represents the result of a manga search operation.
 """
-from dataclasses import dataclass
 from datetime import datetime
 from typing import TypedDict, Union
 from enma.domain.entities.manga import Manga
@@ -17,7 +16,6 @@ class ISearchResultProps(TypedDict):
     total_results: int
     results: list[Manga]
 
-@dataclass
 class SearchResult(Pagination):
     """
     Entity class representing a search result in the Enma application.

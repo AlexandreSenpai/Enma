@@ -11,6 +11,7 @@ from enma.domain.entities.manga import Image, Manga
 @dataclass
 class Thumb:
     id: str
+    url: str
     title: str
     cover: Image
 
@@ -23,7 +24,6 @@ class ISearchResultProps(TypedDict):
     total_results: int
     results: list[Manga]
 
-@dataclass
 class Pagination(Entity[ISearchResultProps]):
     """
     Entity class representing a search result in the Enma application.
@@ -48,6 +48,5 @@ class Pagination(Entity[ISearchResultProps]):
         
         self.page = page
         self.results = results or list()
-        self.total_pages = total_pages or 1 if len(self.results) <= 20 else total_pages
-        self.total_results = total_results or 20 * self.total_pages if self.total_pages > 1 else len(self.results) 
-        
+        self.total_pages = total_pages
+        self.total_results = total_results
