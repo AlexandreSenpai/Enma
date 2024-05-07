@@ -207,5 +207,3 @@ class TestMangadexSourceSearchMethod:
 
         with pytest.raises(Unknown):
             self.sut.search(query='Monster Musume no Iru Nichijou', page=1)
-
-    
