@@ -66,7 +66,7 @@ caching    |    ✅   |     ✅   |   ✅
 
 ```py
 from typing import cast
-from enma import Enma, Sources, CloudFlareConfig, NHentai, Sort
+from enma import Enma, Sources, CloudFlareConfig, NHentai
 
 enma = Enma[Sources]() # or just Enma()
 
