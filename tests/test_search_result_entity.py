@@ -51,5 +51,3 @@ class TestSearchResultEntity:
         assert sut.page == 1
         assert sut.total_results == 300
         assert sut.total_pages == 100
-
-    
