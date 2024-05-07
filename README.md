@@ -66,16 +66,16 @@ caching    |    ✅   |     ✅   |   ✅
 
 ```py
 from typing import cast
-from enma import Enma, DefaultAvailableSources, CloudFlareConfig, NHentai, Sort
+from enma import Enma, Sources, CloudFlareConfig, NHentai, Sort
 
-enma = Enma[DefaultAvailableSources]()
+enma = Enma[Sources]() # or just Enma()
 
 config = CloudFlareConfig(
     user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36',
     cf_clearance=''
 )
 
-enma.source_manager.set_source(source_name='nhentai')
+enma.source_manager.set_source(source_name=Sources.NHENTAI)
 nh_source = cast(NHentai, enma.source_manager.source)
 nh_source.set_config(config=config)
 
@@ -86,9 +86,10 @@ print(doujin)
 ### Example 2: Extending with Custom Sources
 ```py
 from typing import cast
-from enma import Enma, SourcesEnum, Manganato, IMangaRepository
+from enum import Enum
+from enma import Enma, Manganato, IMangaRepository
 
-class AvailableSources(SourcesEnum):
+class AvailableSources(Enum):
     NHENTAI = 'nhentai'
     MANGANATO = 'manganato'
     NEW_SOURCE = 'new-source'
