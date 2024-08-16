@@ -1,13 +1,10 @@
+import os
+
 from unittest.mock import MagicMock, Mock, patch
 import sys
-import os
 
 import pytest
 
-os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
@@ -53,17 +50,17 @@ class TestMangadexSourceGetMethod:
         
     @patch('requests.get')
     def test_raise_forbidden_in_case_of_403_status_code(self, mock_method: MagicMock):
-            mock = Mock()
-            mock.status_code = 403
-            mock_method.return_value = mock
+        mock = Mock()
+        mock.status_code = 403
+        mock_method.return_value = mock
 
-            with pytest.raises(Forbidden):
-                self.sut.get(identifier='manga-kb951984')
-                mock_method.assert_called_with(url='https://chapMangadex.com/manga-kb951984', 
-                                            headers={'Referer': 'https://chapMangadex.com/'}, 
-                                            params={})
+        with pytest.raises(Forbidden):
+            self.sut.get(identifier='manga-kb951984')
+            mock_method.assert_called_with(url='https://chapMangadex.com/manga-kb951984', 
+                                        headers={'Referer': 'https://chapMangadex.com/'}, 
+                                        params={})
 
-    @patch.object(sut, '_Mangadex__list_chapters')
+    @patch.object(sut, '_Mangadex__list_chapters', autospec=True)
     def test_return_empty_chapters(self, mock_method: MagicMock):
         mock_method.return_value = []
 

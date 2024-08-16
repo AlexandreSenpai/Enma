@@ -22,6 +22,7 @@ from enma.domain.entities.manga import (MIME, Chapter, Genre, Author, Image, Man
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
 from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse
 from enma.infra.core.utils.cache import Cache
+from enma._version import __version__
 
 
 class CloudFlareConfig(BaseModel):
@@ -75,20 +76,21 @@ Set the logging mode to debug and try again.')
     def __make_request(self,
                        url: str,
                        headers: Union[dict[str, Any], None] = None,
-                       params: Optional[dict[str, Union[str, int]]] = None):
-
-        if self.__config is None:
-            raise NhentaiSourceWithoutConfig('Please provide a valid cloudflare cookie and user-agent.')
+                       params: Optional[dict[str, Union[str, int]]] = None) -> requests.Response:
 
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
 
-        logger.debug(f'Fetching {url} with headers {headers} and params {params} the current config cf_clearance: {self.__config.cf_clearance}')
+        config = self.__config
+        user_agent = config.user_agent if config is not None else f"Enma/{__version__}"
+        cookies = {'cf_clearance': config.cf_clearance} if config is not None else {}
+
+        logger.debug(f'Fetching {url} with headers {headers}, params {params} and cookies: {cookies}')
 
         response = requests.get(url=urlparse(url).geturl(),
-                                headers={**headers, 'User-Agent': f'{self.__config.user_agent}'},
+                                headers={**headers, 'User-Agent': user_agent},
                                 params={**params},
-                                cookies={'cf_clearance': self.__config.cf_clearance})
+                                cookies=cookies)
         
         self.__handle_source_response(response)
 

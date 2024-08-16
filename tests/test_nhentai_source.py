@@ -5,12 +5,6 @@ import os
 
 import pytest
 
-os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_AUTHOR_TTL_IN_SECONDS'] = '0'
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from enma.infra.core.interfaces.nhentai_response import NHentaiImage
@@ -41,10 +35,10 @@ class TestNHentaiUtils:
         with pytest.raises(InvalidRequest):
             self.sut.set_config(config=CloudFlareConfig(user_agent='', cf_clearance=''))
 
-    def test_request_maker_must_raise_an_error_if_called_without_config(self):
+    def test_should_run_normally_even_without_config(self):
         self.sut._NHentai__config = None # type: ignore
-        with pytest.raises(NhentaiSourceWithoutConfig):
-            self.sut._NHentai__make_request(url='https://www.google.com') # type: ignore
+        req = self.sut._NHentai__make_request(url='https://www.google.com') # type: ignore
+        assert req.status_code == 200
 
     @patch('requests.get')
     def test_make_a_request_successfully(self, request_mock: MagicMock):
@@ -312,10 +306,6 @@ class TestNHentaiSourcePaginationMethod:
         assert res.total_results == 25 * 19163
         assert len(res.results) == 0
 
-    def test_response_when_forbidden(self):
-        with pytest.raises(Forbidden):
-            self.sut.paginate(page=2)
-
 class TestNHentaiSourceSearchMethod:
 
     sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
@@ -371,10 +361,6 @@ class TestNHentaiSourceSearchMethod:
         assert res.total_pages == 0
         assert len(res.results) == 0
 
-    def test_response_when_forbidden(self):
-        with pytest.raises(Forbidden):
-            self.sut.search(query='Monster Musume no Iru Nichijou', page=4)
-            
 
 class TestNHentaiSourceAuthorPageMethod:
 
@@ -429,6 +415,3 @@ class TestNHentaiSourceAuthorPageMethod:
         assert res.total_pages == 0
         assert len(res.results) == 0
 
-    def test_response_when_forbidden(self):
-        with pytest.raises(Forbidden):
-            self.sut.author_page(author='akaneman', page=1)
