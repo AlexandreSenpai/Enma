@@ -55,13 +55,19 @@ class Chapter:
         self.pages_count += 1
 
 @dataclass
-class Genre:
-    name: str
+class Tag:
+    name: Union[Literal["character"], 
+                Literal["related"], 
+                Literal["category"]]
     id: Union[int, str] = field(default=0)
 
 @dataclass
-class Author(Genre):
-    ...
+class Author(Tag):
+    name: str
+
+@dataclass
+class Genre(Tag):
+    name: str
 
 class ILanguage(TypedDict):
     ja: Literal['japanese']
@@ -119,6 +125,7 @@ class Manga(Entity[IMangaProps]):
                  chapters: Union[list[Chapter], None] = None,
                  language: Union[str, None] = None,
                  genres: Union[list[Genre], None] = None,
+                 tags: Union[list[Tag], None] = None,
                  authors: Union[list[Author], None] = None,
                  thumbnail: Union[Image, None] = None,
                  cover: Union[Image, None] = None,
@@ -138,6 +145,7 @@ class Manga(Entity[IMangaProps]):
         self.authors = authors or []
         self.genres = genres or []
         self.chapters = chapters or []
+        self.tags = tags or []
 
         self.chapters_count = len(self.chapters if self.chapters else [])
 
