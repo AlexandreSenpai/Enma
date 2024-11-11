@@ -9,6 +9,7 @@ except ImportError as e:
     ) from e
 
 from enma.application.core.interfaces.saver_adapter import File, ISaverAdapter
+from enma.application.core.utils.logger import logger
 
 class GoogleDriveStorage(ISaverAdapter):
 
@@ -29,20 +30,21 @@ class GoogleDriveStorage(ISaverAdapter):
                 'parents': [folder_id]
             }
 
+            logger.debug(f'Uploading image to google drive with name: {file.name} and parent folder: {folder_id}')
+
             media = MediaIoBaseUpload(file.data, mimetype='application/octet-stream')
 
-            teste = self.service.files().create(
+            self.service.files().create(
                 body=file_metadata,
                 media_body=media,
                 fields='id'
             ).execute()
-            print(teste)
             return True
         except HttpError as e:
-            print(f'Erro HTTP ao fazer upload: {e}')
+            logger.error(f'A HTTP error ocurred while trying to upload image to google drive: {e}')
             return False
         except Exception as e:
-            print(f'Erro ao fazer upload: {e}')
+            logger.error(f'An unknown error ocurred while trying to upload image to google drive: {e}')
             return False
 
     def _get_or_create_folder(self, path: str) -> str:
@@ -56,6 +58,8 @@ class GoogleDriveStorage(ISaverAdapter):
                 f"'{parent_id}' in parents and "
                 f"trashed = false"
             )
+
+            logger.debug(f'Querying folder with query: {query}')
 
             results = self.service.files().list(
                 q=query,
@@ -72,6 +76,9 @@ class GoogleDriveStorage(ISaverAdapter):
                     'mimeType': 'application/vnd.google-apps.folder',
                     'parents': [parent_id]
                 }
+
+                logger.debug(f'Creating folder with metadata: {folder_metadata}')
+
                 folder = self.service.files().create(
                     body=folder_metadata,
                     fields='id'

@@ -2,6 +2,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 import queue
 import threading
+from typing import Optional
 from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
 from enma.application.core.interfaces.saver_adapter import File, ISaverAdapter
 from enma.application.core.interfaces.use_case import DTO, IUseCase
@@ -19,8 +20,8 @@ class DownloadChapterRequestDTO:
     path: str
     saver_adapter: ISaverAdapter
     downloader: IDownloaderAdapter
-    threaded: Threaded = field(default_factory=lambda: Threaded(use_threads=False,
-                                                                number_of_threads=0))
+    threaded: Optional[Threaded] = field(default_factory=lambda: Threaded(use_threads=False,
+                                                                          number_of_threads=0))
 
 @dataclass
 class DownloadChapterResponseDTO:
@@ -65,9 +66,12 @@ class DownloadChapterUseCase(IUseCase[DownloadChapterRequestDTO, DownloadChapter
 
     def execute(self, dto: DTO[DownloadChapterRequestDTO]) -> DownloadChapterResponseDTO:
         try:
+
+            using_threads = dto.data.threaded is not None
+
             logger.info(f'Downloading chapter with {len(dto.data.chapter.pages)} pages.')
             
-            logger.debug(f'Using threads to perform download: {dto.data.threaded.use_threads}.')
+            logger.debug(f'Using threads to perform download: {using_threads}.')
 
             self.queue = self.__create_queue()
             self.downloader = dto.data.downloader
@@ -83,7 +87,7 @@ class DownloadChapterUseCase(IUseCase[DownloadChapterRequestDTO, DownloadChapter
                 t.start()
                 threads.append(t)
 
-            if dto.data.threaded.use_threads:
+            if dto.data.threaded is not None:
                 self.__spawn_workers(chapter=dto.data.chapter, workers=dto.data.threaded.number_of_threads)
             else:
                 self.__make_sync_download(chapter=dto.data.chapter, downloader=dto.data.downloader)
