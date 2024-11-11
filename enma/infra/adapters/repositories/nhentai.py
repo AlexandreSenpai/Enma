@@ -246,6 +246,7 @@ Set the logging mode to debug and try again.')
                       id=doujin.get('id'),
                       created_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
                       updated_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
+                      status='completed',
                       url=urljoin(self.__BASE_URL, f'g/{doujin.get("id")}'),
                       language=language[0] if len(language) > 0 else None,
                       authors=authors,

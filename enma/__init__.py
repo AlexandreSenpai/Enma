@@ -9,6 +9,7 @@ from enma.infra.adapters.downloaders.default import DefaultDownloader
 from enma.infra.adapters.downloaders.manganato import ManganatoDownloader
 from enma.application.core.interfaces.downloader_adapter import IDownloaderAdapter
 from enma.application.core.interfaces.saver_adapter import ISaverAdapter
+from enma.infra.adapters.storage.google_drive import GoogleDriveStorage
 from enma.infra.adapters.storage.local import LocalStorage
 from enma.domain.entities.manga import Manga, Chapter, SymbolicLink
 from enma.domain.entities.search_result import SearchResult

@@ -138,10 +138,12 @@ class Manganato(IMangaRepository):
         
         if table_vals is None: return
         
-        title_cel, author_cel, _, genres_cel = table_vals
+        title_cel, author_cel, status_cel, genres_cel = table_vals
         title = self.__create_title(main_title=elem_title, 
                                     alternative=title_cel.text)
         author = author_cel.text.strip()
+        status = status_cel.text.strip().lower()
+  
         genres = genres_cel.text.replace('\n', '').split(' - ')
 
         extra_infos = cast(Tag, soup.find('div', {'class': 'story-info-right-extent'}))
@@ -164,6 +166,7 @@ class Manganato(IMangaRepository):
                 executor.shutdown()
         
         return Manga(title=title,
+                     status='completed' if status == 'completed' else 'ongoing',
                      authors=[Author(name=author)] if author is not None else None,
                      genres=[Genre(name=genre_name) for genre_name in genres],
                      url=urljoin(self.__BASE_URL, identifier),
@@ -234,8 +237,8 @@ class Manganato(IMangaRepository):
             info = cast(Tag, item.find('a', {'class': 'genres-item-img bookmark_check'}))
             cover = info.find('img')
             pagination.results.append(Thumb(id=info['href'].split('/')[-1], # type: ignore
-                                            url=info['href'],
-                                            title=info['title'] if info is not None else "",
+                                            url=info['href'], # type: ignore
+                                            title=info['title'] if info is not None else "", # type: ignore
                                             cover=Image(uri=cover['src'], width=0, height=0))) # type: ignore
             
         last_pagination = soup.find('a', {'class': 'page-blue page-last'})

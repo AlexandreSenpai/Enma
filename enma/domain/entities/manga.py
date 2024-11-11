@@ -125,6 +125,7 @@ Language: ILanguage = {
 class Manga(Entity[IMangaProps]):
     def __init__(self,
                  title: Title,
+                 status: Literal['ongoing', 'completed'],
                  url: str,
                  chapters: Union[list[Chapter], None] = None,
                  language: Union[str, None] = None,
@@ -141,6 +142,7 @@ class Manga(Entity[IMangaProps]):
                          created_at=created_at,
                          updated_at=updated_at)
         
+        self.status = status
         self.title = title
         self.language = language
         self.cover = cover
