@@ -27,7 +27,7 @@ class TestMangadexSourceGetMethod:
         assert res is not None
         assert res.id == '65498ee8-3c32-4228-b433-73a4d08f8927'
         assert res.title.english == "Monster Musume no Iru Nichijou"
-        assert res.title.japanese == "Monmusu"
+        assert res.title.japanese == "Monster Musume no Iru Nichijō"
         assert res.title.other != ''
         assert res.url != ''
         
@@ -72,7 +72,7 @@ class TestMangadexSourceGetMethod:
         assert len(doujin.chapters) == 0
         assert doujin.id == '65498ee8-3c32-4228-b433-73a4d08f8927'
         assert doujin.title.english == "Monster Musume no Iru Nichijou"
-        assert doujin.title.japanese == "Monmusu"
+        assert doujin.title.japanese == "Monster Musume no Iru Nichijō"
         
         for genre in doujin.genres:
             assert isinstance(genre, Genre)

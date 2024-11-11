@@ -193,6 +193,8 @@ if doujin is not None:
 
 ## Retrieving `user-agent` and `cf_clearance` for NHentai
 
+**!! THIS HAS BECOME OPTIONAL SINCE NHENTAI STOPPED REQUIRING CF_CLEARANCE COOKIES !!**
+
 To retrieve the `user-agent` and `cf_clearance` for NHentai:
 
 1. **Open NHentai in your browser**: Navigate to the NHentai website.

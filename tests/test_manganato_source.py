@@ -152,7 +152,7 @@ class TestManganatoSourceSearchMethod:
         assert res.query == 'GATE'
         assert res.id is not None
         assert res.page == 1
-        assert res.total_pages == 4
+        assert res.total_pages == 5
         assert len(res.results) == 20
 
         for result in res.results:
