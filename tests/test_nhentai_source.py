@@ -58,6 +58,36 @@ class TestNHentaiUtils:
                                                       'add': 'header'},
                                              params={'new': 'parameter'},
                                              cookies={'cf_clearance': 'mocked'})
+        
+    def test_should_filter_tags_correctly(self):
+        TAGS = [
+            {
+                "id": 33172,
+                "type": "category",
+                "name": "doujinshi",
+                "url": "/category/doujinshi/",
+                "count": 228729
+            },
+            {
+                "id": 29859,
+                "type": "tag",
+                "name": "b",
+                "url": "/tag/b/",
+                "count": 37321
+            },
+            {
+                "id": 1,
+                "type": "tag",
+                "name": "a",
+                "url": "/tag/a/",
+                "count": 1
+            }
+        ]
+
+        characters = self.sut._NHentai__get_tag_by_type(type='category', tags=TAGS) # type: ignore
+        tags = self.sut._NHentai__get_tag_by_type(type='tag', tags=TAGS) # type: ignore
+        assert len(characters) == 1
+        assert len(tags) == 2
 
     def test_making_page_uri(self):
         page = self.sut._NHentai__make_page_uri(type='page', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
@@ -130,6 +160,8 @@ class TestNHentaiSourceGetMethod:
 
         for chapter in res.chapters:
             assert isinstance(chapter, Chapter)
+        
+        assert len(res.tags) != 0
 
     @patch('requests.get')
     def test_must_return_other_titles_as_none_if_doesnt_exists(self, mock_method: MagicMock):

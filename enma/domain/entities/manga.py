@@ -55,19 +55,23 @@ class Chapter:
         self.pages_count += 1
 
 @dataclass
-class Tag:
-    name: Union[Literal["character"], 
+class Unit:
+    name: str
+
+@dataclass
+class Tag(Unit):
+    type: Union[Literal["character"], 
                 Literal["related"], 
                 Literal["category"]]
     id: Union[int, str] = field(default=0)
 
 @dataclass
-class Author(Tag):
-    name: str
+class Author(Unit):
+    id: Union[int, str] = field(default=0)
 
 @dataclass
-class Genre(Tag):
-    name: str
+class Genre(Unit):
+    id: Union[int, str] = field(default=0)
 
 class ILanguage(TypedDict):
     ja: Literal['japanese']

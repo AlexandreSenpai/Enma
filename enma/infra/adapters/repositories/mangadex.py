@@ -229,13 +229,13 @@ class Mangadex(IMangaRepository):
         
         data: IVolumesResponse = response.json()
 
-        chapters = []
-        for volume in data.get('volumes', []):
+        chapters = list()
+        for volume in data.get('volumes', dict()):
             volume = data.get('volumes').get(volume)
             
             if volume is None: continue
 
-            volume_chapters = volume.get('chapters')
+            volume_chapters = volume.get('chapters', dict())
             
             for volume_key in volume_chapters:
                 current_vol = volume_chapters.get(volume_key)
