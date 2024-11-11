@@ -129,13 +129,14 @@ This customization capability ensures that you can adapt the caching behavior to
 By leveraging caching, Enma helps make your manga-related applications faster and more reliable, all while giving you the flexibility to tailor caching behavior as needed.
 
 #### Available Caching TTL Settings
-| KEY                                            | DEFAULT |
-|------------------------------------------------|---------|
-| ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS| 100     |
-| ENMA_CACHING_PAGINATE_TTL_IN_SECONDS           | 100     |
-| ENMA_CACHING_SEARCH_TTL_IN_SECONDS             | 100     |
-| ENMA_CACHING_GET_TTL_IN_SECONDS                | 300     |
-| ENMA_CACHING_AUTHOR_TTL_IN_SECONDS             | 100     |
+| KEY                                            | DEFAULT          |
+|------------------------------------------------|------------------|
+| ENMA_CACHING_STATE                             | enabled/disabled |
+| ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS| 100              |
+| ENMA_CACHING_PAGINATE_TTL_IN_SECONDS           | 100              |
+| ENMA_CACHING_SEARCH_TTL_IN_SECONDS             | 100              |
+| ENMA_CACHING_GET_TTL_IN_SECONDS                | 300              |
+| ENMA_CACHING_AUTHOR_TTL_IN_SECONDS             | 100              |
 
 ## Downloading Chapters
 Using Enma you're able to download chapter pages to your local storage or any other storage that implements `ISaverAdapter`.
@@ -164,6 +165,72 @@ if manga:
                           threaded=Threaded(use_threads=True,
                                             number_of_threads=5))
 ```
+
+### Using Google Drive Storage
+
+In addition to saving chapters to local storage, Enma now supports saving chapters directly to Google Drive. This is particularly useful if you want to store your downloaded manga in the cloud for easy access across multiple devices.
+
+#### Installation
+To use the Google Drive storage option, you need to install additional dependencies:
+
+```sh
+pip install enma[google_drive]
+```
+
+#### Setting Up Credentials
+You'll need to set up Google Drive API credentials to allow Enma to upload files to your Google Drive account. Follow these steps:
+
+1. **Enable Google Drive API**:
+    - Go to the Google Cloud Console.
+    - Create a new project or select an existing one.
+    - Navigate to APIs & Services > Library.
+    - Search for Google Drive API and click Enable.
+2. **Create Service Account Credentials**:
+    - In the APIs & Services section, go to Credentials.
+    - Click on Create Credentials > Service Account.
+    - Fill in the necessary details and click Create.
+    - Once the service account is created, go to it and click Keys > Add Key > Create New Key.
+    - Choose JSON as the key type and download the credentials file.
+3. **Share Google Drive Folder with Service Account**:
+    - In Google Drive, create a new folder or use an existing one.
+    - Right-click the folder and select Share.
+    - Share the folder with the service account's email address (found in the credentials JSON under client_email).
+
+#### Example Usage
+Here's how you can use the GoogleDriveStorage adapter:
+
+```python
+from enma import (Enma,
+                  ManganatoDownloader,
+                  GoogleDriveStorage,
+                  Threaded)
+
+enma = Enma()
+enma.source_manager.set_source('manganato')
+manga = enma.get(identifier='manga-wb999684')
+
+downloader = ManganatoDownloader()
+google_drive_storage = GoogleDriveStorage(
+    credentials_path='path/to/your/service_account_credentials.json',
+    root_shared_folder='your_root_folder_id_in_google_drive'
+)
+
+if manga:
+    enma.download_chapter(
+        path=f'folder/subfolder/{manga.title.english}',
+        chapter=manga.chapters[0],
+        downloader=downloader,
+        saver=google_drive_storage,
+        threaded=Threaded(use_threads=True, number_of_threads=5)
+    )
+```
+
+In this example:
+
+- Replace `path/to/your/service_account_credentials.json` with the path to your downloaded service account JSON credentials.
+- Replace `your_root_folder_id_in_google_drive` with the ID of the Google Drive folder where you want to save the chapters.
+    - To get the folder ID, navigate to the folder in Google Drive and copy the ID from the URL (it's the string after folders/).
+- The path parameter specifies the folder structure within your root Google Drive folder where the chapter will be saved.
 
 ## Logger Control
 By default Enma sets logs as `SILENT`. But if you're needing to see what Enma outputs you can set log mode as `NORMAL` or `DEBUG` to deep logs.
