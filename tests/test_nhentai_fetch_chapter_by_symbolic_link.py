@@ -23,6 +23,7 @@ class TestFetchChapterWithSymbolicLink:
     mocked_manga = Manga(title=Title(english="[Hikoushiki (CowBow)] Marine Senchou no Yopparai Archive | Marine's Drunken Archives (Houshou Marine) [English] [Watson] [Digital]",
                                      japanese='[飛行式 (矼房)] マリン船長の酔っぱっぱアーカイブ (宝鐘マリン) [英訳] [DL版]',
                                      other="Marine Senchou no Yopparai Archive | Marine's Drunken Archives"),
+                         status='completed',
                          url="mocked",
                          id=489504,
                          created_at=datetime.datetime(2024, 1, 7, 0, 3, 25, tzinfo=datetime.timezone.utc),
