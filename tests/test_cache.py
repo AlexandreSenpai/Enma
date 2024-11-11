@@ -76,7 +76,7 @@ def test_cache_with_various_argument_types():
 
 def test_cache_function_no_arguments():
     call_count = 0
-    cache = Cache(max_age_seconds=2, max_size=5)
+    cache = Cache(max_age_seconds=2, max_size=5, enabled='enabled')
 
     class Sut:
         @cache.cache

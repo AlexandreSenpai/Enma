@@ -5,7 +5,7 @@ It contains functions and classes to interact with the nhentai API and retrieve 
 from datetime import datetime, timezone
 from enum import Enum
 import os
-from typing import Any, Literal, Optional, Union, cast
+from typing import Any, List, Literal, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
 from pydantic import BaseModel, field_validator
 
@@ -13,15 +13,16 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 from enma.application.core.handlers.error import (ExceedRetryCount, Forbidden, InvalidConfig, InvalidRequest,
-                                                  NhentaiSourceWithoutConfig, NotFound, Unknown)
+                                                  NotFound, Unknown)
 from enma.application.core.interfaces.manga_repository import IMangaRepository
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import (MIME, Chapter, Genre, Author, Image, Manga, SymbolicLink,
-                                        Title)
+                                        Title, Tag as EnmaTag)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
-from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse
+from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse, Tag as NHentaiResponseTag
 from enma.infra.core.utils.cache import Cache
+from enma._version import __version__
 
 
 class CloudFlareConfig(BaseModel):
@@ -45,6 +46,14 @@ class Sort(__StrEnum):
     WEEK = 'popular-week'
     ALL_TIME = 'popular'
     RECENT = None
+
+TagType = Union[Literal["language"],
+                Literal["parody"],
+                Literal["character"],
+                Literal["group"],
+                Literal["artist"],
+                Literal["tag"],
+                Literal["category"]]
 
 class NHentai(IMangaRepository):
     """
@@ -75,20 +84,21 @@ Set the logging mode to debug and try again.')
     def __make_request(self,
                        url: str,
                        headers: Union[dict[str, Any], None] = None,
-                       params: Optional[dict[str, Union[str, int]]] = None):
-
-        if self.__config is None:
-            raise NhentaiSourceWithoutConfig('Please provide a valid cloudflare cookie and user-agent.')
+                       params: Optional[dict[str, Union[str, int]]] = None) -> requests.Response:
 
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
 
-        logger.debug(f'Fetching {url} with headers {headers} and params {params} the current config cf_clearance: {self.__config.cf_clearance}')
+        config = self.__config
+        user_agent = config.user_agent if config is not None else f"Enma/{__version__}"
+        cookies = {'cf_clearance': config.cf_clearance} if config is not None else {}
+
+        logger.debug(f'Fetching {url} with headers {headers}, params {params} and cookies: {cookies}')
 
         response = requests.get(url=urlparse(url).geturl(),
-                                headers={**headers, 'User-Agent': f'{self.__config.user_agent}'},
+                                headers={**headers, 'User-Agent': user_agent},
                                 params={**params},
-                                cookies={'cf_clearance': self.__config.cf_clearance})
+                                cookies=cookies)
         
         self.__handle_source_response(response)
 
@@ -155,6 +165,11 @@ Set the logging mode to debug and try again.')
                                 width=page.get('w'),
                                 height=page.get('h')))
             return chapter
+        
+    def __get_tag_by_type(self, 
+                          type: TagType, 
+                          tags: List[NHentaiResponseTag]) -> List[NHentaiResponseTag]:
+        return list(filter(lambda tag: tag.get('type') == type, tags))
     
     @Cache(max_age_seconds=int(os.getenv('ENMA_CACHING_GET_TTL_IN_SECONDS', 300)), 
            max_size=20).cache
@@ -168,16 +183,46 @@ Set the logging mode to debug and try again.')
         doujin: NHentaiResponse = response.json()
         media_id = doujin.get('media_id')
 
+        nhentai_tags = doujin.get('tags')
+
         chapter = self.__create_chapter(url=url,
                                         with_symbolic_links=with_symbolic_links,
                                         media_id=media_id, 
                                         pages=doujin.get('images').get('pages'))
 
-        language = [tag.get('name') for tag in doujin.get('tags') if tag.get('type') == 'language']
+        language = [tag.get('name') 
+                    for tag in self.__get_tag_by_type(type='language',
+                                                      tags=nhentai_tags)]
+        
         authors = [Author(id=tag.get('id'),
-                          name=tag.get('name')) for tag in doujin.get('tags') if tag.get('type') == 'artist']
-        genres = [Genre(id=genre.get('id'),
-                        name=genre.get('name')) for genre in doujin.get('tags') if genre.get('type') == 'tag']
+                          name=tag.get('name')) 
+                    for tag in self.__get_tag_by_type(type='artist',
+                                                      tags=nhentai_tags)]
+        
+        genres = [Genre(id=tag.get('id'),
+                        name=tag.get('name')) 
+                    for tag in self.__get_tag_by_type(type='tag',
+                                                      tags=nhentai_tags)]
+        
+        characters = [EnmaTag(type='character',
+                              name=tag.get('name'),
+                              id=tag.get('id')) 
+                      for tag in self.__get_tag_by_type(type='character',
+                                                        tags=nhentai_tags)]
+        
+        related = [EnmaTag(type='related',
+                           name=tag.get('name'),
+                           id=tag.get('id')) 
+                      for tag in self.__get_tag_by_type(type='parody',
+                                                        tags=nhentai_tags)]
+        
+        category = [EnmaTag(type='category',
+                            name=tag.get('name'),
+                            id=tag.get('id')) 
+                      for tag in self.__get_tag_by_type(type='category',
+                                                        tags=nhentai_tags)]
+        
+        tags = [*characters, *related, *category]
         
         thumbnail_mime = MIME[doujin.get("images").get("thumbnail").get("t").upper()]
         thumbnail = Image(uri=self.__make_page_uri(type='thumbnail',
@@ -201,11 +246,13 @@ Set the logging mode to debug and try again.')
                       id=doujin.get('id'),
                       created_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
                       updated_at=datetime.fromtimestamp(doujin.get('upload_date'), tz=timezone.utc),
+                      status='completed',
                       url=urljoin(self.__BASE_URL, f'g/{doujin.get("id")}'),
                       language=language[0] if len(language) > 0 else None,
                       authors=authors,
                       genres=genres,
                       thumbnail=thumbnail,
+                      tags=tags,
                       cover=cover,
                       chapters=[chapter])
 

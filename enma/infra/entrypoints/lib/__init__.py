@@ -301,7 +301,7 @@ class Enma(IEnma, Generic[Source]):
                          chapter: Chapter,
                          downloader: IDownloaderAdapter,
                          saver: ISaverAdapter,
-                         threaded: Threaded) -> None:
+                         threaded: Optional[Threaded] = None) -> None:
         """
         Downloads a manga chapter to the specified path using the provided downloader and saver adapters.
 

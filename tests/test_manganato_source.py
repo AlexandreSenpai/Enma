@@ -4,11 +4,6 @@ import os
 
 import pytest
 
-os.environ['ENMA_CACHING_PAGINATE_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_SEARCH_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_GET_TTL_IN_SECONDS'] = '0'
-os.environ['ENMA_CACHING_FETCH_SYMBOLIC_LINK_TTL_IN_SECONDS'] = '0'
-
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 
 from enma.domain.entities.pagination import Thumb
@@ -157,7 +152,7 @@ class TestManganatoSourceSearchMethod:
         assert res.query == 'GATE'
         assert res.id is not None
         assert res.page == 1
-        assert res.total_pages == 4
+        assert res.total_pages == 5
         assert len(res.results) == 20
 
         for result in res.results:

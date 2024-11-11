@@ -229,13 +229,13 @@ class Mangadex(IMangaRepository):
         
         data: IVolumesResponse = response.json()
 
-        chapters = []
-        for volume in data.get('volumes', []):
+        chapters = list()
+        for volume in data.get('volumes', dict()):
             volume = data.get('volumes').get(volume)
             
             if volume is None: continue
 
-            volume_chapters = volume.get('chapters')
+            volume_chapters = volume.get('chapters', dict())
             
             for volume_key in volume_chapters:
                 current_vol = volume_chapters.get(volume_key)
@@ -345,12 +345,14 @@ class Mangadex(IMangaRepository):
         thumbnail = self.__get_cover(manga_data.get('id'), 
                                      manga_data.get('relationships'))
         
+        status = 'completed' if attrs.get('status', "").lower() == 'completed' else 'ongoing'
 
         manga = Manga(title=self.__get_title(alt_titles=attrs.get('altTitles'),
                                              title=attrs.get('title', dict()).get('en') or ''),
                       id=manga_data.get('id'),
                       created_at=datetime.fromisoformat(attrs.get('createdAt')),
                       updated_at=datetime.fromisoformat(attrs.get('updatedAt')),
+                      status=status,
                       url=urljoin(self.__SITE_URL, f'title/{manga_data.get("id")}'),
                       language=Language.get(attrs.get('originalLanguage').strip().lower().replace('-', '_'), 'unknown'),
                       authors=self.__extract_authors(manga_data.get('relationships', list())),
