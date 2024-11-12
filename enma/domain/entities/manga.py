@@ -12,6 +12,8 @@ class MIME(Enum):
     P = 'png'
     GIF = 'gif'
     G = 'gif'
+    W = 'webp'
+    WEBP = 'webp'
     
 @dataclass
 class Image:
