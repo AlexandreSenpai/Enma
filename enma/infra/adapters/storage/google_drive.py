@@ -1,13 +1,3 @@
-try:
-    from googleapiclient.discovery import build, HttpError
-    from googleapiclient.http import MediaIoBaseUpload
-    from google.oauth2.service_account import Credentials
-except ImportError as e:
-    raise ImportError(
-        "The dependencies for Google Drive are not installed. "
-        "Please install them using 'pip install enma[google_drive]'."
-    ) from e
-
 from enma.application.core.interfaces.saver_adapter import File, ISaverAdapter
 from enma.application.core.utils.logger import logger
 
@@ -17,6 +7,21 @@ class GoogleDriveStorage(ISaverAdapter):
             self, 
             credentials_path: str,
             root_shared_folder: str):
+
+        try:
+            from googleapiclient.discovery import build, HttpError
+            from googleapiclient.http import MediaIoBaseUpload
+            from google.oauth2.service_account import Credentials
+
+            self.MediaIoBaseUpload = MediaIoBaseUpload
+            self.HttpError = HttpError
+            self.build = build
+        except ImportError as e:
+            raise ImportError(
+                "The dependencies for Google Drive are not installed. "
+                "Please install them using 'pip install enma[google_drive]'."
+            ) from e
+            
         self.credentials = Credentials.from_service_account_file(credentials_path)
         self.service = build('drive', 'v3', credentials=self.credentials)
         self.root_shared_folder = root_shared_folder
@@ -32,7 +37,7 @@ class GoogleDriveStorage(ISaverAdapter):
 
             logger.debug(f'Uploading image to google drive with name: {file.name} and parent folder: {folder_id}')
 
-            media = MediaIoBaseUpload(file.data, mimetype='application/octet-stream')
+            media = self.MediaIoBaseUpload(file.data, mimetype='application/octet-stream')
 
             self.service.files().create(
                 body=file_metadata,
@@ -40,7 +45,7 @@ class GoogleDriveStorage(ISaverAdapter):
                 fields='id'
             ).execute()
             return True
-        except HttpError as e:
+        except self.HttpError as e:
             logger.error(f'A HTTP error ocurred while trying to upload image to google drive: {e}')
             return False
         except Exception as e:

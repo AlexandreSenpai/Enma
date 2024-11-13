@@ -20,6 +20,7 @@ from enma.domain.entities.author_page import AuthorPage
 from enma.domain.entities.manga import (MIME, Chapter, Genre, Author, Image, Manga, SymbolicLink,
                                         Title, Tag as EnmaTag)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
+from enma.domain.utils import mime
 from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiResponse, Tag as NHentaiResponseTag
 from enma.infra.core.utils.cache import Cache
 from enma._version import __version__
@@ -155,13 +156,19 @@ Set the logging mode to debug and try again.')
         else:
             chapter = Chapter()
             for index, page in enumerate(pages):
-                mime = MIME[page.get('t').upper()]
+                safe_mime = mime.get_mime_safelly(page.get('t').upper())
+
+                if safe_mime is None:
+                    logger.warning(f'Could not find a valid mime type for page {index+1}. Forcing mime type as JPG.')
+
+                safe_mime = safe_mime if safe_mime is not None else MIME.J
+
                 chapter.add_page(Image(uri=self.__make_page_uri(type='page',
-                                                                mime=mime,
+                                                                mime=safe_mime,
                                                                 media_id=media_id,
                                                                 page_number=index+1),
-                                name=f'{index}.{mime.value}',
-                                mime=mime,
+                                name=f'{index}.{safe_mime.value}',
+                                mime=safe_mime,
                                 width=page.get('w'),
                                 height=page.get('h')))
             return chapter
@@ -224,19 +231,23 @@ Set the logging mode to debug and try again.')
         
         tags = [*characters, *related, *category]
         
-        thumbnail_mime = MIME[doujin.get("images").get("thumbnail").get("t").upper()]
+        safe_mime = mime.get_mime_safelly(doujin.get('images').get('thumbnail').get('t').upper())
+        safe_mime = safe_mime if safe_mime is not None else MIME.J
+
         thumbnail = Image(uri=self.__make_page_uri(type='thumbnail',
-                                                   mime=thumbnail_mime,
+                                                   mime=safe_mime,
                                                    media_id=media_id),
-                          mime=thumbnail_mime,
+                          mime=safe_mime,
                           width=doujin.get("images").get("thumbnail").get("w"),
                           height=doujin.get("images").get("thumbnail").get("h"))
         
-        cover_mime = MIME[doujin.get("images").get("cover").get("t").upper()]
+        safe_mime = mime.get_mime_safelly(doujin.get("images").get("cover").get("t").upper())
+        safe_mime = safe_mime if safe_mime is not None else MIME.J
+
         cover = Image(uri=self.__make_page_uri(type='cover',
                                                media_id=media_id,
-                                               mime=cover_mime),
-                      mime=cover_mime,
+                                               mime=safe_mime),
+                      mime=safe_mime,
                       width=doujin.get("images").get("cover").get("w"),
                       height=doujin.get("images").get("cover").get("h"))
 
@@ -352,18 +363,35 @@ Set the logging mode to debug and try again.')
         PER_PAGE = data.get('per_page', 0)
         TOTAL_RESULTS = int(PAGES) * int(PER_PAGE)
 
-        return Pagination(page=int(page),
-                          total_results=TOTAL_RESULTS,
-                          total_pages=PAGES,
-                          results=[Thumb(id=result.get('id'),
-                                         title=result.get('title').get('english'),
-                                         url=urljoin(self.__BASE_URL, f'g/{result.get("id")}'),
-                                         cover=Image(uri=self.__make_page_uri(type='cover',
-                                                                              media_id=result.get('media_id'),
-                                                                              mime=MIME[result.get('images').get('cover').get('t').upper()]),
-                                                     mime=MIME[result.get("images").get("thumbnail").get("t").upper()],
-                                                     width=result.get('images').get('cover').get('w'),
-                                                     height=result.get('images').get('cover').get('h'))) for result in data.get('result')])
+
+        
+        pagination = Pagination(page=int(page),
+                                total_results=TOTAL_RESULTS,
+                                total_pages=PAGES,
+                                results=[])
+        
+        for result in data.get('result'):
+            safe_mime = mime.get_mime_safelly(result.get('images').get('cover').get('t').upper())
+            safe_mime = safe_mime if safe_mime is not None else MIME.J
+            thumb = Thumb(
+                id=result.get('id'),
+                title=result.get('title').get('english'),
+                url=urljoin(self.__BASE_URL, f'g/{result.get("id")}'),
+                cover=Image(
+                    uri=self.__make_page_uri(
+                        type='cover',
+                        media_id=result.get('media_id'),
+                        mime=safe_mime
+                    ),
+                    mime=safe_mime,
+                    width=result.get('images').get('cover').get('w'),
+                    height=result.get('images').get('cover').get('h')
+                )
+            )
+
+            pagination.add_result(thumb)
+
+        return pagination
 
     def random(self, retry=0) -> Manga:
         response = self.__make_request(url=urljoin(self.__BASE_URL, 'random'))
