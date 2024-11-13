@@ -3,22 +3,27 @@ from enma.application.core.utils.logger import logger
 
 class GoogleDriveStorage(ISaverAdapter):
 
-    try:
-        from googleapiclient.discovery import build, HttpError
-        from googleapiclient.http import MediaIoBaseUpload
-        from google.oauth2.service_account import Credentials
-    except ImportError as e:
-        raise ImportError(
-            "The dependencies for Google Drive are not installed. "
-            "Please install them using 'pip install enma[google_drive]'."
-        ) from e
-
     def __init__(
             self, 
             credentials_path: str,
             root_shared_folder: str):
-        self.credentials = self.Credentials.from_service_account_file(credentials_path)
-        self.service = self.build('drive', 'v3', credentials=self.credentials)
+
+        try:
+            from googleapiclient.discovery import build, HttpError
+            from googleapiclient.http import MediaIoBaseUpload
+            from google.oauth2.service_account import Credentials
+
+            self.MediaIoBaseUpload = MediaIoBaseUpload
+            self.HttpError = HttpError
+            self.build = build
+        except ImportError as e:
+            raise ImportError(
+                "The dependencies for Google Drive are not installed. "
+                "Please install them using 'pip install enma[google_drive]'."
+            ) from e
+            
+        self.credentials = Credentials.from_service_account_file(credentials_path)
+        self.service = build('drive', 'v3', credentials=self.credentials)
         self.root_shared_folder = root_shared_folder
 
     def save(self, path: str, file: File) -> bool:
