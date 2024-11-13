@@ -28,6 +28,7 @@ from enma.domain.entities.manga import (MIME,
                                         SymbolicLink,
                                         Title)
 from enma.domain.entities.search_result import Pagination, SearchResult, Thumb
+from enma.domain.utils import mime
 from enma.infra.core.interfaces.mangadex_response import (AuthorRelation, 
                                                           CoverArtRelation, IAltTitles, 
                                                           IGetResult, 
@@ -145,12 +146,20 @@ class Mangadex(IMangaRepository):
         
         ch: IHash = response.json()
         chapter = Chapter()
+
     
         for index, page in enumerate(ch.get('chapter').get('data')):
             extension = page.split('.')[-1]
+            safe_mime = mime.get_mime_safelly(extension.upper())
+            
+            if safe_mime is None:
+                logger.warning(f'Could not determine MIME type for extension {extension}. Defaulting to JPEG.')
+
+            safe_mime = safe_mime if safe_mime is not None else MIME.J
+
             chapter.add_page(Image(uri=self.__create_chapter_page_uri(ch.get('chapter').get('hash'), page),
                                    name=f'{index}.{extension}',
-                                   mime=MIME[extension.upper()]))
+                                   mime=safe_mime))
         return chapter
 
     def __fetch_chapter_hashes(self, chapter_id: str) -> tuple[str, list[str]]:
@@ -208,9 +217,15 @@ class Mangadex(IMangaRepository):
         
             for index, page in enumerate(files):
                 extension = page.split('.')[-1]
+                safe_mime = mime.get_mime_safelly(extension.upper())
+            
+                if safe_mime is None:
+                    logger.warning(f'Could not determine MIME type for extension {extension}. Defaulting to JPEG.')
+
+                safe_mime = safe_mime if safe_mime is not None else MIME.J
                 ch.add_page(Image(uri=self.__create_chapter_page_uri(hash, page),
                                   name=f'{index}.{extension}',
-                                  mime=MIME[extension.upper()]))
+                                  mime=safe_mime))
         
             return ch
     

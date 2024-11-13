@@ -50,3 +50,6 @@ class Pagination(Entity[ISearchResultProps]):
         self.results = results or list()
         self.total_pages = total_pages
         self.total_results = total_results
+
+    def add_result(self, result: Thumb):
+        self.results.append(result)
