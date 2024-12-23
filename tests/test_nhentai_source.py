@@ -16,24 +16,41 @@ from tests.data.mocked_doujins import (nhentai_doujin_mocked,
                                        nhentai_paginate_mocked, 
                                        nhentai_author_mocked,
                                        nhentai_author_not_found_mocked)
-from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, Sort
+from enma.infra.adapters.repositories.nhentai import CloudFlareConfig, NHentai, NHentaiConfig, Sort
 from enma.domain.entities.manga import MIME, Author, Chapter, Genre, Image, SymbolicLink
 from enma.application.core.utils.logger import logger
 
 class TestNHentaiUtils:
-    sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
+    sut = NHentai(
+        config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        )
+    )
     
     def test_raise_error_if_passing_wrong_config(self):
         with pytest.raises(InvalidConfig) as err:
             self.sut.set_config(config={}) # type: ignore
     
     def test_set_config_successfully(self):
-        res = self.sut.set_config(config=CloudFlareConfig(user_agent='mocked', cf_clearance='mocked'))
+        res = self.sut.set_config(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        ))
         assert res is None
 
     def test_set_config_must_raise_in_case_of_empty_values(self):
         with pytest.raises(InvalidRequest):
-            self.sut.set_config(config=CloudFlareConfig(user_agent='', cf_clearance=''))
+            self.sut.set_config(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='',
+                cf_clearance=''
+            )
+        ))
 
     def test_should_run_normally_even_without_config(self):
         self.sut._NHentai__config = None # type: ignore
@@ -47,7 +64,12 @@ class TestNHentaiUtils:
         mock.json.return_value = {}
         request_mock.return_value = mock
 
-        self.sut.set_config(config=CloudFlareConfig(user_agent='mocked', cf_clearance='mocked'))
+        self.sut.set_config(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        ))
         res = self.sut._NHentai__make_request(url='https://www.google.com', headers={'add': 'header'}, params={'new': 'parameter'}) # type: ignore
 
         assert res.status_code == 200
@@ -91,15 +113,15 @@ class TestNHentaiUtils:
 
     def test_making_page_uri(self):
         page = self.sut._NHentai__make_page_uri(type='page', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
-        assert page == 'https://i.nhentai.net/galleries/1234/1.jpg'
+        assert page == 'https://i1.nhentai.net/galleries/1234/1.jpg'
 
     def test_making_cover_uri(self):
         page = self.sut._NHentai__make_page_uri(type='cover', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
-        assert page == 'https://t.nhentai.net/galleries/1234/cover.jpg'
+        assert page == 'https://t1.nhentai.net/galleries/1234/cover.jpg'
 
     def test_making_thumbnail_uri(self):
         page = self.sut._NHentai__make_page_uri(type='thumbnail', media_id='1234', mime=MIME.J, page_number=1) # type: ignore
-        assert page == 'https://t.nhentai.net/galleries/1234/thumb.jpg'
+        assert page == 'https://t1.nhentai.net/galleries/1234/thumb.jpg'
 
     def test_chapter_creator(self):
         images: list[NHentaiImage] = [{
@@ -131,7 +153,12 @@ class TestNHentaiUtils:
 
 class TestNHentaiSourceGetMethod:
 
-    sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
+    sut = NHentai(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        ))
 
     @patch('requests.get')
     def test_success_doujin_retrieve(self, sut_mock: MagicMock):
@@ -299,7 +326,12 @@ class TestNHentaiSourceGetMethod:
         assert doujin.thumbnail.mime.value == 'jpg'
 
 class TestNHentaiSourcePaginationMethod:
-    sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
+    sut = NHentai(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        ))
 
     @patch('requests.get')
     def test_success_searching(self, mock_method: MagicMock):
@@ -340,7 +372,12 @@ class TestNHentaiSourcePaginationMethod:
 
 class TestNHentaiSourceSearchMethod:
 
-    sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
+    sut = NHentai(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        ))
 
     @patch('requests.get')
     def test_success_searching(self, mock_method: MagicMock):
@@ -374,8 +411,8 @@ class TestNHentaiSourceSearchMethod:
                                             params={'q': 'GATE',
                                                     'sort': Sort.RECENT.value,
                                                     'page': 2},
-                                            headers={'User-Agent': 'mock'},
-                                            cookies={'cf_clearance': 'mock'})
+                                            headers={'User-Agent': 'mocked'},
+                                            cookies={'cf_clearance': 'mocked'})
         
     @patch('requests.get')
     def test_must_return_empty_search_result(self, mock_method: MagicMock):
@@ -396,7 +433,12 @@ class TestNHentaiSourceSearchMethod:
 
 class TestNHentaiSourceAuthorPageMethod:
 
-    sut = NHentai(config=CloudFlareConfig(user_agent='mock', cf_clearance='mock'))
+    sut = NHentai(config=NHentaiConfig(
+            cloudflare=CloudFlareConfig(
+                user_agent='mocked',
+                cf_clearance='mocked'
+            )
+        ))
 
     @patch('requests.get')
     def test_success_author_page_fetching(self, mock_method: MagicMock):
@@ -428,8 +470,8 @@ class TestNHentaiSourceAuthorPageMethod:
 
         mock_method.assert_called_once_with(url='https://nhentai.net/artist/akaneman',
                                             params={'page': 2},
-                                            headers={'User-Agent': 'mock'},
-                                            cookies={'cf_clearance': 'mock'})
+                                            headers={'User-Agent': 'mocked'},
+                                            cookies={'cf_clearance': 'mocked'})
         
     @patch('requests.get')
     def test_must_return_empty_author_page_result(self, mock_method: MagicMock):

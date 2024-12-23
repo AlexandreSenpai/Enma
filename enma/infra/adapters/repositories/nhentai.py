@@ -31,12 +31,14 @@ class CloudFlareConfig(BaseModel):
 
     @field_validator('user_agent')
     def user_agent_validator(cls, value: str) -> str:
-        if value == '': raise InvalidRequest(message='User Agent cant be empty.')
+        if value == '': 
+            raise InvalidRequest(message='User Agent cant be empty.')
         return str(value)
 
     @field_validator('cf_clearance')
     def cf_clearance_validator(cls, value: str) -> str:
-        if value == '': raise InvalidRequest(message='CF Clearance cant be empty.')
+        if value == '': 
+            raise InvalidRequest(message='CF Clearance cant be empty.')
         return str(value)
 
 class NhentaiSourceConfig(BaseModel):
@@ -122,7 +124,8 @@ Set the logging mode to debug and try again.')
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
 
-        config = self.__config.cloudflare
+        config = self.__config.cloudflare if self.__config is not None else None
+
         user_agent = config.user_agent if config is not None else f"Enma/{__version__}"
         cookies = {'cf_clearance': config.cf_clearance} if config is not None else {}
 
