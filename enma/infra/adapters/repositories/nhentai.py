@@ -7,7 +7,7 @@ from enum import Enum
 import os
 from typing import Any, List, Literal, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 import requests
 from bs4 import BeautifulSoup, Tag
@@ -25,7 +25,6 @@ from enma.infra.core.interfaces.nhentai_response import NHentaiImage, NHentaiRes
 from enma.infra.core.utils.cache import Cache
 from enma._version import __version__
 
-
 class CloudFlareConfig(BaseModel):
     user_agent: str
     cf_clearance: str
@@ -40,9 +39,27 @@ class CloudFlareConfig(BaseModel):
         if value == '': raise InvalidRequest(message='CF Clearance cant be empty.')
         return str(value)
 
-class __StrEnum(str, Enum):...
+class NhentaiSourceConfig(BaseModel):
+    tiny_image_server: str = Field(default='t1')
+    large_image_server: str = Field(default='i1')
+    base_url: str = Field(default='https://nhentai.net/')
+    api_url: str = Field(default='https://nhentai.net/api/')
+    image_base_url: str = Field(default='https://{server}.nhentai.net/galleries/')
+    tiny_image_url: str = Field(default='https://{server}.nhentai.net/galleries/')
+    avatar_url: str = Field(default='https://i5.nhentai.net/')
 
-class Sort(__StrEnum):
+    def model_post_init(self, ctx):
+        self.image_base_url = self.image_base_url.format(server=self.large_image_server)
+        self.tiny_image_url = self.tiny_image_url.format(server=self.tiny_image_server)
+
+class NHentaiConfig(BaseModel):
+    cloudflare: Optional[CloudFlareConfig] = Field(default=None)
+    source: NhentaiSourceConfig = Field(default=NhentaiSourceConfig())
+    
+class StrEnum(str, Enum):
+    ...
+
+class Sort(StrEnum):
     TODAY = 'popular-today'
     WEEK = 'popular-week'
     ALL_TIME = 'popular'
@@ -62,13 +79,28 @@ class NHentai(IMangaRepository):
     Provides methods to fetch manga details, search for manga, etc.
     """
     def __init__(self,
-                 config: Optional[CloudFlareConfig] = None) -> None:
+                 config: Optional[NHentaiConfig] = None) -> None:
+        
+        config = config or NHentaiConfig()
+
         self.__config = config
-        self.__BASE_URL = 'https://nhentai.net/'
-        self.__API_URL = 'https://nhentai.net/api/'
-        self.__IMAGE_BASE_URL = 'https://i.nhentai.net/galleries/'
-        self.__AVATAR_URL = 'https://i5.nhentai.net/'
-        self.__TINY_IMAGE_BASE_URL = self.__IMAGE_BASE_URL.replace('/i.', '/t.')
+        self.__BASE_URL = config.source.base_url
+        self.__API_URL = config.source.api_url
+        self.__IMAGE_BASE_URL = config.source.image_base_url
+        self.__TINY_IMAGE_BASE_URL = config.source.tiny_image_url
+        self.__AVATAR_URL = config.source.avatar_url
+
+    def set_config(self, config: NHentaiConfig) -> None:
+        if not isinstance(config, NHentaiConfig): 
+            raise InvalidConfig(message='You must provide a NHentaiConfig object.') 
+        config = config or NHentaiConfig()
+        
+        self.__config = config
+        self.__BASE_URL = config.source.base_url
+        self.__API_URL = config.source.api_url
+        self.__IMAGE_BASE_URL = config.source.image_base_url
+        self.__TINY_IMAGE_BASE_URL = config.source.tiny_image_url
+        self.__AVATAR_URL = config.source.avatar_url
 
     def __handle_source_response(self, response: requests.Response):
         logger.debug(f'Fetched {response.url} with response status code {response.status_code} and text {response.text}')
@@ -90,7 +122,7 @@ Set the logging mode to debug and try again.')
         headers = headers if headers is not None else {}
         params = params if params is not None else {}
 
-        config = self.__config
+        config = self.__config.cloudflare
         user_agent = config.user_agent if config is not None else f"Enma/{__version__}"
         cookies = {'cf_clearance': config.cf_clearance} if config is not None else {}
 
@@ -104,10 +136,6 @@ Set the logging mode to debug and try again.')
         self.__handle_source_response(response)
 
         return response
-
-    def set_config(self, config: CloudFlareConfig) -> None:
-        if not isinstance(config, CloudFlareConfig): raise InvalidConfig(message='You must provide a CloudFlareConfig object.') 
-        self.__config = config
     
     def __make_page_uri(self,
                         type: Union[Literal['cover'], Literal['page'], Literal['thumbnail']],
@@ -182,7 +210,8 @@ Set the logging mode to debug and try again.')
            max_size=20).cache
     def get(self, 
             identifier: str,
-            with_symbolic_links: bool = False) -> Union[Manga, None]:
+            with_symbolic_links: bool = False,
+            **kwargs) -> Union[Manga, None]:
 
         url = urljoin(self.__API_URL, f'gallery/{identifier}')
         response = self.__make_request(url=url)
