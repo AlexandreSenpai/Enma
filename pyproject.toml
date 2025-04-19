@@ -2,7 +2,7 @@
 name = "enma"
 description = "Enma is a Python library designed to fetch manga and doujinshi data from many sources."
 readme = { file = "README.md", content-type = "text/markdown" }
-requires-python = ">=3.9.0"
+requires-python = ">=3.9"
 authors = [
     { name = "AlexandreSenpai", email = "alexandrebsramos@hotmail.com" }
 ]
@@ -24,6 +24,7 @@ dependencies = [
 dev = [
     "pytest-cov==4.1.0",
     "pytest==8.3.2",
+    "ruff>=0.11.6",
 ]
 
 [project.optional-dependencies]
@@ -36,6 +37,19 @@ google_drive = [
 [project.urls]
 "Github" = "https://github.com/AlexandreSenpai/Enma"
 "Documentation" = "https://docs.minorin.io/enma"
+
+[tool.ruff]
+line-length = 80
+select = ["E", "W", "F", "C90", "N", "Q", "ANN"]
+ignore = ["E203", "N818"]
+per-file-ignores = { "__init__.py" = ["F401"] }
+
+[tool.ruff.flake8-quotes]
+inline-quotes    = "double"
+multiline-quotes = "double"
+docstring-quotes = "double"
+avoid-escape     = true
+
 
 [build-system]
 requires = ["hatchling", "hatch-vcs"]

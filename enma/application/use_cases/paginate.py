@@ -7,25 +7,28 @@ from enma.application.core.interfaces.use_case import DTO, IUseCase
 from enma.application.core.utils.logger import logger
 from enma.domain.entities.pagination import Pagination
 
+
 class PaginateRequestDTO(BaseModel):
     page: int
 
     @field_validator("page")
-    def validate_page(cls, page: int) -> int:
+    def validate_page(self, page: int) -> int:
         if page <= 0:
-            raise InvalidRequest(message='Page value must be greater than 0.')
+            raise InvalidRequest(message="Page value must be greater than 0.")
         return int(page)
+
+
 @dataclass
 class PaginateResponseDTO:
     result: Pagination
-    
-class PaginateUseCase(IUseCase[PaginateRequestDTO, PaginateResponseDTO]):
 
-    def __init__(self, manga_repository: IMangaRepository):
+
+class PaginateUseCase(IUseCase[PaginateRequestDTO, PaginateResponseDTO]):
+    def __init__(self, manga_repository: IMangaRepository) -> None:
         self.__manga_repository = manga_repository
 
     def execute(self, dto: DTO[PaginateRequestDTO]) -> PaginateResponseDTO:
-        logger.info(f'Retrieving page {dto.data.page}')
+        logger.info(f"Retrieving page {dto.data.page}")
         result = self.__manga_repository.paginate(page=dto.data.page)
-        
+
         return PaginateResponseDTO(result=result)

@@ -4,15 +4,17 @@ from typing import Any, Literal, TypedDict, Union, TypeVar
 class Title(TypedDict):
     en: str
 
+
 class MangaDesc(TypedDict):
     en: str
+
 
 class TagAttrs(TypedDict):
     name: dict[str, str]
     description: dict[str, str]
-    group: Union[Literal["theme"], Literal["genre"], 
-                 Literal["format"]]
+    group: Union[Literal["theme"], Literal["genre"], Literal["format"]]
     version: int
+
 
 class IMangaTag(TypedDict):
     id: str
@@ -20,7 +22,9 @@ class IMangaTag(TypedDict):
     attributes: TagAttrs
     relationships: list[Any]
 
+
 IAltTitles = list[dict[str, str]]
+
 
 class MangaAttrs(TypedDict):
     title: Title
@@ -44,6 +48,7 @@ class MangaAttrs(TypedDict):
     availableTranslatedLanguages: list[str]
     latestUploadedChapter: str
 
+
 class CoverAttrs(TypedDict):
     description: str
     volume: int
@@ -53,10 +58,12 @@ class CoverAttrs(TypedDict):
     updatedAt: str
     version: int
 
+
 class CoverArtRelation(TypedDict):
     id: str
     type: Literal["cover_art"]
     attributes: CoverAttrs
+
 
 class PersonAttrs(TypedDict):
     name: str
@@ -80,14 +87,15 @@ class PersonAttrs(TypedDict):
     updatedAt: str
     version: int
 
+
 class AuthorRelation(TypedDict):
     id: str
     type: Union[Literal["author"], Literal["artist"]]
     attributes: PersonAttrs
 
-IRelations = list[Union[CoverArtRelation,
-                       AuthorRelation,
-                       dict[str, str]]]
+
+IRelations = list[Union[CoverArtRelation, AuthorRelation, dict[str, str]]]
+
 
 class IManga(TypedDict):
     id: str
@@ -95,10 +103,12 @@ class IManga(TypedDict):
     attributes: MangaAttrs
     relationships: IRelations
 
+
 class IGetResult(TypedDict):
     result: str
     response: str
     data: IManga
+
 
 class ISearchResult(IGetResult):
     limit: int
@@ -108,25 +118,30 @@ class ISearchResult(IGetResult):
     response: str
     data: list[IManga]
 
+
 class IChapter(TypedDict):
     chapter: str
     id: str
     others: list
     count: int
 
+
 class IVolume(TypedDict):
     volume: str
     count: int
     chapters: dict[str, IChapter]
 
+
 class IVolumesResponse(TypedDict):
     result: str
     volumes: dict[str, IVolume]
+
 
 class IChapterHash(TypedDict):
     hash: str
     data: list[str]
     dataSaver: list[str]
+
 
 class IHash(TypedDict):
     result: str

@@ -4,7 +4,5 @@ from enma.domain.entities.manga import Image
 
 
 class IDownloaderAdapter(ABC):
-
     @abstractmethod
-    def download(self, page: Image) -> BytesIO:
-        ...
+    def download(self, page: Image) -> BytesIO: ...

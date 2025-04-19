@@ -5,16 +5,19 @@ class NHentaiImage(TypedDict):
     t: Union[Literal["j"], Literal["p"], Literal["g"]]
     w: int
     h: int
-    
+
+
 class NHentaiImages(TypedDict):
     pages: list[NHentaiImage]
     cover: NHentaiImage
     thumbnail: NHentaiImage
 
+
 class Title(TypedDict):
     english: str
     japanese: str
     pretty: str
+
 
 class Tag(TypedDict):
     id: int
@@ -22,6 +25,7 @@ class Tag(TypedDict):
     name: str
     url: str
     count: int
+
 
 class NHentaiResponse(TypedDict):
     id: int
@@ -33,6 +37,7 @@ class NHentaiResponse(TypedDict):
     tags: list[Tag]
     num_pages: int
     num_favorites: int
+
 
 class NHentaiPaginateResponse(TypedDict):
     result: NHentaiResponse
