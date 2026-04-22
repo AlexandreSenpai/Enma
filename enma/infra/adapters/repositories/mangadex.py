@@ -2,8 +2,10 @@
 This module provides an adapter for the mangadex repository.
 It contains functions and classes to interact with the mangadex API and retrieve manga data.
 """
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
+from multiprocessing import cpu_count
 import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
@@ -377,9 +379,24 @@ class Mangadex(IMangaRepository):
         
         chapter_list = self.__list_chapters(manga_id=str(manga.id))
 
-        for chapter in chapter_list:
-            manga.add_chapter(self.__create_chapter(chapter=chapter,
-                                                    with_symbolic_links=with_symbolic_links))
+        if with_symbolic_links:
+            for chapter in chapter_list:
+                manga.add_chapter(self.__create_chapter(chapter=chapter,
+                                                        with_symbolic_links=with_symbolic_links))
+        else:
+            workers = cpu_count()
+            logger.debug(f'Initializing {workers} workers to fetch chapters of {manga.id}.')
+
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                def create_chapter_wrapper(chapter):
+                    return self.__create_chapter(chapter=chapter, with_symbolic_links=False)
+
+                chapters = executor.map(create_chapter_wrapper, chapter_list)
+
+                for chapter in chapters:
+                    manga.add_chapter(chapter)
+
+                executor.shutdown()
             
         return manga
     
