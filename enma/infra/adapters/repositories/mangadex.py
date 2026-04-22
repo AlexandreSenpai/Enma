@@ -2,8 +2,10 @@
 This module provides an adapter for the mangadex repository.
 It contains functions and classes to interact with the mangadex API and retrieve manga data.
 """
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from enum import Enum
+from multiprocessing import cpu_count
 import os
 from typing import Any, Optional, Union, cast
 from urllib.parse import urljoin, urlparse
@@ -319,25 +321,28 @@ class Mangadex(IMangaRepository):
         return Image(uri=self.__create_cover_uri(manga_id, cover.get("attributes").get("fileName")),
                      width=512)
     
-    def __get_title(self, alt_titles: IAltTitles, title: str) -> Title:
+    def __get_title(self, alt_titles: IAltTitles, title_dict: dict[str, str]) -> Title:
         """
         Constructs a Title object for the manga, incorporating the English title, a Japanese title if available,
         and an alternative title.
 
         Args:
             alt_titles (IAltTitles): A list of alternative titles for the manga.
-            title (str): The primary English title of the manga.
+            title_dict (dict[str, str]): The primary title dictionary of the manga.
 
         Returns:
             Title: A Title object containing the English, Japanese, and an alternative title for the manga.
         """
+
+        english_title = title_dict.get('en') or title_dict.get('ja-ro') or list(title_dict.values())[0] if title_dict else ''
+
         japanese_titles = [ title.get('ja-ro') for title in alt_titles if title.get('ja-ro') is not None ]
-        japanese_title = japanese_titles[0] if len(japanese_titles) > 0 else None
+        japanese_title = japanese_titles[0] if len(japanese_titles) > 0 else title_dict.get('ja-ro')
 
         other_keys = list(alt_titles[-1].keys()) if len(alt_titles) > 0 else []
         other_key = other_keys[0] if len(other_keys) > 0 else ''
 
-        return Title(english=title,
+        return Title(english=english_title,
                      japanese=japanese_title or '',
                      other=alt_titles[-1].get(other_key, '') if len(alt_titles) > 0 else '')
 
@@ -363,7 +368,7 @@ class Mangadex(IMangaRepository):
         status = 'completed' if attrs.get('status', "").lower() == 'completed' else 'ongoing'
 
         manga = Manga(title=self.__get_title(alt_titles=attrs.get('altTitles'),
-                                             title=attrs.get('title', dict()).get('en') or ''),
+                                             title_dict=attrs.get('title', dict())),
                       id=manga_data.get('id'),
                       created_at=datetime.fromisoformat(attrs.get('createdAt')),
                       updated_at=datetime.fromisoformat(attrs.get('updatedAt')),
@@ -377,9 +382,24 @@ class Mangadex(IMangaRepository):
         
         chapter_list = self.__list_chapters(manga_id=str(manga.id))
 
-        for chapter in chapter_list:
-            manga.add_chapter(self.__create_chapter(chapter=chapter,
-                                                    with_symbolic_links=with_symbolic_links))
+        if with_symbolic_links:
+            for chapter in chapter_list:
+                manga.add_chapter(self.__create_chapter(chapter=chapter,
+                                                        with_symbolic_links=with_symbolic_links))
+        else:
+            workers = cpu_count()
+            logger.debug(f'Initializing {workers} workers to fetch chapters of {manga.id}.')
+
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                def create_chapter_wrapper(chapter):
+                    return self.__create_chapter(chapter=chapter, with_symbolic_links=False)
+
+                chapters = executor.map(create_chapter_wrapper, chapter_list)
+
+                for chapter in chapters:
+                    manga.add_chapter(chapter)
+
+                executor.shutdown()
             
         return manga
     
@@ -394,8 +414,9 @@ class Mangadex(IMangaRepository):
         Returns:
             Thumb: A Thumb object containing the manga's ID, title, and cover image.
         """
+        title_dict = manga.get('attributes').get('title', {})
+        title = title_dict.get('en') or title_dict.get('ja-ro') or (list(title_dict.values())[0] if title_dict else 'Unknown')
 
-        title = manga.get('attributes').get('title').get('en')
         return Thumb(id=manga.get('id'),
                      title=title,
                      url=urljoin(self.__SITE_URL, f'title/{manga.get("id")}'),
